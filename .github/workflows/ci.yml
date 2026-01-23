@@ -8,6 +8,10 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -59,21 +63,20 @@ jobs:
     
     - name: Build and push Docker image
       if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == '3.12'
-      env:
-        GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
-        GHCR_PASSWORD: ${{ secrets.GHCR_PASSWORD }}
       run: |
-        echo "Starting Docker deployment to GHCR for alexandrovlab..."
+        echo "Starting Docker deployment to GHCR for sigprofilersuite..."
         
         VERSION_TAG=$(grep "VERSION = " setup.py | cut -d'"' -f2)
         
         # Get the repository name and convert it to lowercase
         REPO_NAME=$(basename ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
-        IMAGE_NAME="ghcr.io/alexandrovlab/$REPO_NAME"
+        IMAGE_NAME="ghcr.io/sigprofilersuite/$REPO_NAME"
         
         echo "Building version: $VERSION_TAG for image: $IMAGE_NAME"
         
-        echo "$GHCR_PASSWORD" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io \
+          --username "${{ github.actor }}" \
+          --password-stdin
         
         docker build \
           --build-arg COMMIT_SHA=${{ github.sha }} \
