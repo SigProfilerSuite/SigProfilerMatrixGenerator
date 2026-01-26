@@ -1,4 +1,4 @@
-[![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://osf.ucsd.edu/s93d5/wiki/home/) [![License](https://img.shields.io/badge/License-BSD\%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause) [![Build Status](https://app.travis-ci.com/AlexandrovLab/SigProfilerMatrixGenerator.svg?branch=master)](https://app.travis-ci.com/AlexandrovLab/SigProfilerMatrixGenerator)
+[![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://osf.ucsd.edu/s93d5/wiki/home/) [![License](https://img.shields.io/badge/License-BSD\%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause) [![CI](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/actions/workflows/ci.yml/badge.svg)](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/actions/workflows/ci.yml)
 [![Uptime Robot status](https://img.shields.io/uptimerobot/status/m795312784-02766a79f207f67626cef289)](https://stats.uptimerobot.com/jjqW4Ulymx)
 
 # SigProfilerMatrixGenerator
