@@ -1,0 +1,77 @@
+site_name: SigProfilerMatrixGenerator Documentation
+site_description: Documentation for SigProfilerMatrixGenerator - a tool for generating mutational matrices
+site_author: Alexandrov Lab
+site_url: https://alexandrovlab.github.io/SigProfilerMatrixGenerator/
+
+repo_name: AlexandrovLab/SigProfilerMatrixGenerator
+repo_url: https://github.com/AlexandrovLab/SigProfilerMatrixGenerator
+
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - tables
+  - attr_list
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quick Start Example: Quick-Start-Example.md
+  - Installation:
+    - Python: Installation-Python.md
+    - R: Installation-R.md
+    - Supported Genomes: Currently-Supported-Genomes.md
+  - Usage:
+    - SBS, ID, DBS Input: Using-the-Tool-SBS-ID-DBS-Input.md
+    - CNV Input: Using-the-Tool-CNV-Input.md
+    - SV Input: Using-the-Tool-SV-Input.md
+    - Output Overview: Using-the-Tool-Output.md
+  - Output Reference:
+    - SBS Output: Output-SBS.md
+    - DBS Output: Output-DBS.md
+    - ID Output: Output-ID.md
+    - TSB Output: Output-TSB.md
+    - VCF Files: Output-vcf_files.md
+    - Plots: Output-Plots.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/AlexandrovLab/SigProfilerMatrixGenerator
