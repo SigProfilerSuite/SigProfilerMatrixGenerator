@@ -1,4 +1,4 @@
-[![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://osf.ucsd.edu/s93d5/wiki/home/) [![License](https://img.shields.io/badge/License-BSD\%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause) [![CI](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/actions/workflows/ci.yml/badge.svg)](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://sigprofilersuite.github.io/SigProfilerMatrixGenerator/) [![License](https://img.shields.io/badge/License-BSD\%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause) [![CI](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/actions/workflows/ci.yml/badge.svg)](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/actions/workflows/ci.yml)
 [![Uptime Robot status](https://img.shields.io/uptimerobot/status/m795312784-02766a79f207f67626cef289)](https://stats.uptimerobot.com/jjqW4Ulymx)
 
 # SigProfilerMatrixGenerator
@@ -6,7 +6,7 @@ SigProfilerMatrixGenerator creates mutational matrices for all types of somatic 
 
 **INTRODUCTION**
 
-The purpose of this document is to provide a guide for using the SigProfilerMatrixGenerator framework to generate mutational matrices for a set of samples with associated mutational catalogues. An extensive Wiki page detailing the usage of this tool can be found at https://osf.io/s93d5/wiki/home/.
+The purpose of this document is to provide a guide for using the SigProfilerMatrixGenerator framework to generate mutational matrices for a set of samples with associated mutational catalogues. Full documentation is available in `docs/` (rendered via MkDocs): https://sigprofilersuite.github.io/SigProfilerMatrixGenerator/
 
 For users that prefer working in an R environment, a wrapper package is provided and can be found and installed from: https://github.com/AlexandrovLab/SigProfilerMatrixGeneratorR
 

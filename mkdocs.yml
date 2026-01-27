@@ -1,10 +1,10 @@
 site_name: SigProfilerMatrixGenerator Documentation
 site_description: Documentation for SigProfilerMatrixGenerator - a tool for generating mutational matrices
-site_author: Alexandrov Lab
-site_url: https://alexandrovlab.github.io/SigProfilerMatrixGenerator/
+site_author: SigProfilerSuite
+site_url: https://sigprofilersuite.github.io/SigProfilerMatrixGenerator/
 
-repo_name: AlexandrovLab/SigProfilerMatrixGenerator
-repo_url: https://github.com/AlexandrovLab/SigProfilerMatrixGenerator
+repo_name: SigProfilerSuite/SigProfilerMatrixGenerator
+repo_url: https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator
 
 docs_dir: docs
 
@@ -74,4 +74,4 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/AlexandrovLab/SigProfilerMatrixGenerator
+      link: https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator
