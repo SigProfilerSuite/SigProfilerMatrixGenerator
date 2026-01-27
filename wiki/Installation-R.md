@@ -41,7 +41,7 @@ R
 > use_python("path_to_your_python3")
 > py_config()
 > library("devtools")
-> install_github("AlexandrovLab/SigProfilerMatrixGeneratorR")
+> install_github("SigProfilerSuite/SigProfilerMatrixGeneratorR")
 ```
 
 Replace `"path_to_your_python3"` with the actual path to your Python 3 installation (e.g., `/usr/local/bin/python3` or the path from your conda environment).
@@ -69,7 +69,7 @@ conda create --name spmg_r -y
 conda activate spmg_r
 conda install python=3.10 r-base r-devtools r-reticulate -c conda-forge -y
 pip install SigProfilerMatrixGenerator
-echo 'devtools::install_github("AlexandrovLab/SigProfilerMatrixGeneratorR")' | Rscript -
+echo 'devtools::install_github("SigProfilerSuite/SigProfilerMatrixGeneratorR")' | Rscript -
 ```
 
 ## Upgrades
@@ -85,5 +85,5 @@ Then reinstall the R package:
 ```r
 R
 > library("devtools")
-> install_github("AlexandrovLab/SigProfilerMatrixGeneratorR")
+> install_github("SigProfilerSuite/SigProfilerMatrixGeneratorR")
 ```
