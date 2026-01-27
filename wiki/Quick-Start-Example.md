@@ -28,7 +28,7 @@ Check if SigProfilerMatrixGenerator is installed:
 
 Look for `SigProfilerMatrixGenerator` in the list of available modules.
 
-If not installed, follow the instructions on the [Installation - Python](Installation-Python.md) page.
+If not installed, follow the instructions on the [Installation - Python](Installation-Python) page.
 
 ## Step 3: Install Reference Genome
 
@@ -39,7 +39,7 @@ Install your desired reference genome:
 >>> genInstall.install('GRCh37')
 ```
 
-This example installs the human GRCh37 assembly. You can install any of the [available genome assemblies](Currently-Supported-Genomes.md).
+This example installs the human GRCh37 assembly. You can install any of the [available genome assemblies](Currently-Supported-Genomes).
 
 **Note:**
 - ~3 GB of storage is required per genome
@@ -112,4 +112,4 @@ python3
 ... )
 ```
 
-For all function arguments and their types, see the [Using the Tool - SBS, ID, DBS Input](Using-the-Tool-SBS-ID-DBS-Input.md) section.
+For all function arguments and their types, see the [Using the Tool - SBS, ID, DBS Input](Using-the-Tool-SBS-ID-DBS-Input) section.

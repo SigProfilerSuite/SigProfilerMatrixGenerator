@@ -140,7 +140,7 @@ python3
 >>> genInstall.install('GRCh37', bash=True)
 ```
 
-This example installs the human GRCh37 assembly reference files. You can install any of the [available genome assemblies](Currently-Supported-Genomes.md).
+This example installs the human GRCh37 assembly reference files. You can install any of the [available genome assemblies](Currently-Supported-Genomes).
 
 If the server has a firewall that blocks wget, use the rsync parameter:
 

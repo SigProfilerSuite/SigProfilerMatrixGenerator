@@ -24,6 +24,6 @@
 - [Output - Plots](Output-Plots)
 
 ## Resources
-- [GitHub Repository](https://github.com/AlexandrovLab/SigProfilerMatrixGenerator)
+- [GitHub Repository](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator)
 - [SigProfilerPlotting](https://github.com/AlexandrovLab/SigProfilerPlotting)
 - [Contact](mailto:contact@sigprofilersuite.org)

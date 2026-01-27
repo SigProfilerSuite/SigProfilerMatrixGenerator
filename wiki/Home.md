@@ -4,14 +4,14 @@ SigProfilerMatrixGenerator creates mutational matrices for all types of somatic 
 
 ## Quick Links
 
-- [Installation - Python](Installation-Python.md)
-- [Installation - R](Installation-R.md)
-- [Using the Tool - SBS, ID, DBS Input](Using-the-Tool-SBS-ID-DBS-Input.md)
-- [Using the Tool - CNV Input](Using-the-Tool-CNV-Input.md)
-- [Using the Tool - SV Input](Using-the-Tool-SV-Input.md)
-- [Using the Tool - Output](Using-the-Tool-Output.md)
-- [Quick Start Example](Quick-Start-Example.md)
-- [Currently Supported Genomes](Currently-Supported-Genomes.md)
+- [Installation - Python](Installation-Python)
+- [Installation - R](Installation-R)
+- [Using the Tool - SBS, ID, DBS Input](Using-the-Tool-SBS-ID-DBS-Input)
+- [Using the Tool - CNV Input](Using-the-Tool-CNV-Input)
+- [Using the Tool - SV Input](Using-the-Tool-SV-Input)
+- [Using the Tool - Output](Using-the-Tool-Output)
+- [Quick Start Example](Quick-Start-Example)
+- [Currently Supported Genomes](Currently-Supported-Genomes)
 
 ## Prerequisites
 

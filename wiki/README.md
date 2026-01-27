@@ -1,6 +1,6 @@
 # GitHub Wiki Migration Files
 
-This folder contains documentation migrated from the OSF wiki (https://osf.io/s93d5/wiki) for SigProfilerMatrixGenerator.
+This folder contains documentation migrated from an external OSF wiki for SigProfilerMatrixGenerator.
 
 ## How to Set Up GitHub Wiki
 
@@ -13,7 +13,7 @@ This folder contains documentation migrated from the OSF wiki (https://osf.io/s9
 GitHub Wikis are stored as separate Git repositories:
 
 ```bash
-git clone https://github.com/AlexandrovLab/SigProfilerMatrixGenerator.wiki.git
+git clone https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator.wiki.git
 ```
 
 ### Step 3: Copy Wiki Files

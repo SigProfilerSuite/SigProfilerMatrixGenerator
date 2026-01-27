@@ -15,7 +15,7 @@ This section will help you set up the necessary software and packages required t
 
 ## Step 1: Install Python Package
 
-First, follow the [Python Installation](Installation-Python.md) instructions to install the base SigProfilerMatrixGenerator package:
+First, follow the [Python Installation](Installation-Python) instructions to install the base SigProfilerMatrixGenerator package:
 
 ```bash
 pip install SigProfilerMatrixGenerator
@@ -56,7 +56,7 @@ R
 > install('GRCh37', rsync=FALSE, bash=TRUE)
 ```
 
-This example installs the human GRCh37 assembly reference files. You can install any of the [available genome assemblies](Currently-Supported-Genomes.md).
+This example installs the human GRCh37 assembly reference files. You can install any of the [available genome assemblies](Currently-Supported-Genomes).
 
 **Note:** The installation process saves custom reference files for all chromosomes in the genome assembly, requiring ~3 GB of storage per genome.
 
