@@ -2,12 +2,11 @@ name: Deploy Documentation
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
     paths:
-      - 'docs/**'
-      - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
@@ -25,29 +24,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
+      # IMPORTANT: configure Pages early (fixes "Get Pages site failed / HttpError: Not Found")
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.11"
 
       - name: Install MkDocs and dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install mkdocs-material
-          pip install mkdocs-material[imaging]
 
       - name: Build documentation
         run: mkdocs build --strict
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'site'
+          path: site
 
   deploy:
     environment:
