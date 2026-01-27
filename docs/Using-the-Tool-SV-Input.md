@@ -62,7 +62,7 @@ conda create --name spmg_r -y
 conda activate spmg_r
 conda install python=3.10 r-base r-devtools r-reticulate -c conda-forge -y
 pip install SigProfilerMatrixGenerator
-echo 'devtools::install_github("AlexandrovLab/SigProfilerMatrixGeneratorR")' | Rscript -
+echo 'devtools::install_github("SigProfilerSuite/SigProfilerMatrixGeneratorR")' | Rscript -
 ```
 
 ### R Example
