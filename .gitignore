@@ -33,8 +33,5 @@ SigProfilerMatrixGenerator/references/SV/example_input/VCF/*.bedpe
 
 # OSF mirror outputs
 /docs/osf_wiki/
-/docs/assets/osf/manifest.json
-/docs/assets/osf/missing_assets.json
-/
-  docs/assets/osf/*.html
-/docs/assets/osf/*.bin
+/docs/assets/osf/*
+!/docs/assets/osf/osf_asset_unavailable.svg
