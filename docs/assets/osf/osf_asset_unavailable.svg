@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="260" viewBox="0 0 900 260">
+  <rect x="0" y="0" width="900" height="260" fill="#f6f8fa"/>
+  <rect x="24" y="24" width="852" height="212" rx="12" fill="#ffffff" stroke="#d0d7de"/>
+  <g fill="#57606a" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'">
+    <text x="60" y="108" font-size="28" font-weight="600">Image unavailable</text>
+    <text x="60" y="150" font-size="18">This OSF-hosted asset is not accessible (HTTP 403) and could not be mirrored.</text>
+  </g>
+  <g fill="none" stroke="#cf222e" stroke-width="10" stroke-linecap="round">
+    <path d="M60 70 L96 34" />
+    <path d="M96 70 L60 34" />
+  </g>
+</svg>
+

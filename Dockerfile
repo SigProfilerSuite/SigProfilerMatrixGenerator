@@ -16,7 +16,7 @@ ARG COMMIT_SHA=master
 WORKDIR /usr/src/app
 
 # Install the package directly from the specific commit on GitHub
-RUN pip3 install 'git+https://github.com/AlexandrovLab/SigProfilerMatrixGenerator.git@'${COMMIT_SHA}
+RUN pip3 install 'git+https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator.git@'${COMMIT_SHA}
 
 # Create a non-root user
 RUN useradd -m -s /bin/bash spm_user

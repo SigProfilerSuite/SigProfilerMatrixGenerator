@@ -1,108 +1,72 @@
-# Output - ID (Insertions and Deletions)
+<h1> Insertions and Deletions, Indels (ID) </h1>
 
-This page provides detailed information about Insertion and Deletion (ID/Indel) output files.
-
-## Overview
-
-ID matrices classify small insertions and deletions based on size, sequence context, and repeat/microhomology status.
-
-## Output Files
-
-| File | # of Sequences | Description |
-|------|----------------|-------------|
-| test.ID28.all | 28 | Basic indel classification |
-| test.ID83.all | 83 | Extended classification |
-| test.ID415.all | 415 | With TSB categories |
-| test.ID8628.all | 8628 | Complete sequence information |
-
+@[toc](Quick Links)
+- [Using the Tool - **Output**][1]
 ---
 
-## ID-28
+## Overview ##
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cca315fbbbd370018a60ecc?mode=render =50%x)
 
-The ID28 file provides basic classification of insertions and deletions.
+This output folder returns files containing all the insertions and deletions found within the samples. If no files are returned, this means no insertions or deletions were found.
 
-### Categories
+<h3> Indel Sample Plot </h3>
 
-| Category | Description | Rows |
-|----------|-------------|------|
-| 1:Del:C:0-5 | 1bp deletion of C in homopolymer length 0-5+ | 6 |
-| 1:Del:T:0-5 | 1bp deletion of T in homopolymer length 0-5+ | 6 |
-| 1:Ins:C:0-5 | 1bp insertion of C in homopolymer length 0-5+ | 6 |
-| 1:Ins:T:0-5 | 1bp insertion of T in homopolymer length 0-5+ | 6 |
-| long_Del | >1bp deletions at repeat regions | 1 |
-| long_Ins | >1bp insertions at repeat regions | 1 |
-| MH | Microhomology-mediated deletions | 1 |
-| complex | Complex indels | 1 |
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cca319cbbbd37001aa27f97?mode=render =75%x)
+<br>
+### ID-28 ###
+The *test.ID28.all* file identifies all 1 bp (C and T only) insertions and deletions from homopolymer length 1 to 6+, the >1bp deletions and insertions as repeats, and all other indels in the microhomology category and categorizes each by length. 
 
-**Example:** `1:Del:C:3` corresponds to a deletion of C in a sequence N[C]CCCN (homopolymer of 4 C's).
+The generated plot above gives a visual for how each indel is categorized and returned. 
 
----
+| Mutation Type | Sample 1 (PD10001a) | Sample 2 (PD10011a) | ..... |
+| ------- |  ------- |  ------- |  ------- |
+| 6 rows for 1:Del:C:0 to 1:Del:C:5 | frequency of each deletion of C in sample 1 | frequency of each deletion of C in sample 2 | .... |
+| 6 rows for 1:Del:T:0 to 1:Del:T:5 | frequency of each deletion of T in sample 1 | frequency of each deletion of T in sample 2 | .... |
+| 6 rows for 1:Ins:C:0 to 1:Ins:C:5 | frequency of each insertion of C in sample 1 | frequency of each insertion of C in sample 2 | .... |
+| 6 rows for 1:Ins:C:0 to 1:Ins:C:5 |frequency of each insertion of T in sample 1 | frequency of each insertion of T in sample 2 | .... |
+| long_Del (repeat units) | frequency of each long deletion in sample 1 | frequency of each long deletion in sample 2 | .... |
+| long_Ins (repeat units) | frequency of each long insertion in sample 1 | frequency of each long insertion in sample 2 | .... |
+| MH (microhomology) | 0 | 0 | | |
+| complex | 0 | 0 | | |
 
-## ID-83
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cca31ce00a81000175f07a3?mode=render =100%x)
+The above image is a screenshot of the generated file. Here, on line **5**, 1:Del:C:3 corresponds to a deletion of C in a sequence N[C]CCCN where N is represents any nucleotide A, T, or G to give NCCCN. 
 
-ID-83 extends ID-28 by further categorizing repeat and microhomology indels.
+### ID-83 ###
+The *test.ID83.all* file further categorizes each unique repeat and microhomology indel found. 
 
-### Long Deletions/Insertions at Repeats
+| *test.ID28.all* | *test.ID83.all* |
+| ------------------ | ----------------- |
+| long_Del | 2:Del:R:0 - 2:Del:R:5<br> 3:Del:R:0 - 3:Del:R:5<br> 4:Del:R:0 - 4:Del:R:5 <br> 5:Del:R:0 - 5:Del:R:5|
+| long_Ins | 2:Ins:R:0 - 2:Ins:R:5<br> 3:Ins:R:0 - 3:Ins:R:5<br> 4:Ins:R:0 - 4:Ins:R:5 <br> 5:Ins:R:0 - 5:Ins:R:5|
+| MH | 2:Del:M:1 - 5:Del:M:5 <br> 2:Ins:M:1 - 5:Ins:M:5 |
 
-| ID-28 Category | ID-83 Categories |
-|----------------|------------------|
-| long_Del | 2:Del:R:0-5, 3:Del:R:0-5, 4:Del:R:0-5, 5:Del:R:0-5 |
-| long_Ins | 2:Ins:R:0-5, 3:Ins:R:0-5, 4:Ins:R:0-5, 5:Ins:R:0-5 |
 
-### Microhomology
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cca31d542c4b70016b5bae7?mode=render =100%x)
+Here, on line **3**, 1:Del:C:1 corresponds to a deletion of C in a sequence N[C]CN where N is represents any nucleotide A, C, or G to give NCN.
 
-| ID-28 Category | ID-83 Categories |
-|----------------|------------------|
-| MH | 2:Del:M:1-5, 3:Del:M:1-5, 4:Del:M:1-5, 5:Del:M:1-5 |
+### ID-415 ###
+The *test.ID415.all* file categorizes each identified indel from *test.ID83.all* into the 5 transcriptional strand bias categories {T, U, N, B, Q}.
 
-**Notation:**
-- `X:Del:R:Y` = Deletion of length X at repeat with Y repeat units
-- `X:Del:M:Y` = Deletion of length X with Y bp microhomology
+83 x 5 = 415 combinations
+    
+For example, a category in *test.ID83.all* would be further categorized into the following in *test.ID415.all*.
 
-**Example:** `1:Del:C:1` corresponds to a deletion of C in sequence N[C]CN.
+| *test.ID83.all* | *test.ID415.all* |
+| ------------------ | ----------------- |
+| 4:Del:R:4 | T:4:Del:R:4 <br> U:4:Del:R:4 <br> N:4:Del:R:4 <br> B:4:Del:R:4 <br> Q:4:Del:R:4|
 
----
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cca31db42c4b70018b62345?mode=render =100%x)
+The above image is a screenshot of the generated file. Here, on line **7**, T:1:Del:C:5 corresponds to a deletion of C in a sequence N[C]CCCCCN where N is represents any nucleotide A, C, or G to give NCCCCCN. 
+on the transcribed strand.
 
-## ID-415
+### ID-8268 ###
+The test.ID8268.all file extends the categorization from the ID-83 matrix by providing complete information about the indel sequence for indels at repetitive regions with length less than 6bp. 
 
-ID-415 categorizes each ID-83 category into 5 transcriptional strand bias categories.
+| *test.ID8268.all* |  |
+| ------------------ | ----------------- |
+| 2:Del:TA:5 | Deletion of length 2 with sequence TC or GA (reverse complement)|
+| 5:Ins:CCATC:2 | Insertion of length 5 with sequence CCATC or GATGG (reverse complement)|
 
-**Calculation:** 83 × 5 = 415 combinations
 
-### TSB Categories
-
-| Category | Description |
-|----------|-------------|
-| **T** | Transcribed strand |
-| **U** | Untranscribed strand |
-| **N** | Non-transcribed |
-| **B** | Bidirectional |
-| **Q** | Questionable |
-
-**Example:** `T:1:Del:C:5` corresponds to a deletion of C in homopolymer CCCCCC on the transcribed strand.
-
----
-
-## ID-8628
-
-ID-8628 provides complete information about the indel sequence for indels at repetitive regions with length less than 6bp.
-
-### Format
-
-| Pattern | Description |
-|---------|-------------|
-| 2:Del:TA:5 | Deletion of length 2 with sequence TC or GA (reverse complement) |
-| 5:Ins:CCATC:2 | Insertion of length 5 with sequence CCATC at 2 repeat units |
-
-This extended classification allows for more precise analysis of indel patterns.
-
----
-
-## File Extensions
-
-| Extension | Description |
-|-----------|-------------|
-| `.all` | All mutations (default) |
-| `.exome` | Mutations mapped to exome regions |
-| `.region` | Mutations mapped to custom BED file regions |
-| `.chrX` | Chromosome-specific mutations |
+  [1]: https://osf.io/s93d5/wiki/4.%20Using%20the%20Tool%20-%20Output/

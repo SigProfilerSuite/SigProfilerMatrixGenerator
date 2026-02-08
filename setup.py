@@ -44,7 +44,7 @@ setup(
     description="SigProfiler matrix generator tool",
     long_description=readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/AlexandrovLab/SigProfilerMatrixGenerator.git",
+    url="https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator.git",
     author="Erik Bergstrom",
     author_email="ebergstr@eng.ucsd.edu",
     license="UCSD",

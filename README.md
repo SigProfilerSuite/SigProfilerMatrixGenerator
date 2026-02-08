@@ -8,9 +8,18 @@ SigProfilerMatrixGenerator creates mutational matrices for all types of somatic 
 
 The purpose of this document is to provide a guide for using the SigProfilerMatrixGenerator framework to generate mutational matrices for a set of samples with associated mutational catalogues. Full documentation is available in `docs/` (rendered via MkDocs): https://sigprofilersuite.github.io/SigProfilerMatrixGenerator/
 
-For users that prefer working in an R environment, a wrapper package is provided and can be found and installed from: https://github.com/AlexandrovLab/SigProfilerMatrixGeneratorR
+For users that prefer working in an R environment, a wrapper package is provided and can be found and installed from: https://github.com/SigProfilerSuite/SigProfilerMatrixGeneratorR
 
 ![schematic](schematic.png)
+
+**DOCUMENTATION**
+
+- Source Markdown lives in `docs/` and is rendered via MkDocs to https://sigprofilersuite.github.io/SigProfilerMatrixGenerator/
+- Local preview:
+  - `python3 -m mkdocs serve`
+  - `python3 -m mkdocs build && open site/index.html`
+- Optional (mirror OSF wiki + images): `python3 tools/mirror_osf_wiki.py --node s93d5` (use `OSF_TOKEN=...` for private assets)
+- Optional (offline images for existing docs): `python3 tools/fetch_osf_assets.py`
 
 **PREREQUISITES**
 
@@ -136,7 +145,7 @@ SigProfilerMatrixGenerator sv_matrix_generator $input_dir $project $output_dir
 
 ### VCF INPUT FORMAT:
 
-**Note that VCF format (4.1, 4.2 and 4.3) is now supported. If using VCFs, please make sure the files in your input directory end with .vcf. Manta, Delly, Lumpy and GRIDSS are supported and example test files can be found in the [references/SV/](https://github.com/AlexandrovLab/SigProfilerMatrixGenerator/tree/master/SigProfilerMatrixGenerator/references/SV) folder**
+**Note that VCF format (4.1, 4.2 and 4.3) is now supported. If using VCFs, please make sure the files in your input directory end with .vcf. Manta, Delly, Lumpy and GRIDSS are supported and example test files can be found in the [references/SV/](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/tree/master/SigProfilerMatrixGenerator/references/SV) folder**
 
 ### Quick Start Example: ###
 

@@ -31,7 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Resolved an issue where ID plots were not generated due to the use of an unrecognized plot type (`96ID`). The correct plot type `IDSB` is now used.
 
 ### Deprecated
-- Removed support for **ICGC input format**. The [ICGC Data Portal officially closed](https://www.icgc-argo.org/) in June 2024, and associated example files are no longer accessible. Since the format is no longer actively maintained or distributed, and unresolved issues remained (see [#158](https://github.com/AlexandrovLab/SigProfilerMatrixGenerator/issues/158), [#159](https://github.com/AlexandrovLab/SigProfilerMatrixGenerator/issues/159)), support has been deprecated to reduce maintenance burden and avoid user confusion.
+- Removed support for **ICGC input format**. The [ICGC Data Portal officially closed](https://www.icgc-argo.org/) in June 2024, and associated example files are no longer accessible. Since the format is no longer actively maintained or distributed, and unresolved issues remained (see [#158](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/issues/158), [#159](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/issues/159)), support has been deprecated to reduce maintenance burden and avoid user confusion.
 
 ## [1.3.2] - 2025-03-13
 

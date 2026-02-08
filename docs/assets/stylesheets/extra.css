@@ -1,0 +1,7 @@
+.md-grid {
+  max-width: 1200px;
+}
+
+.md-typeset__table {
+  overflow-x: auto;
+}

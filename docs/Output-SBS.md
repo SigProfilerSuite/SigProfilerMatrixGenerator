@@ -1,104 +1,71 @@
-# Output - SBS (Single Base Substitution)
+<h1> Single Base Substitution (SBS) </h1>
 
-This page provides detailed information about Single Base Substitution (SBS) output files.
-
-## Overview
-
-SBS matrices classify single nucleotide variants using pyrimidine notation (C>X or T>X mutations only, as purine mutations are represented by their complementary pyrimidine).
-
-## Output Files
-
-| File | # of Sequences | Calculation |
-|------|----------------|-------------|
-| test.SBS6.all | 6 | 6 mutation types |
-| test.SBS24.all | 24 | 6 × 4 TSB categories |
-| test.SBS96.all | 96 | 4 × 6 × 4 |
-| test.SBS384.all | 384 | 96 × 4 TSB categories |
-| test.SBS1536.all | 1536 | 4 × 4 × 6 × 4 × 4 |
-| test.SBS6144.all | 6144 | 1536 × 4 TSB categories |
-
+@[toc](Quick Links)
+- [Using the Tool - **Output**][1]
 ---
 
-## SBS-6
+## Overview ##
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cca3896d7dc3f00196c1a98?mode=render =50%x)
+<br>
 
-The 6 basic mutation types (using pyrimidine notation):
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5c86002a245c0a0018d22838?mode=render =75%x)
+<br>
 
-1. **C>A** - Cytosine to Adenine
-2. **C>G** - Cytosine to Guanine
-3. **C>T** - Cytosine to Thymine
-4. **T>A** - Thymine to Adenine
-5. **T>C** - Thymine to Cytosine
-6. **T>G** - Thymine to Guanine
+Classification of single base substitutions (SBSs). The complete classification of an SBS includes both bases in the Watson-Crick base-pairing. To simplify this notation, one can use either the purine or the pyrimidine base. SigProfilerMatrixGenerator uses as a standard the pyrimidine classification
 
----
+| File | # of sequences |
+| ------ | ----------- |
+| *test.SBS6.all*  | Pyrimidine single nucleotide variants, C > {A, G, or T} and T > {A, G, or C} = **6** |
+| *test.SBS24.all* | *test.SBS6.all* (**6**) x **4** transcriptional bias categories = **24** |
+| *test.SBS96.all* | Possible starting nucleotides (**4**) x *test.SBS6.all* (**6**) x possible ending nucleotides (**4**)= **96** total combinations |
+| *test.SBS384.all* | *test.SBS96.all* (**96**) x **4** transcriptional bias categories = **384** |
+| *test.SBS1536.all* | Possible starting dinucleotides (**16**) x *test.SBS6.all* (**6**) x possible ending dinucleotides (**16**) = **1536** total combinations |
+| *test.SBS6124.all* | *test.SBS1536.all* (**1536**) x **4** transcriptional bias categories = **6144** |
 
-## SBS-24
+### SBS-6 ###
+The *test.SBS6.all* file contains the frequency of each of the 6 pyrimidine single nucleotide variants, C > {A, G, or T} and T > {A, G, or C} detected in each input sample. 
 
-SBS-24 extends SBS-6 by incorporating 4 transcriptional strand bias categories:
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cc798b800a81000175c54a3?mode=render =50%x)
+The above image is a screenshot of the generated file. Here, on line **3**, C>G corresponds to a C to G mutation and each column is the frequency of that mutation in a specific sample (corresponding column header). 
 
-| Category | Description |
-|----------|-------------|
-| **T** | Transcribed strand |
-| **U** | Untranscribed strand |
-| **B** | Bidirectional transcription |
-| **N** | Non-transcribed (intergenic) |
+### SBS-24 ###
+The *test.SBS24.all* file separates each of the 6 pyrimidine single nucleotide variants, C > {A, G, or T} and T > {A, G, or C} detected into the 4 transcriptional strand bias categories.
+6 x 4 = 24 total combinations
+    
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cc798c3d7dc3f00166d44c2?mode=render =50%x)
+The above image is a screenshot of the generated file. Here, on line **4**, T:C>T corresponds to a C to T mutation on the transcribed strand. 
+  
+### SBS-96 ###    
+The *test.SBS96.all* file contains all of the following the pyrimidine single nucleotide variants, N[{C > A, G, or T} or {T > A, G, or C}]N.  
 
-**Calculation:** 6 mutation types × 4 TSB categories = 24 sequences
+4 possible starting nucleotides x 6 pyrimidine variants x 4 ending nucleotides = 96 total combinations.
+    
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cc798dad7dc3f00176b012a?mode=render =50%x)
+The above image is a screenshot of the generated file. Here, on line **6**, A[C>G]A corresponds to a ACA mutating to AGA. 
+    
+### SBS-384 ###
+The *test.SBS384.all* file separates each nucleotide combination in the *test.SBS96.all* file into the 4 transcriptional strand bias categories. 
 
----
+96 sequences x 4 categories = 384 total combinations.
+    
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cc7992f00a81000175c550a?mode=render =50%x)
+The above image is a screenshot of the generated file. Here, on line **7**, T:A[C>G]C corresponds to a ACC mutating to AGC on the transcribed strand. 
+    
+### SBS-1536 ###
+The *test.SBS1536.all* file contains all of the following the pyrimidine single nucleotide variants, NN[{C > A, G, or T} or {T > A, G, or C}]NN. 
 
-## SBS-96
+16 (4x4) possible starting dinucleotides x 6 pyrimidine variants x 16 (4x4) possible ending dinucleotides = 1536 total combinations.
+    
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cc79937bbbd37001aa12d51?mode=render =50%x)
+The above image is a screenshot of the generated file. Here, on line **8**, AA[C>A]CG corresponds to a AACCG mutating to AAACG. 
+  
+### SBS-6144 ###
+The *test.SBS6144.all* file separates each nucleotide combination in the *test.SB1536.all* file into the 4 transcriptional strand bias categories. 
 
-SBS-96 is the standard mutational signature format, incorporating the immediate 5' and 3' sequence context.
+1536 sequences x 4 categories = 6144 total combinations.
 
-**Format:** `5'[X>Y]3'`
+![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cc79942bbbd37001aa12d5a?mode=render =50%x)
+The above image is a screenshot of the generated file. Here, on line **9**, T:AA[C>A]CT corresponds to a AACCT mutating to AAACT on the transcribed strand.
 
-Where:
-- 5' = One of 4 possible nucleotides (A, C, G, T)
-- X>Y = One of 6 mutation types
-- 3' = One of 4 possible nucleotides (A, C, G, T)
 
-**Calculation:** 4 (5' context) × 6 (mutations) × 4 (3' context) = 96 sequences
-
-**Example:** `A[C>T]G` represents a C>T mutation with A at the 5' position and G at the 3' position.
-
----
-
-## SBS-384
-
-SBS-384 extends SBS-96 by incorporating transcriptional strand bias.
-
-**Calculation:** 96 × 4 TSB categories = 384 sequences
-
-**Example:** `T:A[C>T]G` represents a C>T mutation in A_G context on the transcribed strand.
-
----
-
-## SBS-1536
-
-SBS-1536 extends the sequence context to include two nucleotides on each side.
-
-**Format:** `5'5'[X>Y]3'3'`
-
-**Calculation:** 4 × 4 × 6 × 4 × 4 = 1536 sequences
-
-**Example:** `AA[C>T]GG` represents a C>T mutation with AA at 5' and GG at 3'.
-
----
-
-## SBS-6144
-
-SBS-6144 combines SBS-1536 with transcriptional strand bias categories.
-
-**Calculation:** 1536 × 4 TSB categories = 6144 sequences
-
----
-
-## File Extensions
-
-| Extension | Description |
-|-----------|-------------|
-| `.all` | All mutations (default) |
-| `.exome` | Mutations mapped to exome regions |
-| `.region` | Mutations mapped to custom BED file regions |
-| `.chrX` | Chromosome-specific mutations |
+  [1]:  https://osf.io/s93d5/wiki/4.%20Using%20the%20Tool%20-%20Output/

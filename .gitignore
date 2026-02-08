@@ -13,6 +13,9 @@
 
 # pypi build folder
 /build/
+
+# MkDocs build output
+/site/
 SigProfilerMatrixGenerator/version.py
 SigProfilerMatrixGenerator/references/chromosomes/tsb/
 SigProfilerMatrixGenerator/references/vcf_files/*_bench/input/
@@ -27,3 +30,11 @@ SigProfilerMatrixGenerator/install.log
 SigProfilerMatrixGenerator/references/SV/example_output/*
 SigProfilerMatrixGenerator/references/SV/example_input/VCF/*.tsv
 SigProfilerMatrixGenerator/references/SV/example_input/VCF/*.bedpe
+
+# OSF mirror outputs
+/docs/osf_wiki/
+/docs/assets/osf/manifest.json
+/docs/assets/osf/missing_assets.json
+/
+  docs/assets/osf/*.html
+/docs/assets/osf/*.bin

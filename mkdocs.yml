@@ -8,6 +8,11 @@ repo_url: https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator
 
 docs_dir: docs
 
+use_directory_urls: false
+
+exclude_docs: |
+  osf_wiki/**
+
 theme:
   name: material
   palette:
@@ -35,6 +40,9 @@ theme:
 
 plugins:
   - search
+
+hooks:
+  - mkdocs_hooks.py
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -64,10 +72,12 @@ nav:
     - SV Input: Using-the-Tool-SV-Input.md
     - Output Overview: Using-the-Tool-Output.md
   - Output Reference:
+    - CNV Output: Output-CNV.md
     - SBS Output: Output-SBS.md
     - DBS Output: Output-DBS.md
     - ID Output: Output-ID.md
     - TSB Output: Output-TSB.md
+    - SV Output: Output-SV.md
     - VCF Files: Output-vcf_files.md
     - Plots: Output-Plots.md
 
@@ -75,3 +85,6 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator
+
+extra_css:
+  - assets/stylesheets/extra.css

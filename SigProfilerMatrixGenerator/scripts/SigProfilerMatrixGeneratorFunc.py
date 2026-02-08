@@ -110,7 +110,7 @@ def SigProfilerMatrixGeneratorFunc(
         raise Exception(
             "The specified genome "
             + reference_genome
-            + " has not been installed\nPlease refer to the SigProfilerMatrixGenerator README for installation instructions:\n\thttps://github.com/AlexandrovLab/SigProfilerMatrixGenerator"
+            + " has not been installed\nPlease refer to the SigProfilerMatrixGenerator README for installation instructions:\n\thttps://github.com/SigProfilerSuite/SigProfilerMatrixGenerator"
         )
 
     # Instantiates all of the required variables and references
@@ -1186,7 +1186,7 @@ def SigProfilerMatrixGeneratorFunc(
         raise Exception(
             "The specified genome "
             + reference_genome
-            + " has not been installed\nPlease refer to the SigProfilerMatrixGenerator README for installation instructions:\n\thttps://github.com/AlexandrovLab/SigProfilerMatrixGenerator"
+            + " has not been installed\nPlease refer to the SigProfilerMatrixGenerator README for installation instructions:\n\thttps://github.com/SigProfilerSuite/SigProfilerMatrixGenerator"
         )
 
     # Set base directory (for input/ and output/) based on user-provided output_directory if given
