@@ -265,12 +265,10 @@ def generateCNVMatrix(file_type, input_file, project, output_path, folder=False)
                     or (t == 0 and pd.isnull(a))
                 ):
                     LOH_status.append("homdel")
-                elif t >= 1 and (a == 0 or a == "NA" or pd.isnull(a)):
+                elif t == 1 or (t >= 1 and (a == 0 or a == "NA" or pd.isnull(a))):
                     LOH_status.append("LOH")
                 else:
                     LOH_status.append("het")
-                    if t == 1:
-                        print(t, a)
 
         elif file_type == "BATTENBERG":
             for acn, bcn in zip(df["nMaj1_A"], df["nMin1_A"]):
