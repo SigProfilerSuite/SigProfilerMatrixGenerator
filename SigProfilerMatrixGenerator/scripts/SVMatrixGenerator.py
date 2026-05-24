@@ -920,9 +920,9 @@ def annotateBedpe(sv_bedpe):
 
     check_exist_list = sample_bps["id"][sample_bps["is_clustered"]]
     sample_bps["is_clustered"][
-        np.in1d(sample_bps["id"].values, check_exist_list.values)
+        np.isin(sample_bps["id"].values, check_exist_list.values)
     ] = True
-    sv_bedpe["is_clustered"] = np.in1d(
+    sv_bedpe["is_clustered"] = np.isin(
         sv_bedpe["id"], sample_bps["id"][sample_bps["is_clustered"]]
     )
     sv_bedpe = processBEDPE(sv_bedpe)

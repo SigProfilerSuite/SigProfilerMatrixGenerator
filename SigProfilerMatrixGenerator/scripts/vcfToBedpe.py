@@ -8,6 +8,48 @@ import os
 
 # --------------------------------------
 # define functions
+def _infer_bnd_strands(alt):
+    """Infer BRASS-style breakend strands from VCF BND ALT notation."""
+    if "[" in alt:
+        bracket = "["
+    elif "]" in alt:
+        bracket = "]"
+    else:
+        return ".", "."
+
+    bracket_is_after_local_sequence = alt.find(bracket) > 0
+    if bracket == "]" and bracket_is_after_local_sequence:
+        return "+", "+"
+    if bracket == "[" and bracket_is_after_local_sequence:
+        return "-", "-"
+    if bracket == "]":
+        return "-", "+"
+    return "+", "-"
+
+
+def _classify_sv(svtype, chrom1, chrom2, strand1=".", strand2="."):
+    mapping = {
+        "DEL": "deletion",
+        "INS": "insertion",
+        "DUP": "tandem-duplication",
+        "CPX": "unknown",
+        "INV": "inversion",
+        "CNV": "unknown",
+        "CTX": "translocation",
+    }
+    if svtype != "BND":
+        return mapping.get(svtype, "unknown")
+    if str(chrom1) != str(chrom2):
+        return "translocation"
+    if strand1 == "+" and strand2 == "+":
+        return "deletion"
+    if strand1 == "-" and strand2 == "-":
+        return "tandem-duplication"
+    if (strand1 == "+" and strand2 == "-") or (strand1 == "-" and strand2 == "+"):
+        return "inversion"
+    return "unknown"
+
+
 class Vcf(object):
     def __init__(self):
         self.file_format = "VCFv4.2"
@@ -280,6 +322,7 @@ def vcfToBedpe(vcf_path, output_path):
     vcf = Vcf()
     in_header = True
     sample_list = []
+    processed_bnd_ids = set()
 
     for line in vcf_file:
         if in_header:
@@ -324,6 +367,11 @@ def vcfToBedpe(vcf_path, output_path):
         else:
             if "SECONDARY" in var.info:
                 continue
+            if var.var_id in processed_bnd_ids:
+                continue
+            processed_bnd_ids.add(var.var_id)
+            if "MATEID" in var.info:
+                processed_bnd_ids.update(var.info["MATEID"].split(","))
             sep = "["
             if sep not in var.alt:
                 sep = "]"
@@ -331,6 +379,8 @@ def vcfToBedpe(vcf_path, output_path):
             if len(r.findall(var.alt)) > 0:
                 chrom2, b2 = r.findall(var.alt)[0].split(":")
                 b2 = int(b2)
+            else:
+                b2 = b1
 
             if "EVENT" in var.info:
                 name = var.info["EVENT"]
@@ -341,6 +391,8 @@ def vcfToBedpe(vcf_path, output_path):
             strands = var.info["STRANDS"]
             o1 = strands[0]
             o2 = strands[1]
+        elif var.info["SVTYPE"] == "BND":
+            o1, o2 = _infer_bnd_strands(var.alt)
 
         span = [0, 0]
         if "CIPOS" in var.info:
@@ -390,22 +442,30 @@ def vcfToBedpe(vcf_path, output_path):
 
     l = list(df.columns)
 
-    cols = l[0:6] + [l[10]]
+    cols = l[0:6] + [l[8], l[9], l[10]]
     df = df[cols]
-    df.columns = ["chrom1", "start1", "end1", "chrom2", "start2", "end2", "svclass"]
+    df.columns = [
+        "chrom1",
+        "start1",
+        "end1",
+        "chrom2",
+        "start2",
+        "end2",
+        "strand1",
+        "strand2",
+        "svtype",
+    ]
 
     # deletion, translocation, tandem-duplication, or inversion
-    mapping = {
-        "DEL": "deletion",
-        "BND": "unknown",
-        "INS": "insertion",
-        "DUP": "tandem-duplication",
-        "CPX": "unknown",
-        "INV": "inversion",
-        "CNV": "unknown",
-        "CTX": "translocation",
-    }
-    df["svclass"] = df["svclass"].map(mapping)
+    df["svclass"] = [
+        _classify_sv(svtype, chrom1, chrom2, strand1, strand2)
+        for svtype, chrom1, chrom2, strand1, strand2 in zip(
+            df["svtype"], df["chrom1"], df["chrom2"], df["strand1"], df["strand2"]
+        )
+    ]
+    df = df[
+        ["chrom1", "start1", "end1", "chrom2", "start2", "end2", "svclass"]
+    ]
     df2 = df[df["svclass"] != "unknown"]  # classified confidently
     unclassified = df[df["svclass"] == "unknown"]  # not classified confidentlyprint
     dropped = int(df.shape[0] - df2.shape[0])
