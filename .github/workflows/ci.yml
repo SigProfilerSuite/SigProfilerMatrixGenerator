@@ -14,13 +14,29 @@ permissions:
 
 jobs:
   test:
+    name: Test (${{ matrix.python-version }}, pandas ${{ matrix.pandas-label }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.9', '3.12']
+        include:
+          - python-version: '3.10'
+            pandas-label: '2.2.3'
+            pandas-spec: 'pandas==2.2.3'
+          - python-version: '3.12'
+            pandas-label: '2.2.3'
+            pandas-spec: 'pandas==2.2.3'
+          - python-version: '3.12'
+            pandas-label: '3.x'
+            pandas-spec: 'pandas>=3,<4'
+          - python-version: '3.14'
+            pandas-label: '3.x'
+            pandas-spec: 'pandas>=3,<4'
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -30,6 +46,10 @@ jobs:
     - name: Upgrade pip, setuptools, and packaging
       run: |
         python -m pip install --upgrade pip setuptools packaging
+
+    - name: Pin pandas ${{ matrix.pandas-label }}
+      run: |
+        python -m pip install --upgrade "${{ matrix.pandas-spec }}"
     
     - name: Cache src directory
       uses: actions/cache@v4
@@ -62,11 +82,13 @@ jobs:
         python3 test.py -t GRCh37
     
     - name: Build and push Docker image
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == '3.12'
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == '3.12' && matrix.pandas-label == '3.x'
       run: |
         echo "Starting Docker deployment to GHCR for sigprofilersuite..."
         
-        VERSION_TAG=$(grep "VERSION = " setup.py | cut -d'"' -f2)
+        python -m pip install --upgrade setuptools_scm
+        VERSION_TAG=$(python -m setuptools_scm)
+        VERSION_TAG=${VERSION_TAG//+/-}
         
         # Get the repository name and convert it to lowercase
         REPO_NAME=$(basename ${{ github.repository }} | tr '[:upper:]' '[:lower:]')

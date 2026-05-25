@@ -1,6 +1,5 @@
 import pathlib
 
-import pkg_resources
 import pytest
 
 import SigProfilerMatrixGenerator
@@ -10,10 +9,7 @@ from SigProfilerMatrixGenerator.scripts import ref_install
 class TestReferenceDir:
     @pytest.fixture
     def package_reference_dir(self):
-        result = pathlib.Path(
-            pkg_resources.resource_filename(SigProfilerMatrixGenerator.__name__, "")
-        )
-        return result
+        return pathlib.Path(SigProfilerMatrixGenerator.__file__).parent.resolve()
 
     @pytest.fixture
     def default_fasta_dir(self, package_reference_dir):
@@ -27,7 +23,6 @@ class TestReferenceDir:
 
     def test_path_no_secondary_chromosome_install_dir(self, package_reference_dir):
         refdir = ref_install.reference_dir()
-        # using deprecated pkg_resources for compatibility with python 3.8
         observed = refdir.path
         assert package_reference_dir == observed
         # check path is absolute

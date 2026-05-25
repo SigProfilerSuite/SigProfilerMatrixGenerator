@@ -16,7 +16,7 @@
 
 # MkDocs build output
 /site/
-SigProfilerMatrixGenerator/version.py
+SigProfilerMatrixGenerator/_version.py
 SigProfilerMatrixGenerator/references/chromosomes/tsb/
 SigProfilerMatrixGenerator/references/vcf_files/*_bench/input/
 SigProfilerMatrixGenerator/references/vcf_files/*_bench/output/

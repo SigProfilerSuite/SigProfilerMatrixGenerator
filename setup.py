@@ -1,63 +1,39 @@
-import os
-import shutil
+from pathlib import Path
 
-from setuptools import setup
-
-VERSION = "1.3.6"
-
-# remove the dist folder first if exists
-if os.path.exists("dist"):
-    shutil.rmtree("dist")
+from setuptools import find_namespace_packages, setup
 
 
-def readme():
-    this_directory = os.path.abspath(os.path.dirname(__file__))
-    with open(os.path.join(this_directory, "README.md"), encoding="latin-1") as f:
-        long_description = f.read()
-        return long_description
+LONG_DESCRIPTION = Path("README.md").read_text(encoding="utf-8")
 
+INSTALL_REQUIRES = [
+    "matplotlib>=2.2.2",
+    "sigProfilerPlotting>=1.4.1",
+    "statsmodels>=0.9.0",
+    "numpy>=2.0.0",
+    "pandas>=2.0.0",
+    "scipy>=1.12.0",
+]
 
-def write_version_py(filename="SigProfilerMatrixGenerator/version.py"):
-    # Copied from numpy setup.py
-    cnt = """
-# THIS FILE IS GENERATED FROM SIGPROFILEMATRIXGENERATOR SETUP.PY
-short_version = '%(version)s'
-version = '%(version)s'
-Update = 'v1.3.6: Add automated Docker build and publish pipeline'
+VERSION_TEMPLATE = "version = '{version}'\n"
 
-	"""
-    fh = open(filename, "w")
-    fh.write(
-        cnt
-        % {
-            "version": VERSION,
-        }
-    )
-    fh.close()
-
-
-write_version_py()
 
 setup(
     name="SigProfilerMatrixGenerator",
-    version=VERSION,
+    use_scm_version={
+        "write_to": "SigProfilerMatrixGenerator/_version.py",
+        "write_to_template": VERSION_TEMPLATE,
+        "fallback_version": "0+unknown",
+    },
     description="SigProfiler matrix generator tool",
-    long_description=readme(),
+    long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     url="https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator.git",
     author="Erik Bergstrom",
     author_email="ebergstr@eng.ucsd.edu",
     license="UCSD",
-    packages=["SigProfilerMatrixGenerator"],
+    packages=find_namespace_packages(include=["SigProfilerMatrixGenerator*"]),
     python_requires=">=3.9",
-    install_requires=[
-        "matplotlib>=2.2.2",
-        "sigProfilerPlotting>=1.4.1",
-        "statsmodels>=0.9.0",
-        "numpy>=2.0.0",
-        "pandas>=2.0.0",
-        "scipy>=1.12.0",
-    ],
+    install_requires=INSTALL_REQUIRES,
     entry_points={
         "console_scripts": [
             "SigProfilerMatrixGenerator=SigProfilerMatrixGenerator.scripts.SigProfilerMatrixGenerator_CLI:main_function",
