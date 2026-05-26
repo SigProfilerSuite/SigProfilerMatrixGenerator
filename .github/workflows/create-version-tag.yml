@@ -1,0 +1,88 @@
+name: Create version tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without leading v, for example 1.3.8"
+        required: true
+        type: string
+      target_branch:
+        description: "Branch commit to tag"
+        required: true
+        default: "master"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  create-tag:
+    name: Create annotated release tag
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+      TAG_NAME: v${{ inputs.version }}
+      TARGET_BRANCH: ${{ inputs.target_branch }}
+      RELEASE_TAG_TOKEN: ${{ secrets.RELEASE_TAG_TOKEN }}
+
+    steps:
+      - name: Validate inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${VERSION}" == v* ]]; then
+            echo "Enter the version without the leading v, for example 1.3.8."
+            exit 1
+          fi
+
+          if ! [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must use the form MAJOR.MINOR.PATCH, for example 1.3.8."
+            exit 1
+          fi
+
+          if [[ -z "${RELEASE_TAG_TOKEN}" ]]; then
+            echo "Missing RELEASE_TAG_TOKEN secret. This workflow needs a PAT or GitHub App token so the pushed tag triggers release.yml."
+            exit 1
+          fi
+
+      - name: Check out target branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify tag does not already exist
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
+            echo "Tag ${TAG_NAME} already exists locally."
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
+            echo "Tag ${TAG_NAME} already exists on origin."
+            exit 1
+          fi
+
+      - name: Create annotated tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG_NAME}" -m "SigProfilerMatrixGenerator ${TAG_NAME}"
+
+          echo "Created ${TAG_NAME} at $(git rev-parse HEAD)."
+
+      - name: Push tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git push "https://x-access-token:${RELEASE_TAG_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "${TAG_NAME}"
