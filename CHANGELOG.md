@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+- Added support for the T2T-CHM13v2.0 human reference genome (CHM13-T2T), nuclear chromosomes only (1–22, X, Y), WGS matrices, distributed via the AlexandrovLab FTP.
+
 ## [1.3.6] - 2025-10-28
 
 ### Added

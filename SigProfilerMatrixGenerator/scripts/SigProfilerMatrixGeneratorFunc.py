@@ -1597,6 +1597,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -1729,6 +1730,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -1880,6 +1882,7 @@ def SigProfilerMatrixGeneratorFunc(
                             for genome in [
                                 "GRCh37",
                                 "GRCh38",
+                                "CHM13-T2T",
                                 "dog",
                                 "ebv",
                                 "mm10",
@@ -2013,6 +2016,7 @@ def SigProfilerMatrixGeneratorFunc(
                             for genome in [
                                 "GRCh37",
                                 "GRCh38",
+                                "CHM13-T2T",
                                 "dog",
                                 "ebv",
                                 "mm10",
@@ -2240,6 +2244,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2370,6 +2375,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2502,6 +2508,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2637,6 +2644,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2768,6 +2776,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",

@@ -223,7 +223,7 @@ def BED_sorting(bed_file_path, genome):
         ],
         **{
             g: common_chrom_list
-            for g in ["GRCh37", "GRCh38", "dog", "ebv", "mm10", "mm9", "mm39", "rn6"]
+            for g in ["GRCh37", "GRCh38", "CHM13-T2T", "dog", "ebv", "mm10", "mm9", "mm39", "rn6"]
         },
     }
 
