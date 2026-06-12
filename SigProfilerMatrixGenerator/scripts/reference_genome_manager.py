@@ -126,7 +126,7 @@ CHECKSUMS = {
         "21": "460c01106a2402a25591a625c6a8ff73",
         "22": "8d3aa47b4456add9d0b78cb70b155fda",
         "X": "13dea22db0695374c214c15211c65424",
-        "Y": "2323d989382a60e2e4a2e60c7cd4c9a4",
+        "Y": "3a5cc4f01eaa1eef9a34f9d5bd09ca3b",
     },
     "GRCh38_havana": {
         "1": "c4ef4ee14a4f0f7b319e9ed01f2a9742",
