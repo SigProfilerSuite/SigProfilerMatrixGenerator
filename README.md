@@ -29,7 +29,7 @@ The framework is written in PYTHON, however, it also requires the following soft
   * WGET                   version 1.9  or RSYNC if you have a firewall
 
 By default the installation process will save the FASTA files for all chromosomes for the default genome
-assemblies (GRCh37, GRCH38, mm10, mm9, rn6). As a result, ~3 Gb of storage must be available for the downloads for each genome.
+assemblies (CHM13-T2T, GRCh37, GRCh38, mm10, mm9, rn6). As a result, ~3 Gb of storage must be available for the downloads for each genome.
 
 **QUICK START GUIDE**
 
