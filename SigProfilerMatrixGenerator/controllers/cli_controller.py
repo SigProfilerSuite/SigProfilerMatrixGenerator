@@ -60,7 +60,8 @@ def parse_arguments_install(args: List[str]) -> argparse.Namespace:
         "--local_genome",
         help="""
             Install an offline reference genome downloaded from the Alexandrov Lab's FTP server.
-            Provide the absolute path to the locally-stored genome file.
+            Provide the absolute path to the directory containing the locally-stored
+            <genome>.tar.gz file.
             For downloads, visit AlexandrovLab's ftp server:
             ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerMatrixGenerator/
             """,
