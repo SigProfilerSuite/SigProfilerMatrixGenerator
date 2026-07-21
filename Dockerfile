@@ -15,8 +15,10 @@ ARG COMMIT_SHA=master
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Install the package directly from the specific commit on GitHub
-RUN pip3 install 'git+https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator.git@'${COMMIT_SHA}
+# Upgrade the Ubuntu packaging toolchain before building the project.
+RUN python3 -m pip install --upgrade pip "setuptools>=69" wheel && \
+    python3 -m pip install \
+      "git+https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator.git@${COMMIT_SHA}"
 
 # Create a non-root user
 RUN useradd -m -s /bin/bash spm_user
