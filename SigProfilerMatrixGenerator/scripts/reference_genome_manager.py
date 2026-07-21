@@ -348,6 +348,10 @@ CHECKSUMS = {
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
 
 
+class GenomeDownloadError(RuntimeError):
+    """Raised when a reference genome archive cannot be downloaded or installed."""
+
+
 class ReferenceGenomeManager:
     """
     A class for downloading and managing reference genomes.
@@ -370,38 +374,77 @@ class ReferenceGenomeManager:
 
         file_name = f"{genome_name}.tar.gz"
         local_filepath = self.reference_dir.get_tsb_dir() / file_name
+        local_filepath.parent.mkdir(parents=True, exist_ok=True)
+
+        downloaded = False
+        failures = []
 
         # First try to download using FTP
         for server_key in FTP_SERVERS:
             server_info = FTP_SERVERS[server_key]
             try:
+                self._remove_partial_archive(local_filepath)
                 self._download_via_ftplib(
                     server_info["address"],
                     server_info["path"],
                     file_name,
                     local_filepath,
                 )
-                logging.info(f"Downloaded {genome_name} from {server_key} using FTP.")
-                break  # Exit the loop if download is successful
+                if self._downloaded_archive_exists(local_filepath):
+                    logging.info(
+                        f"Downloaded {genome_name} from {server_key} using FTP."
+                    )
+                    downloaded = True
+                    break  # Exit the loop if download is successful
+                failures.append(
+                    f"{server_key} FTP: download completed but did not create "
+                    f"{local_filepath}."
+                )
             except ftplib.all_errors as e:
+                failures.append(f"{server_key} FTP: {e}")
                 logging.info(f"Attempt to download from {server_key} failed: {e}")
+            if downloaded:
+                break
             if shutil.which("curl"):
                 try:
+                    self._remove_partial_archive(local_filepath)
                     self._download_via_curl(
                         server_info["address"],
                         server_info["path"],
                         file_name,
                         local_filepath,
                     )
-                    logging.info(f"Downloaded {genome_name} using curl.")
-                    break  # Exit the loop if download is successful
-                except (subprocess.CalledProcessError, KeyboardInterrupt) as e:
+                    if self._downloaded_archive_exists(local_filepath):
+                        logging.info(f"Downloaded {genome_name} using curl.")
+                        downloaded = True
+                        break  # Exit the loop if download is successful
+                    failures.append(
+                        f"{server_key} curl: download completed but did not create "
+                        f"{local_filepath}."
+                    )
+                except (subprocess.CalledProcessError, OSError) as e:
+                    failures.append(f"{server_key} curl: {e}")
                     logging.error(f"Curl download failed with error: {e}")
             else:
+                failures.append(f"{server_key} curl: curl is not available.")
                 logging.error("Curl is not available. Unable to download the file.")
-                return
 
-        self._unzip_file(local_filepath)
+        if not downloaded:
+            self._remove_partial_archive(local_filepath)
+            raise GenomeDownloadError(
+                self._format_download_failure_message(file_name, failures)
+            )
+
+        try:
+            self._unzip_file(local_filepath)
+        except (tarfile.TarError, OSError) as e:
+            self._remove_partial_archive(local_filepath)
+            raise GenomeDownloadError(
+                f"Downloaded archive {local_filepath} could not be extracted. "
+                "Please retry the installation; if the problem persists, manually "
+                "download a fresh archive and install it with --local_genome in the "
+                "CLI or offline_files_path in the Python API."
+            ) from e
         local_filepath.unlink()
         logging.info(f"{genome_name} has been successfully installed.")
 
@@ -568,16 +611,57 @@ class ReferenceGenomeManager:
         Helper function for download_genome.
         """
         try:
-            url = f"ftp://{ftp_server}/{ftp_path}/{filename}"
-            command = ["curl", "-o", str(local_filepath), url]
+            local_filepath.parent.mkdir(parents=True, exist_ok=True)
+            url = f"ftp://{ftp_server}/{ftp_path.rstrip('/')}/{filename}"
+            command = [
+                "curl",
+                "--fail",
+                "--location",
+                "--retry",
+                "3",
+                "--connect-timeout",
+                "30",
+                "-o",
+                str(local_filepath),
+                url,
+            ]
             subprocess.run(command, check=True)
         except subprocess.CalledProcessError as e:
             logging.error(f"Curl download failed with error: {e}.")
             raise
 
+    def _downloaded_archive_exists(self, local_filepath):
+        return local_filepath.exists() and local_filepath.stat().st_size > 0
+
+    def _remove_partial_archive(self, local_filepath):
+        try:
+            local_filepath.unlink()
+        except FileNotFoundError:
+            pass
+
+    def _format_download_failure_message(self, file_name, failures):
+        message = [
+            f"Unable to download {file_name} from the configured reference genome mirrors.",
+        ]
+        if failures:
+            message.append("Download attempts failed with:")
+            message.extend(f"  - {failure}" for failure in failures)
+        message.append(
+            "Please check FTP/network access or manually download the archive from "
+            "ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerMatrixGenerator/ "
+            "and install it with --local_genome in the CLI or offline_files_path in "
+            "the Python API. Both options expect the directory containing the archive."
+        )
+        return "\n".join(message)
+
     def _unzip_file(self, file_path):
         with tarfile.open(file_path, "r:gz") as tar:
-            tar.extractall(path=self.reference_dir.get_tsb_dir())
+            extraction_options = {}
+            if hasattr(tarfile, "data_filter"):
+                extraction_options["filter"] = "data"
+            tar.extractall(
+                path=self.reference_dir.get_tsb_dir(), **extraction_options
+            )
 
     def _verify_checksum(self, file_path, checksum):
         """
