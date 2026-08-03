@@ -163,6 +163,14 @@ def parse_arguments_sv_matrix_generator(args: List[str]) -> argparse.Namespace:
     parser.add_argument("input_dir", help="The directory containing the input files.")
     parser.add_argument("project", help="The name of the project.")
     parser.add_argument(
+        "--plot",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=False,
+        help="Integrates with SigProfilerPlotting to output matrix visualization. Default is False.",
+    )
+    parser.add_argument(
         "output_dir", help="The directory where the output matrix will be stored."
     )
 
@@ -246,6 +254,7 @@ class CliController:
             input_dir=parsed_args.input_dir,
             project=parsed_args.project,
             output_dir=parsed_args.output_dir,
+            plot=parsed_args.plot,
         )
 
     def dispatch_cnv_matrix_generator(self, user_args: List[str]) -> None:
