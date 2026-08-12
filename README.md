@@ -205,7 +205,7 @@ SigProfilerMatrixGenerator cnv_matrix_generator BATTENBERG ./SigProfilerMatrixGe
 This tool currently supports the following genomes:
 
 T2T-CHM13v2.0 [CHM13-T2T] (Telomere-to-Telomere Consortium CHM13 assembly v2.0), INSDC
-Assembly GCA_009914755.4. Nuclear chromosomes only (1–22, X, Y; no mitochondrion). WGS matrices supported.
+Assembly GCA_009914755.4. Nuclear chromosomes only (1–22, X, Y; no mitochondrion). WGS and exome matrices supported. The exome interval list is annotation-derived (merged CDS features from NCBI RefSeq annotation release GCF_009914755.1-RS_2025_08) rather than a capture-kit definition, so its exome matrices are not directly comparable to the GRCh37/GRCh38 ones; see docs/Currently-Supported-Genomes.md.
 
 GRCh38.p12 [GRCh38] (Genome Reference Consortium Human Reference 38), INSDC
 Assembly GCA_000001405.27, Dec 2013. Released July 2014. Last updated January 2018. This genome was downloaded from ENSEMBL database version 93.38.

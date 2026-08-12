@@ -7,7 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
-- Added support for the T2T-CHM13v2.0 human reference genome (CHM13-T2T), nuclear chromosomes only (1–22, X, Y), WGS matrices, distributed via the AlexandrovLab FTP.
+- Added support for the T2T-CHM13v2.0 human reference genome (CHM13-T2T), nuclear chromosomes only (1–22, X, Y), distributed via the AlexandrovLab FTP.
+- Added an exome interval list for CHM13-T2T, so `exome=True` is supported alongside WGS. It is annotation-derived (union of all CDS features in NCBI RefSeq annotation release `GCF_009914755.1-RS_2025_08`, merged; 213,010 intervals over 36.4 Mb) rather than a capture-kit definition, so CHM13-T2T exome matrices are not directly comparable to GRCh38 exome matrices. See `docs/Currently-Supported-Genomes.md` for the full derivation.
 
 ### Changed
 - `exome=True` now fails immediately with an actionable message naming the missing interval list and the genomes that do support exome downsampling, instead of raising a bare `FileNotFoundError` after every chromosome has already been parsed.

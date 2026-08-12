@@ -14,6 +14,10 @@ These are the currently supported genomes:
 - [GRCh38.p12 [GRCh38]][6] <br>
 *GRCh38.p12 [GRCh38] (Genome Reference Consortium Human Reference 38), INSDC Assembly GCA_000001405.27, Dec 2013. Released July 2014. Last updated January 2018. <br>This genome was downloaded from ENSEMBL database version 93.38.*
 
+- [T2T-CHM13v2.0 [CHM13-T2T]][16] <br>
+*T2T-CHM13v2.0 [CHM13-T2T] (Telomere-to-Telomere consortium complete human reference), INSDC Assembly GCA_009914755.4, Jan 2022. Nuclear chromosomes only (1-22, X, Y); the mitochondrial genome is not included.*
+<br>*Exome regions: unlike the capture-kit definitions used for GRCh37/GRCh38, the CHM13-T2T exome interval list is annotation-derived. It is the union of all CDS features in NCBI RefSeq annotation release `GCF_009914755.1-RS_2025_08` (annotation date 2025-08-01), mapped from RefSeq accessions to chromosome names via `GCF_009914755.1_T2T-CHM13v2.0_assembly_report.txt`, restricted to chromosomes 1-22/X/Y, then merged with `bedtools merge`. Result: 213,010 non-overlapping intervals covering 36.4 Mb (mean 171 bp), against 215,152 intervals / 49.7 Mb for the GRCh38 Agilent SureSelect list. CDS was chosen over the wider exon-based sets (mRNA exons 102.4 Mb, all exons 153.7 Mb) because it stays closest to the interval granularity of the other human genomes; CDS features from predicted (XM_) models are included as well as curated (NM_) ones, so genes annotated only in regions newly resolved by T2T are not dropped. Exome matrices for CHM13-T2T are therefore not directly comparable to GRCh38 exome matrices. The list can be regenerated exactly with `SigProfilerMatrixGenerator/scripts/build_exome_interval_list.py --feature CDS`.*
+
 - [GRCh37.p13 [GRCh37]][7] <br>
 *GRCh37.p13 [GRCh37] (Genome Reference Consortium Human Reference 37), INSDC Assembly GCA_000001405.14, Feb 2009. Released April 2011. Last updated September 2013. <br>This genome was downloaded from ENSEMBL database version 93.37.*
 
@@ -57,3 +61,4 @@ These are the currently supported genomes:
   [13]: https://www.ncbi.nlm.nih.gov/nuccore/82503188/
   [14]: http://uswest.ensembl.org/Canis_lupus_familiaris/Location/Genome?r=1
   [15]: http://uswest.ensembl.org/Caenorhabditis_elegans/Location/Genome?db=core;g=WBGene00001663;r=V:11174567-11177559
+  [16]: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_009914755.1/
