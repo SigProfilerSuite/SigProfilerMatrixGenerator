@@ -113,6 +113,25 @@ def SigProfilerMatrixGeneratorFunc(
             + " has not been installed\nPlease refer to the SigProfilerMatrixGenerator README for installation instructions:\n\thttps://github.com/SigProfilerSuite/SigProfilerMatrixGenerator"
         )
 
+    # 3. Check the exome interval list up front, rather than failing with a bare
+    # FileNotFoundError in exome_check() after every chromosome has been parsed
+    if exome:
+        exome_interval_list = reference_dir.get_exome_interval_list(reference_genome)
+        if not exome_interval_list.exists():
+            supported = sorted(
+                subdir.name
+                for subdir in reference_dir.get_exome_dir().iterdir()
+                if (subdir / (subdir.name + "_exome.interval_list")).exists()
+            )
+            raise FileNotFoundError(
+                "exome=True is not supported for the genome "
+                + reference_genome
+                + ": no exome interval list was found at\n\t"
+                + str(exome_interval_list)
+                + "\nGenomes with exome support: "
+                + ", ".join(supported)
+            )
+
     # Instantiates all of the required variables and references
     if not os.path.exists(path_to_input_files):
         print(
