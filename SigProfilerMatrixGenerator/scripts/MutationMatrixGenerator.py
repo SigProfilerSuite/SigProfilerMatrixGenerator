@@ -223,7 +223,7 @@ def BED_sorting(bed_file_path, genome):
         ],
         **{
             g: common_chrom_list
-            for g in ["GRCh37", "GRCh38", "dog", "ebv", "mm10", "mm9", "mm39", "rn6"]
+            for g in ["GRCh37", "GRCh38", "CHM13-T2T", "dog", "ebv", "mm10", "mm9", "mm39", "rn6"]
         },
     }
 
@@ -2203,16 +2203,8 @@ def exome_check(
     initial = True
     udpate_chrom = False
     reference_dir = ref_install.reference_dir()
-    ref_dir = str(reference_dir.path)
 
-    exome_file = (
-        ref_dir
-        + "/references/chromosomes/exome/"
-        + genome
-        + "/"
-        + genome
-        + "_exome.interval_list"
-    )
+    exome_file = str(reference_dir.get_exome_interval_list(genome))
 
     exome_output_path = output_matrix + "vcf_files/" + context + "/"
     if context == "ID":

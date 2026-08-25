@@ -53,7 +53,7 @@ def parse_arguments_install(args: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Install reference genome files.")
     parser.add_argument(
         "genome",
-        help="The reference genome to install. Supported genomes include {c_elegans, dog, ebv, GRCh37, GRCh38, mm9, mm10, mm39, rn6, rn7, yeast}.",
+        help="The reference genome to install. Supported genomes include {c_elegans, CHM13-T2T, dog, ebv, GRCh37, GRCh38, mm9, mm10, mm39, rn6, rn7, yeast}.",
     )
     parser.add_argument(
         "-l",
@@ -86,7 +86,7 @@ def parse_arguments_matrix_generator(args: List[str]) -> argparse.Namespace:
     parser.add_argument("project", help="The name of the project.")
     parser.add_argument(
         "reference_genome",
-        help="The name of the reference genome. Supported values {c_elegans, dog, ebv, GRCh37, GRCh38, mm9, mm10, mm39, rn6, rn7, yeast}.",
+        help="The name of the reference genome. Supported values {c_elegans, CHM13-T2T, dog, ebv, GRCh37, GRCh38, mm9, mm10, mm39, rn6, rn7, yeast}.",
     )
     parser.add_argument("path_to_input_files", help="The path to the input files.")
 

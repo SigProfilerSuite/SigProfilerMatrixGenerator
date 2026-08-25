@@ -1,4 +1,6 @@
 import os
+import warnings
+
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
@@ -10,10 +12,11 @@ from SigProfilerMatrixGenerator.scripts import (
 
 reference_dir = ref_install.reference_dir()
 TEST_INPUT_DIR = str(reference_dir.path / "references/tests/") + "/"
-BED_FILE_DIR = str(reference_dir.path / "references/chromosomes/exome") + "/"
+BED_FILE_DIR = str(reference_dir.get_exome_dir()) + "/"
 FILE_PREF = "test_example"
 TEST_GENOMES = [
     "c_elegans",
+    "CHM13-T2T",
     "dog",
     "GRCh37",
     "GRCh38",
@@ -45,6 +48,12 @@ def load_and_compare(matrices, solution_dir, exome=False, bed_file=True):
         if os.path.exists(solution_file):
             solution_df = pd.read_csv(solution_file, sep="\t", index_col=0)
             assert_frame_equal(matrices[key], solution_df)
+        else:
+            # Nothing to compare against: warn so that a genome without solution
+            # files is not mistaken for a passing test
+            warnings.warn(
+                "No solution file found, skipping comparison: " + solution_file
+            )
 
 
 def test_one_genome(genome, volume, exome=False, bed_file=True):
@@ -69,9 +78,7 @@ def test_one_genome(genome, volume, exome=False, bed_file=True):
             os.path.join(TEST_INPUT_DIR + "bed_file", genome),
             plot=False,
             exome=False,
-            bed_file=os.path.join(
-                BED_FILE_DIR + genome + "/" + genome + "_exome.interval_list"
-            ),
+            bed_file=str(reference_dir.get_exome_interval_list(genome)),
             chrom_based=False,
             tsb_stat=False,
             seqInfo=False,
@@ -101,7 +108,10 @@ def test_one_genome(genome, volume, exome=False, bed_file=True):
         solution_dir = os.path.join(TEST_INPUT_DIR, f"bed_file/solutions/{genome}/")
     else:
         solution_dir = os.path.join(TEST_INPUT_DIR, f"WGS/solutions/{genome}/")
-    load_and_compare(matrices, solution_dir)
+    # Pass the flags through: load_and_compare defaults to bed_file=True, so
+    # without them the WGS and exome paths looked for ".region" solution files in
+    # the WGS/WES solution directories and silently found nothing.
+    load_and_compare(matrices, solution_dir, exome=exome, bed_file=bed_file)
 
 
 def install_genomes(genome_install_list):
