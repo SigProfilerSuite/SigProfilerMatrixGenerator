@@ -108,7 +108,10 @@ def test_one_genome(genome, volume, exome=False, bed_file=True):
         solution_dir = os.path.join(TEST_INPUT_DIR, f"bed_file/solutions/{genome}/")
     else:
         solution_dir = os.path.join(TEST_INPUT_DIR, f"WGS/solutions/{genome}/")
-    load_and_compare(matrices, solution_dir)
+    # Pass the flags through: load_and_compare defaults to bed_file=True, so
+    # without them the WGS and exome paths looked for ".region" solution files in
+    # the WGS/WES solution directories and silently found nothing.
+    load_and_compare(matrices, solution_dir, exome=exome, bed_file=bed_file)
 
 
 def install_genomes(genome_install_list):
