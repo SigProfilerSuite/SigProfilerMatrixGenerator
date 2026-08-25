@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+- Corrected TSB reference generation at inclusive transcript ends and across
+  nested or overlapping transcripts on either strand.
+
 ## [1.3.6] - 2025-10-28
 
 ### Added
