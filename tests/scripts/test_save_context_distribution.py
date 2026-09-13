@@ -80,3 +80,26 @@ def test_exome_distribution_uses_same_opportunities_and_bias(tmp_path):
     counts = read_counts(output_dir / "context_counts_fixture_24_exome.csv")
     assert counts["U:T"]["1"] == 1
     assert counts["T:C"]["2"] == 1
+
+
+def test_binary_whitespace_bytes_at_file_boundaries_are_not_removed(tmp_path):
+    chromosome_dir = tmp_path / "chromosomes"
+    output_dir = tmp_path / "output"
+    chromosome_dir.mkdir()
+    output_dir.mkdir()
+    # Bytes 10 and 9 are valid TSB/base encodings. Placing them at the file
+    # boundaries catches regressions that call strip() on binary chromosome data.
+    (chromosome_dir / "1.txt").write_bytes(bytes([10, 1, 5, 1, 1, 9]))
+    output = output_dir / "context_distribution_fixture_24_male.csv"
+
+    contexts.context_distribution(
+        "24",
+        str(output),
+        f"{chromosome_dir}/",
+        ["1"],
+        TSB_REF,
+        "fixture",
+    )
+
+    counts = read_counts(output_dir / "context_counts_fixture_24.csv")
+    assert sum(channel_counts["1"] for channel_counts in counts.values()) == 2
