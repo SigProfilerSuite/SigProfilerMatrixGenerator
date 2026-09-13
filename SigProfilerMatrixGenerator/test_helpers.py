@@ -26,6 +26,8 @@ TEST_GENOMES = [
 
 
 def load_and_compare(matrices, solution_dir, exome=False, bed_file=True):
+    if not matrices:
+        raise AssertionError("No matrices were generated for comparison.")
     for key in matrices:
         # Determine the solution file path based on the exome flag
         if exome:
@@ -42,9 +44,10 @@ def load_and_compare(matrices, solution_dir, exome=False, bed_file=True):
             )
 
         # Load the solution file and compare with the generated matrix
-        if os.path.exists(solution_file):
-            solution_df = pd.read_csv(solution_file, sep="\t", index_col=0)
-            assert_frame_equal(matrices[key], solution_df)
+        if not os.path.isfile(solution_file):
+            raise FileNotFoundError(f"Required solution file not found: {solution_file}")
+        solution_df = pd.read_csv(solution_file, sep="\t", index_col=0)
+        assert_frame_equal(matrices[key], solution_df)
 
 
 def test_one_genome(genome, volume, exome=False, bed_file=True):
@@ -101,7 +104,9 @@ def test_one_genome(genome, volume, exome=False, bed_file=True):
         solution_dir = os.path.join(TEST_INPUT_DIR, f"bed_file/solutions/{genome}/")
     else:
         solution_dir = os.path.join(TEST_INPUT_DIR, f"WGS/solutions/{genome}/")
-    load_and_compare(matrices, solution_dir)
+    # Forward the modes so WGS/WES do not look for BED (.region) solutions.
+    # This correction was also identified by Luuk Harbers in PR #250.
+    load_and_compare(matrices, solution_dir, exome=exome, bed_file=bed_file)
 
 
 def install_genomes(genome_install_list):

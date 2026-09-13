@@ -348,6 +348,22 @@ CHECKSUMS = {
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
 
 
+REFERENCE_ASSEMBLIES = {
+    "GRCh37_havana": "GRCh37",
+    "GRCh38_havana": "GRCh38",
+    "mm10_havana": "mm10",
+}
+
+
+def get_reference_assembly(reference_name):
+    """Resolve explicitly registered shared resources, never guess from a suffix."""
+    return REFERENCE_ASSEMBLIES.get(reference_name, reference_name)
+
+
+class ReferenceInstallationError(RuntimeError):
+    """Raised when a requested reference is missing, incomplete, or incompatible."""
+
+
 class GenomeDownloadError(RuntimeError):
     """Raised when a reference genome archive cannot be downloaded or installed."""
 
@@ -499,9 +515,38 @@ class ReferenceGenomeManager:
                 self.reference_dir.get_tsb_dir() / genome_name / file_with_extension
             )
 
-            if not file_path.exists() or not self._verify_checksum(file_path, checksum):
+            if not file_path.is_file() or not self._verify_checksum(file_path, checksum):
                 return False
         return True
+
+    def installation_error_message(self, genome_name):
+        """Explain a failed verification without changing any installed files."""
+        if genome_name not in CHECKSUMS:
+            return (
+                f"Reference genome {genome_name!r} is not registered in this "
+                "version of SigProfilerMatrixGenerator. Choose a supported reference "
+                "or register the custom genome and its chromosome checksums."
+            )
+
+        directory = self.reference_dir.get_tsb_dir() / genome_name
+        expected_files = [directory / f"{chrom}.txt" for chrom in CHECKSUMS[genome_name]]
+        present = [path for path in expected_files if path.is_file()]
+        if not present:
+            problem = f"Reference genome {genome_name!r} has not been installed at {directory}."
+        elif len(present) != len(expected_files):
+            problem = f"Reference genome {genome_name!r} is incomplete at {directory}."
+        else:
+            problem = (
+                f"Reference genome {genome_name!r} is present at {directory}, but "
+                "its files do not match the checksums expected by this software. "
+                "The reference may be a different revision or the files may be damaged."
+            )
+        return (
+            problem + " Existing files have not been removed or replaced. "
+            "To reproduce an older analysis, use its matching software and reference "
+            "versions. Otherwise, preserve the existing reference before reinstalling "
+            f"the requested reference {genome_name!r}."
+        )
 
     def print_available_genomes_report(self):
         """
@@ -544,12 +589,12 @@ class ReferenceGenomeManager:
                 self.reference_dir.get_tsb_dir() / genome_name / file_with_extension
             )
 
-            if file_path.exists():
+            if file_path.is_file():
                 actual_md5 = self._calculate_md5(file_path)
                 status = "Match" if expected_md5 == actual_md5 else "Mismatch"
             else:
                 actual_md5 = "N/A"
-                status = "Missing"
+                status = "Not a regular file" if file_path.exists() else "Missing"
 
             print(
                 f"{file_with_extension:<{max_file_name_length}} | {status:<8} | {expected_md5:<32} | {actual_md5:<32}"

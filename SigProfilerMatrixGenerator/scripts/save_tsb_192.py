@@ -7,6 +7,8 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
+from SigProfilerMatrixGenerator.scripts.transcript_reference import iter_transcripts
+
 
 _ENCODING_TABLES = {
     "N": bytes.maketrans(b"ACGTN", bytes([0, 1, 2, 3, 16])),
@@ -42,60 +44,16 @@ def _resolve_chromosome_name(chromosome, chromosome_string_path):
     )
 
 
-def _split_transcript_line(line):
-    tab_fields = line.rstrip("\n").split("\t")
-    return tab_fields if len(tab_fields) >= 6 else line.split()
-
-
 def _load_transcripts(transcript_path, chromosome_string_path):
     transcripts = defaultdict(list)
-
-    for transcript_file in sorted(transcript_path.iterdir()):
-        if transcript_file.name.startswith(".") or not transcript_file.is_file():
-            continue
-
-        with transcript_file.open(encoding="utf-8") as handle:
-            for line_number, line in enumerate(handle, start=1):
-                if not line.strip() or line.lstrip().startswith("#"):
-                    continue
-
-                fields = _split_transcript_line(line)
-                if len(fields) < 6:
-                    raise ValueError(
-                        f"{transcript_file}:{line_number} has fewer than six columns."
-                    )
-
-                try:
-                    start = int(fields[4])
-                    end = int(fields[5])
-                except ValueError:
-                    is_header = (
-                        "start" in fields[4].lower() and "end" in fields[5].lower()
-                    )
-                    if is_header:
-                        continue
-                    raise ValueError(
-                        f"{transcript_file}:{line_number} has invalid coordinates."
-                    ) from None
-
-                strand = fields[3]
-                if strand not in {"1", "-1"}:
-                    raise ValueError(
-                        f"{transcript_file}:{line_number} has unsupported strand "
-                        f"{strand!r}; expected '1' or '-1'."
-                    )
-                if start < 1 or end < start:
-                    raise ValueError(
-                        f"{transcript_file}:{line_number} has invalid interval "
-                        f"{start}-{end}."
-                    )
-
-                chromosome = _resolve_chromosome_name(
-                    fields[2], chromosome_string_path
-                )
-                # Transcript coordinates are one-based and inclusive. Converting
-                # to a zero-based half-open interval preserves the final base.
-                transcripts[chromosome].append((start - 1, end, strand))
+    for transcript in iter_transcripts(transcript_path):
+        chromosome = _resolve_chromosome_name(
+            transcript.chromosome, chromosome_string_path
+        )
+        # Convert inclusive coordinates to a zero-based half-open interval.
+        transcripts[chromosome].append(
+            (transcript.start - 1, transcript.end, transcript.strand)
+        )
 
     return transcripts
 
