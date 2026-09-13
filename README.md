@@ -83,7 +83,7 @@ View the table below for the full list of parameters.
 | ------ | ----------- | ----------- | ----------- |
 | Required |  |  |  |
 |  | project | String | The name of the project. |
-|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, dog, ebv, GRCh37, GRCh38, mm9, mm10, mm39, rn6, yeast} |
+|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, dog, ebv, GRCh37, GRCh38, GRCh38_TSBv2, mm9, mm10, mm39, rn6, yeast} |
 |  | path_to_input_files | String | The path to the input files. |
 | Optional |  |  |  |
 |  | exome | Boolean | Downsamples mutational matrices to the exome regions of the genome. Default value False. |
@@ -206,6 +206,11 @@ This tool currently supports the following genomes:
 
 GRCh38.p12 [GRCh38] (Genome Reference Consortium Human Reference 38), INSDC
 Assembly GCA_000001405.27, Dec 2013. Released July 2014. Last updated January 2018. This genome was downloaded from ENSEMBL database version 93.38.
+
+GRCh38 TSB edition 2 [GRCh38_TSBv2] uses the same GRCh38 DNA assembly and
+shared exome resources, with corrected transcription-strand annotation. It is
+versioned separately so installing it does not replace the original GRCh38
+reference and older analyses remain reproducible.
 
 GRCh37.p13 [GRCh37] (Genome Reference Consortium Human Reference 37), INSDC
 Assembly GCA_000001405.14, Feb 2009. Released April 2011. Last updated September 2013. This genome was downloaded from ENSEMBL database version 93.37.

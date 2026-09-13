@@ -13,6 +13,7 @@ from SigProfilerMatrixGenerator.scripts import reference_genome_manager as refs
         ("GRCh38", "GRCh38"),
         ("GRCh37_havana", "GRCh37"),
         ("GRCh38_havana", "GRCh38"),
+        ("GRCh38_TSBv2", "GRCh38"),
         ("mm10_havana", "mm10"),
         ("custom_genome_name", "custom_genome_name"),
         ("contains_havana_but_not_registered", "contains_havana_but_not_registered"),
@@ -20,6 +21,15 @@ from SigProfilerMatrixGenerator.scripts import reference_genome_manager as refs
 )
 def test_reference_assembly_mapping_is_explicit(name, assembly):
     assert refs.get_reference_assembly(name) == assembly
+
+
+def test_grch38_tsbv2_registration_has_all_primary_chromosomes():
+    assert set(refs.CHECKSUMS["GRCh38_TSBv2"]) == {
+        *(str(chromosome) for chromosome in range(1, 23)),
+        "X",
+        "Y",
+        "MT",
+    }
 
 
 @pytest.mark.parametrize(

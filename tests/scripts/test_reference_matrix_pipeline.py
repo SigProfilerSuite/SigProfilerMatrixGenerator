@@ -20,12 +20,8 @@ from SigProfilerMatrixGenerator.scripts import (
 def test_tiny_reference_through_public_matrix_api(
     monkeypatch, tmp_path, mode, genome, input_format
 ):
-    # Use a supported name only to exercise dispatch. This is a synthetic
-    # 20-base fixture, not validation of the real distributed GRCh37 reference.
-    # The proposed edition is registered only inside this synthetic test.
-    monkeypatch.setitem(
-        reference_genome_manager.REFERENCE_ASSEMBLIES, "GRCh38_TSBv2", "GRCh38"
-    )
+    # Use supported names to exercise dispatch. This is a synthetic 20-base
+    # fixture, not validation of the real distributed references.
     assembly = reference_genome_manager.get_reference_assembly(genome)
     if genome != assembly:
         monkeypatch.setitem(

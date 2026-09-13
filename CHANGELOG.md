@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+- Register the versioned `GRCh38_TSBv2` reference while retaining the existing
+  `GRCh38` reference unchanged. Include its validated strand-aware whole-genome
+  and exome context-count and distribution tables.
+
 ### Fixed
 - Rebuild SBS context-distribution tables from the shared five-base opportunity
   set, preserve valid binary chromosome bytes, include the final valid window,
@@ -33,9 +38,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   retaining the CNV48 schema (from `fix/facets-cnv48-tcn1-loh`).
 
 ### Reference Data
-- These code fixes do not replace existing GRCh38 or other distributed reference
-  archives. Corrected reference data need separate validation and an explicit
-  release/versioning policy before publication.
+- The existing `GRCh38` checksums and archive identity remain unchanged.
+  `GRCh38_TSBv2` is a separate reference-data ID so prior analyses remain
+  reproducible. Its archive must be published under the matching versioned
+  filename before network installation can succeed.
 
 ## [1.3.6] - 2025-10-28
 

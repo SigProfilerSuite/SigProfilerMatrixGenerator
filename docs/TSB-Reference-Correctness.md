@@ -68,15 +68,15 @@ interchangeable: chromosome checksums, input conversion, and TSB lookup retain
 the full reference-data ID. Run logs record both names and the TSB directory.
 
 `REFERENCE_ASSEMBLIES` explicitly maps the existing `GRCh37_havana`,
-`GRCh38_havana`, and `mm10_havana` references to their base assemblies. Unknown
-names are not shortened by guessing from underscores or the word `havana`.
+`GRCh38_havana`, `GRCh38_TSBv2`, and `mm10_havana` references to their base
+assemblies. Unknown names are not shortened by guessing from underscores or the
+word `havana`.
 
-`GRCh38_TSBv2` is a proposed name for a corrected reference edition, not a
-currently registered or downloadable reference. Tests temporarily register a
-tiny synthetic fixture with this name; they do not add production checksums.
-Before registering a real edition, verify that any shared exome intervals match
-the assembly. Rebuild and validate strand-dependent context distributions rather
-than automatically reusing those from an older TSB edition.
+`GRCh38_TSBv2` is registered as a separate corrected reference-data edition; it
+does not replace `GRCh38`. It shares GRCh38 exome intervals and transcript
+resources but has its own chromosome checksums and strand-dependent context
+tables. Network installation also requires publication of the independently
+checksummed `GRCh38_TSBv2.tar.gz` archive under that exact filename.
 
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,
@@ -90,9 +90,10 @@ reproducing an earlier analysis.
 
 Tests include direct boundary classifications, reverse-complement controls,
 nested intervals, decoded-base checks, and small generated references passed
-through the public WGS, WES, and BED matrix workflows. These use explicitly
-synthetic sequences. They do not establish the correctness of all distributed
-GRCh38/CHM13 files or quantify effects on real sample results.
+through the public WGS, WES, and BED matrix workflows. Full GRCh38_TSBv2
+validation separately checks all encoded bases and TSB positions and compares
+legacy and corrected matrices for the public TCGA-BRCA cohort. CHM13 remains a
+separate reference-validation task.
 
 Before releasing regenerated references:
 
@@ -111,5 +112,5 @@ standard C/T orientation, its T/U label must also be reversed. Whole-genome and
 exome counts must be conserved when N/T/U/B labels are collapsed.
 
 Do not silently overwrite published archives or update expected matrices solely
-to make tests pass. Reference publication and naming require a separate release
-decision. No corrected archive is bundled by this code change.
+to make tests pass. The corrected archive remains a separately published data
+artifact and is not bundled in the Python wheel.
