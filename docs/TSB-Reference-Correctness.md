@@ -103,6 +103,13 @@ Before releasing regenerated references:
 5. Validate expected matrices, including boundary and overlapping-transcript cases.
 6. Record both software and reference-data versions so earlier analyses remain reproducible.
 
+For SBS opportunity tables, `24` and `384` must be collapsed from the same
+valid five-base opportunities used by `6144`; calculating them independently
+from one-base or three-base windows admits positions that matrix generation
+cannot classify. When an A/G-centered context is reverse-complemented into the
+standard C/T orientation, its T/U label must also be reversed. Whole-genome and
+exome counts must be conserved when N/T/U/B labels are collapsed.
+
 Do not silently overwrite published archives or update expected matrices solely
 to make tests pass. Reference publication and naming require a separate release
 decision. No corrected archive is bundled by this code change.

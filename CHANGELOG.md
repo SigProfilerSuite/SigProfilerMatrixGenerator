@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Fixed
+- Rebuild SBS context-distribution tables from the shared five-base opportunity
+  set, preserve valid binary chromosome bytes, include the final valid window,
+  and reverse T/U labels when purine contexts are canonicalized.
 - Preserve full reference IDs during input conversion and in execution logs;
   explicitly map existing Havana editions to their shared assembly resources.
 - Distinguish missing, incomplete, unregistered, and checksum-mismatched
