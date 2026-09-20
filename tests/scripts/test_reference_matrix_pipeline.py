@@ -14,7 +14,14 @@ from SigProfilerMatrixGenerator.scripts import (
 @pytest.mark.parametrize("mode", ["WGS", "WES", "BED", "WES_ZERO_LOWER_BOUND"])
 @pytest.mark.parametrize(
     "genome",
-    ["GRCh37", "GRCh37_havana", "GRCh38_havana", "mm10_havana", "GRCh38_TSBv2"],
+    [
+        "GRCh37",
+        "GRCh38",
+        "GRCh38_Legacy",
+        "GRCh37_havana",
+        "GRCh38_havana",
+        "mm10_havana",
+    ],
 )
 @pytest.mark.parametrize("input_format", ["vcf", "txt", "maf", "genome"])
 def test_tiny_reference_through_public_matrix_api(

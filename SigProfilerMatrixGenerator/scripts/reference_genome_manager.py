@@ -75,7 +75,7 @@ CHECKSUMS = {
         "Y": "b86042fd443490fb0061478037392fc0",
         "X": "02b7328d7d74704d571fd38149bbf814",
     },
-    "GRCh38": {
+    "GRCh38_Legacy": {
         "1": "ebe083105e7703a49581a36d73732a96",
         "2": "cd65e36dbdf12a8ac3d2c70ebac8cad4",
         "3": "6c20a7008394f2fa9c304d231a1f391b",
@@ -102,7 +102,7 @@ CHECKSUMS = {
         "X": "d5edbea3cf5d1716765dd4a7b41b7656",
         "MT": "dfd6db5743d399516d5c8dadee5bee78",
     },
-    "GRCh38_TSBv2": {
+    "GRCh38": {
         "1": "570ba2c0c11b999a906abd4f854a38be",
         "2": "9abc7b182edb5395e94dca82404f3a4c",
         "3": "8b01b1506b08ac747469fc988cdba191",
@@ -378,7 +378,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
 REFERENCE_ASSEMBLIES = {
     "GRCh37_havana": "GRCh37",
     "GRCh38_havana": "GRCh38",
-    "GRCh38_TSBv2": "GRCh38",
+    "GRCh38_Legacy": "GRCh38",
     "mm10_havana": "mm10",
 }
 
@@ -569,8 +569,16 @@ class ReferenceGenomeManager:
                 "its files do not match the checksums expected by this software. "
                 "The reference may be a different revision or the files may be damaged."
             )
+        migration = ""
+        if genome_name == "GRCh38":
+            migration = (
+                " Releases before the corrected transcription-strand reference may "
+                "have installed the former GRCh38 data at this location. Reinstall "
+                "'GRCh38' for new analyses, or install and select 'GRCh38_Legacy' "
+                "to reproduce historical results."
+            )
         return (
-            problem + " Existing files have not been removed or replaced. "
+            problem + migration + " Existing files have not been removed or replaced. "
             "To reproduce an older analysis, use its matching software and reference "
             "versions. Otherwise, preserve the existing reference before reinstalling "
             f"the requested reference {genome_name!r}."

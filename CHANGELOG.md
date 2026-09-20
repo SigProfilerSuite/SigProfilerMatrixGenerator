@@ -7,9 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
-- Register the versioned `GRCh38_TSBv2` reference while retaining the existing
-  `GRCh38` reference unchanged. Include its validated strand-aware whole-genome
-  and exome context-count and distribution tables.
+- Register `GRCh38_Legacy` with the chromosome checksums and context tables from
+  the previously distributed GRCh38 reference so historical results remain
+  reproducible.
+
+### Changed
+- Promote the corrected transcription-strand reference to the default `GRCh38`
+  identity, including validated strand-aware whole-genome and exome context-count
+  and distribution tables. Existing installations of the former `GRCh38`
+  reference must be reinstalled after upgrading.
 
 ### Fixed
 - Rebuild SBS context-distribution tables from the shared five-base opportunity
@@ -38,10 +44,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   retaining the CNV48 schema (from `fix/facets-cnv48-tcn1-loh`).
 
 ### Reference Data
-- The existing `GRCh38` checksums and archive identity remain unchanged.
-  `GRCh38_TSBv2` is a separate reference-data ID so prior analyses remain
-  reproducible. Its archive must be published under the matching versioned
-  filename before network installation can succeed.
+- `GRCh38.tar.gz` now contains the corrected transcription-strand reference.
+  The previously distributed data is preserved as `GRCh38_Legacy.tar.gz`.
+  Both archives must be published under these exact filenames before network
+  installation can succeed.
 
 ## [1.3.6] - 2025-10-28
 

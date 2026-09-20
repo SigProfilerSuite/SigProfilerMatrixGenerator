@@ -68,29 +68,32 @@ interchangeable: chromosome checksums, input conversion, and TSB lookup retain
 the full reference-data ID. Run logs record both names and the TSB directory.
 
 `REFERENCE_ASSEMBLIES` explicitly maps the existing `GRCh37_havana`,
-`GRCh38_havana`, `GRCh38_TSBv2`, and `mm10_havana` references to their base
+`GRCh38_havana`, `GRCh38_Legacy`, and `mm10_havana` references to their base
 assemblies. Unknown names are not shortened by guessing from underscores or the
 word `havana`.
 
-`GRCh38_TSBv2` is registered as a separate corrected reference-data edition; it
-does not replace `GRCh38`. It shares GRCh38 exome intervals and transcript
-resources but has its own chromosome checksums and strand-dependent context
-tables. Network installation also requires publication of the independently
-checksummed `GRCh38_TSBv2.tar.gz` archive under that exact filename.
+`GRCh38` identifies the corrected transcription-strand reference and is the
+default for new analyses. The previously distributed data is registered as
+`GRCh38_Legacy` for reproducing historical results. Both identities share the
+GRCh38 DNA assembly, exome intervals, and transcript resources, but have their
+own chromosome checksums and strand-dependent context tables. Network
+installation requires publication of independently checksummed `GRCh38.tar.gz`
+and `GRCh38_Legacy.tar.gz` archives under those exact filenames.
 
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,
 and files whose checksums do not match. A mismatch may mean a different reference
 revision or damaged files; it does not necessarily mean the genome is absent.
-Verification does not delete or replace files. Preserve old references before
-reinstallation, and retain matching software and reference versions when
-reproducing an earlier analysis.
+Verification does not delete or replace files. An installation created by an
+earlier release under the name `GRCh38` will fail verification after upgrading;
+reinstall `GRCh38` to use the correction, or install `GRCh38_Legacy` and select
+that identity to reproduce an earlier analysis.
 
 ## Tests and Release Limits
 
 Tests include direct boundary classifications, reverse-complement controls,
 nested intervals, decoded-base checks, and small generated references passed
-through the public WGS, WES, and BED matrix workflows. Full GRCh38_TSBv2
+through the public WGS, WES, and BED matrix workflows. Full corrected GRCh38
 validation separately checks all encoded bases and TSB positions and compares
 legacy and corrected matrices for the public TCGA-BRCA cohort. CHM13 remains a
 separate reference-validation task.
@@ -111,6 +114,8 @@ cannot classify. When an A/G-centered context is reverse-complemented into the
 standard C/T orientation, its T/U label must also be reversed. Whole-genome and
 exome counts must be conserved when N/T/U/B labels are collapsed.
 
-Do not silently overwrite published archives or update expected matrices solely
-to make tests pass. The corrected archive remains a separately published data
-artifact and is not bundled in the Python wheel.
+When changing which data the default identity resolves to, preserve the former
+archive under an explicit legacy identity, document the migration, and validate
+both archives. Do not update expected matrices solely to make tests pass. The
+reference archives are separately published data artifacts and are not bundled
+in the Python wheel.
