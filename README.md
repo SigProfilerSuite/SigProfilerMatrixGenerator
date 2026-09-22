@@ -83,7 +83,7 @@ View the table below for the full list of parameters.
 | ------ | ----------- | ----------- | ----------- |
 | Required |  |  |  |
 |  | project | String | The name of the project. |
-|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, dog, ebv, GRCh37, GRCh38, mm9, mm10, mm39, rn6, yeast} |
+|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, dog, ebv, GRCh37, GRCh38, GRCh38_Legacy, mm9, mm10, mm39, rn6, yeast} |
 |  | path_to_input_files | String | The path to the input files. |
 | Optional |  |  |  |
 |  | exome | Boolean | Downsamples mutational matrices to the exome regions of the genome. Default value False. |
@@ -205,7 +205,32 @@ SigProfilerMatrixGenerator cnv_matrix_generator BATTENBERG ./SigProfilerMatrixGe
 This tool currently supports the following genomes:
 
 GRCh38.p12 [GRCh38] (Genome Reference Consortium Human Reference 38), INSDC
-Assembly GCA_000001405.27, Dec 2013. Released July 2014. Last updated January 2018. This genome was downloaded from ENSEMBL database version 93.38.
+Assembly GCA_000001405.27, Dec 2013. Released July 2014. Last updated January
+2018. The DNA sequence was downloaded from ENSEMBL database version 93.38.
+The current `GRCh38` reference includes corrected transcription-strand
+annotation and should be used for new analyses.
+
+GRCh38 legacy TSB reference [GRCh38_Legacy] contains the GRCh38 reference data
+distributed before the transcription-strand correction. It is retained only
+to reproduce results from earlier SigProfilerMatrixGenerator releases. New
+analyses should use `GRCh38`. Because the corrected reference is now the
+default, users with an older `GRCh38` installation must reinstall `GRCh38`
+after upgrading. To reproduce an old analysis, install and select
+`GRCh38_Legacy` explicitly.
+
+```python
+from SigProfilerMatrixGenerator import install as genInstall
+
+# Corrected reference for new analyses
+genInstall.install("GRCh38")
+
+# Former reference data, only for reproducing historical results
+genInstall.install("GRCh38_Legacy")
+```
+
+The migration can change transcription-strand-aware matrices. Sequence-only
+matrices such as SBS96 and ID83 are expected to remain unchanged because both
+references use the same GRCh38 DNA sequence.
 
 GRCh37.p13 [GRCh37] (Genome Reference Consortium Human Reference 37), INSDC
 Assembly GCA_000001405.14, Feb 2009. Released April 2011. Last updated September 2013. This genome was downloaded from ENSEMBL database version 93.37.

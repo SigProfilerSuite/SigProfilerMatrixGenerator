@@ -8,7 +8,16 @@ from __future__ import print_function
 
 import os
 
-from SigProfilerMatrixGenerator.scripts import MutationMatrixGenerator as spm
+from SigProfilerMatrixGenerator.scripts import reference_genome_manager
+
+
+def _get_output_chromosomes(genome):
+    # Transcript inputs may be combined or omit unannotated chromosomes.
+    # Use the same chromosome manifest as reference installation verification.
+    try:
+        return list(reference_genome_manager.CHECKSUMS[genome])
+    except KeyError:
+        raise ValueError(f"No chromosome manifest is registered for {genome}.") from None
 
 
 def convertVCF(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
@@ -32,17 +41,7 @@ def convertVCF(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
 
     """
     # Collect all input file names and instantiate flags
-    transcript_path = (
-        str(spm.reference_paths(genome)[1])
-        + "/references/chromosomes/transcripts/"
-        + genome
-        + "/"
-    )
-    out_chroms = [
-        x.replace("_transcripts.txt", "")
-        for x in os.listdir(transcript_path)
-        if not x.startswith(".")
-    ]
+    out_chroms = _get_output_chromosomes(genome)
     files = os.listdir(vcf_path)
     first_indel = True
     first_SNV = True
@@ -440,17 +439,7 @@ def convertTxt(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
     """
 
     # Collect all input file names and instantiate flags
-    transcript_path = (
-        str(spm.reference_paths(genome)[1])
-        + "/references/chromosomes/transcripts/"
-        + genome
-        + "/"
-    )
-    out_chroms = [
-        x.replace("_transcripts.txt", "")
-        for x in os.listdir(transcript_path)
-        if not x.startswith(".")
-    ]
+    out_chroms = _get_output_chromosomes(genome)
     out = open(log_file, "a")
     files = os.listdir(vcf_path)
     first_indel = True
@@ -851,17 +840,7 @@ def convertMAF(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
     samples = []
 
     # Iterates through each file
-    transcript_path = (
-        str(spm.reference_paths(genome)[1])
-        + "/references/chromosomes/transcripts/"
-        + genome
-        + "/"
-    )
-    out_chroms = [
-        x.replace("_transcripts.txt", "")
-        for x in os.listdir(transcript_path)
-        if not x.startswith(".")
-    ]
+    out_chroms = _get_output_chromosomes(genome)
     for file in files:
         header = True
         if file[0] == ".":

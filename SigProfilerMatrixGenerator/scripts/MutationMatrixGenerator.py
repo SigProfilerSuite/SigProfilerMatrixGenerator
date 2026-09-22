@@ -25,6 +25,7 @@ import statsmodels.stats.multitest as sm
 from scipy import stats
 
 from SigProfilerMatrixGenerator.scripts import ref_install
+from SigProfilerMatrixGenerator.scripts.transcript_reference import iter_transcripts
 
 
 ################# Functions and references ###############################################
@@ -115,20 +116,18 @@ def BED_filtering(bed_file_path):
     ranges = {}
     ranges_final = {}
     with open(bed_file_path) as f:
-        # next(f)
         for lines in f:
-            if lines[0] == "#" or lines[0] == "@":
-                next(f)
-            else:
-                line = lines.strip().split()
-                chrom = line[0]
-                if len(chrom) > 2:
-                    chrom = chrom[3:]
-                start = int(line[1])
-                end = int(line[2])
-                if chrom not in ranges.keys():
-                    ranges[chrom] = []
-                ranges[chrom].append((start, end))
+            if not lines.strip() or lines.lstrip().startswith(("#", "@")):
+                continue
+            line = lines.strip().split()
+            chrom = line[0]
+            if chrom.startswith("chr"):
+                chrom = chrom[3:]
+            start = int(line[1])
+            end = int(line[2])
+            if chrom not in ranges:
+                ranges[chrom] = []
+            ranges[chrom].append((start, end))
 
     for chroms in ranges.keys():
         ranges_final[chroms] = set(
@@ -304,57 +303,40 @@ def gene_range(files_path, indel=False):
     sample_mut_counts_per_gene = {}
     sample_mut_counts_per_mut_type = {}
 
-    for file in os.listdir(files_path):
-        name = file.split("_")
-        chrom = name[0]
-        gene_ranges[chrom] = []
-        gene_names[chrom] = []
-        if file == ".DS_Store":
-            continue
+    ranges_by_chromosome = defaultdict(dict)
+    for transcript in iter_transcripts(files_path):
+        chrom = transcript.chromosome
+        gene = transcript.gene_name
+        start, end, strand = transcript.start, transcript.end, transcript.strand
+        ranges = ranges_by_chromosome[chrom]
+        if gene in ranges:
+            previous_start, previous_end, previous_strand = ranges[gene]
+            if previous_strand != strand:
+                raise ValueError(f"Gene {gene!r} on {chrom} has conflicting strands.")
+            ranges[gene] = (min(start, previous_start), max(end, previous_end), strand)
         else:
-            with open(files_path + file) as f:
-                next(f)
-                for lines in f:
-                    line = lines.strip().split("\t")
-                    gene, start, end, strand, chrom = (
-                        line[6],
-                        line[4],
-                        line[5],
-                        line[3],
-                        line[2],
-                    )
-                    start, end = int(start), int(end)
-                    if gene not in gene_names[chrom]:
-                        gene_counts[gene] = OrderedDict()
-                        gene_ranges[chrom].append((start, end, strand))
-                        gene_names[chrom].append(gene)
-                        if indel:
-                            gene_counts[gene] = {"T": 0, "U": 0, "samples": []}
-                        else:
-                            gene_counts[gene] = {
-                                "T:C>A": 0,
-                                "T:C>G": 0,
-                                "T:C>T": 0,
-                                "T:T>A": 0,
-                                "T:T>C": 0,
-                                "T:T>G": 0,
-                                "U:C>A": 0,
-                                "U:C>G": 0,
-                                "U:C>T": 0,
-                                "U:T>A": 0,
-                                "U:T>C": 0,
-                                "U:T>G": 0,
-                                "samples": [],
-                            }
-                        sample_mut_counts_per_gene[gene] = {}
-                        sample_mut_counts_per_mut_type[gene] = {}
-                    else:
-                        lst = list(gene_ranges[chrom][-1])
-                        if start < lst[0]:
-                            lst[0] = start
-                        if end > lst[1]:
-                            lst[1] = end
-                        gene_ranges[chrom][-1] = tuple(lst)
+            ranges[gene] = (start, end, strand)
+
+        if gene not in gene_counts:
+            if indel:
+                gene_counts[gene] = {"T": 0, "U": 0, "samples": []}
+            else:
+                gene_counts[gene] = {
+                    f"{bias}:{mutation}": 0
+                    for bias in ("T", "U")
+                    for mutation in ("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
+                }
+                gene_counts[gene]["samples"] = []
+            sample_mut_counts_per_gene[gene] = {}
+            sample_mut_counts_per_mut_type[gene] = {}
+
+    # Callers stop scanning when a gene starts beyond the mutation position.
+    for chrom, ranges in ranges_by_chromosome.items():
+        ordered = sorted(
+            ranges.items(), key=lambda item: (item[1][0], item[1][1], item[0])
+        )
+        gene_names[chrom] = [gene for gene, _ in ordered]
+        gene_ranges[chrom] = [interval for _, interval in ordered]
 
     return (
         gene_ranges,
@@ -796,6 +778,8 @@ def catalogue_generator_single(
 
                 # Pulls out the relevant sequence depending on the context
                 try:
+                    if start < 3:
+                        raise IndexError("Insufficient left flanking sequence")
                     sequence = "".join(
                         [
                             tsb_ref[chrom_string[start - 3]][1],
@@ -821,7 +805,7 @@ def catalogue_generator_single(
                     skipped_count += 1
                     continue
 
-                bias = tsb_ref[chrom_string[start]][0]
+                bias = tsb_ref[chrom_string[start - 1]][0]
                 char = sequence[int(len(sequence) / 2)]
 
                 # Prints the sequence and position if the pulled sequence doesn't match
@@ -2412,9 +2396,7 @@ def exome_check(
 
                     if chrom == chrom_ref:
                         save_mat = True
-                        if start > (
-                            start_ref - base_cushion and end_ref + base_cushion
-                        ):
+                        if start > end_ref + base_cushion:
                             read = True
                             continue
                         elif (
@@ -2828,9 +2810,7 @@ def panel_check(
 
                     if chrom == chrom_ref:
                         save_mat = True
-                        if start > (
-                            start_ref - base_cushion and end_ref + base_cushion
-                        ):
+                        if start > end_ref + base_cushion:
                             read = True
                             continue
                         elif (

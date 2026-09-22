@@ -75,7 +75,7 @@ CHECKSUMS = {
         "Y": "b86042fd443490fb0061478037392fc0",
         "X": "02b7328d7d74704d571fd38149bbf814",
     },
-    "GRCh38": {
+    "GRCh38_Legacy": {
         "1": "ebe083105e7703a49581a36d73732a96",
         "2": "cd65e36dbdf12a8ac3d2c70ebac8cad4",
         "3": "6c20a7008394f2fa9c304d231a1f391b",
@@ -101,6 +101,33 @@ CHECKSUMS = {
         "Y": "3b38c639ad164d60f1a055b46fcd2748",
         "X": "d5edbea3cf5d1716765dd4a7b41b7656",
         "MT": "dfd6db5743d399516d5c8dadee5bee78",
+    },
+    "GRCh38": {
+        "1": "570ba2c0c11b999a906abd4f854a38be",
+        "2": "9abc7b182edb5395e94dca82404f3a4c",
+        "3": "8b01b1506b08ac747469fc988cdba191",
+        "4": "18b339950998a1559e1f4c585dceb156",
+        "5": "ae5e64898b17f00baaa91e97e2ce4315",
+        "6": "b3d213a25e91dfd506e5fffdb3b3d212",
+        "7": "9dab1905ed72ddcc05dcc7caf8688a2a",
+        "8": "e69712ed6e176db3fe81dff629e57d33",
+        "9": "0895960e429ed6f7a4099611d9c2b2e2",
+        "10": "8a3eef6aaf00bbd3a9622653a0ac42aa",
+        "11": "a5c157f9213e5960e7f28b67124060d7",
+        "12": "3071646436ace3ef8d90dd26d2cc3cdc",
+        "13": "b9bb76005849a9d2c87947a13c0cb16c",
+        "14": "820318c102f652f44a2dbe8cf65a4ae5",
+        "15": "6ff03e9753f7164e0ff85cf9028621e5",
+        "16": "56ebeb7b0821d502c552d726b47d14cb",
+        "17": "aa2b97c5d3526cbc611b0529cdbdefcd",
+        "18": "64573778d05a519104be30c39dba4c25",
+        "19": "b041f4788bed2158175dc32e227423d4",
+        "20": "437236e20d9703ed3ba8ad891fcc8d6b",
+        "21": "5f0131ab127a29b05591dfc609c04c3f",
+        "22": "db8fde6c083d07ac2ff0d912feca0971",
+        "X": "dfdc9ff27650a8986a9cc7f057fdc4fe",
+        "Y": "14b265af3813f97ed662ce6a073173da",
+        "MT": "09d22623b7b11e6df3a06b01c3b5ba2f",
     },
     "GRCh38_havana": {
         "1": "c4ef4ee14a4f0f7b319e9ed01f2a9742",
@@ -348,6 +375,23 @@ CHECKSUMS = {
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
 
 
+REFERENCE_ASSEMBLIES = {
+    "GRCh37_havana": "GRCh37",
+    "GRCh38_havana": "GRCh38",
+    "GRCh38_Legacy": "GRCh38",
+    "mm10_havana": "mm10",
+}
+
+
+def get_reference_assembly(reference_name):
+    """Resolve explicitly registered shared resources, never guess from a suffix."""
+    return REFERENCE_ASSEMBLIES.get(reference_name, reference_name)
+
+
+class ReferenceInstallationError(RuntimeError):
+    """Raised when a requested reference is missing, incomplete, or incompatible."""
+
+
 class GenomeDownloadError(RuntimeError):
     """Raised when a reference genome archive cannot be downloaded or installed."""
 
@@ -499,9 +543,46 @@ class ReferenceGenomeManager:
                 self.reference_dir.get_tsb_dir() / genome_name / file_with_extension
             )
 
-            if not file_path.exists() or not self._verify_checksum(file_path, checksum):
+            if not file_path.is_file() or not self._verify_checksum(file_path, checksum):
                 return False
         return True
+
+    def installation_error_message(self, genome_name):
+        """Explain a failed verification without changing any installed files."""
+        if genome_name not in CHECKSUMS:
+            return (
+                f"Reference genome {genome_name!r} is not registered in this "
+                "version of SigProfilerMatrixGenerator. Choose a supported reference "
+                "or register the custom genome and its chromosome checksums."
+            )
+
+        directory = self.reference_dir.get_tsb_dir() / genome_name
+        expected_files = [directory / f"{chrom}.txt" for chrom in CHECKSUMS[genome_name]]
+        present = [path for path in expected_files if path.is_file()]
+        if not present:
+            problem = f"Reference genome {genome_name!r} has not been installed at {directory}."
+        elif len(present) != len(expected_files):
+            problem = f"Reference genome {genome_name!r} is incomplete at {directory}."
+        else:
+            problem = (
+                f"Reference genome {genome_name!r} is present at {directory}, but "
+                "its files do not match the checksums expected by this software. "
+                "The reference may be a different revision or the files may be damaged."
+            )
+        migration = ""
+        if genome_name == "GRCh38":
+            migration = (
+                " Releases before the corrected transcription-strand reference may "
+                "have installed the former GRCh38 data at this location. Reinstall "
+                "'GRCh38' for new analyses, or install and select 'GRCh38_Legacy' "
+                "to reproduce historical results."
+            )
+        return (
+            problem + migration + " Existing files have not been removed or replaced. "
+            "To reproduce an older analysis, use its matching software and reference "
+            "versions. Otherwise, preserve the existing reference before reinstalling "
+            f"the requested reference {genome_name!r}."
+        )
 
     def print_available_genomes_report(self):
         """
@@ -544,12 +625,12 @@ class ReferenceGenomeManager:
                 self.reference_dir.get_tsb_dir() / genome_name / file_with_extension
             )
 
-            if file_path.exists():
+            if file_path.is_file():
                 actual_md5 = self._calculate_md5(file_path)
                 status = "Match" if expected_md5 == actual_md5 else "Mismatch"
             else:
                 actual_md5 = "N/A"
-                status = "Missing"
+                status = "Not a regular file" if file_path.exists() else "Missing"
 
             print(
                 f"{file_with_extension:<{max_file_name_length}} | {status:<8} | {expected_md5:<32} | {actual_md5:<32}"

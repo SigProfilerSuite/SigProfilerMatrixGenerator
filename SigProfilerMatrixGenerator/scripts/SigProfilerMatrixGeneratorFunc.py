@@ -100,6 +100,7 @@ def SigProfilerMatrixGeneratorFunc(
     # 1. get list of all files that were downloaded
     # Terminates the code if the genome reference files have not been created/installed
 
+    reference_name = reference_genome
     reference_dir = ref_install.reference_dir(secondary_chromosome_install_dir=volume)
     ref_dir = str(reference_dir.path)
 
@@ -107,10 +108,8 @@ def SigProfilerMatrixGeneratorFunc(
     genome_manager = reference_genome_manager.ReferenceGenomeManager(volume)
     if not genome_manager.is_genome_installed(reference_genome):
         genome_manager.print_genome_checksum_verification_report(reference_genome)
-        raise Exception(
-            "The specified genome "
-            + reference_genome
-            + " has not been installed\nPlease refer to the SigProfilerMatrixGenerator README for installation instructions:\n\thttps://github.com/SigProfilerSuite/SigProfilerMatrixGenerator"
+        raise reference_genome_manager.ReferenceInstallationError(
+            genome_manager.installation_error_message(reference_name)
         )
 
     # Instantiates all of the required variables and references
@@ -1175,8 +1174,7 @@ def SigProfilerMatrixGeneratorFunc(
     contexts = ["6144"]
 
     chrom_path = str(reference_dir.get_tsb_dir() / reference_genome) + "/"
-    if "havana" in reference_genome:
-        reference_genome = reference_genome.split("_")[0]
+    reference_genome = reference_genome_manager.get_reference_assembly(reference_name)
     transcript_path = (
         ref_dir + "/references/chromosomes/transcripts/" + reference_genome + "/"
     )
@@ -1286,6 +1284,9 @@ def SigProfilerMatrixGeneratorFunc(
     log_out.write("numpy version: " + np.__version__ + "\n")
 
     log_out.write("\n-------Vital Parameters Used for the execution -------\n")
+    log_out.write(f"Reference data ID: {reference_name}\n")
+    log_out.write(f"Reference assembly: {reference_genome}\n")
+    log_out.write(f"Reference directory: {chrom_path}\n")
     log_out.write(
         "Project: {}\nGenome: {}\nInput File Path: {}\nexome: {}\nbed_file: {}\nchrom_based: {}\nplot: {}\ntsb_stat: {}\nseqInfo: {}\n".format(
             project,
@@ -1331,20 +1332,20 @@ def SigProfilerMatrixGeneratorFunc(
     # Converts the input files to standard text in the temporary folder
     if file_extension == "genome":
         snv, indel, skipped, samples = convertIn.convertTxt(
-            project, vcf_path, reference_genome, output_path
+            project, vcf_path, reference_name, output_path, ncbi_chrom, log_file
         )
     else:
         if file_extension == "txt":
             snv, indel, skipped, samples = convertIn.convertTxt(
-                project, vcf_path, reference_genome, output_path, ncbi_chrom, log_file
+                project, vcf_path, reference_name, output_path, ncbi_chrom, log_file
             )
         elif file_extension == "vcf":
             snv, indel, skipped, samples = convertIn.convertVCF(
-                project, vcf_path, reference_genome, output_path, ncbi_chrom, log_file
+                project, vcf_path, reference_name, output_path, ncbi_chrom, log_file
             )
         elif file_extension == "maf":
             snv, indel, skipped, samples = convertIn.convertMAF(
-                project, vcf_path, reference_genome, output_path, ncbi_chrom, log_file
+                project, vcf_path, reference_name, output_path, ncbi_chrom, log_file
             )
         elif file_extension == "tsv":
             print("ICGC format (.tsv) is no longer supported. Please convert your file to .vcf, .maf, or .txt.")
