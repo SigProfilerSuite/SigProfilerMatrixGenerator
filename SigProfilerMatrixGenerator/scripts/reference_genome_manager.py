@@ -387,7 +387,6 @@ REFERENCE_ASSEMBLIES = {
 # are immutable so older software can continue downloading the archive whose
 # checksums it expects.
 ARCHIVE_FILENAMES = {
-    "GRCh38": "GRCh38.tsb-v2.tar.gz",
 }
 
 LEGACY_REFERENCES = {

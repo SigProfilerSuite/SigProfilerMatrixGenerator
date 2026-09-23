@@ -83,8 +83,9 @@ default for new analyses. The previously distributed data is registered as
 `GRCh38_Legacy` for reproducing historical results. Both identities share the
 GRCh38 DNA assembly, exome intervals, and transcript resources, but have their
 own chromosome checksums and strand-dependent context tables. Network
-installation requires publication of independently checksummed `GRCh38.tar.gz`
-and `GRCh38_Legacy.tar.gz` archives under those exact filenames.
+installation continues to use the already-published corrected `GRCh38.tar.gz`.
+The immutable filename mapping applies prospectively and does not rename this
+working archive.
 
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,

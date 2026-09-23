@@ -123,9 +123,10 @@ def test_old_grch38_installation_error_explains_legacy_migration(monkeypatch, tm
     assert "'GRCh38_Legacy'" in message
 
 
-def test_grch38_uses_immutable_corrected_archive_filename():
-    assert refs.get_archive_filename("GRCh38") == "GRCh38.tsb-v2.tar.gz"
+def test_grch38_uses_existing_published_archive_filenames():
+    assert refs.get_archive_filename("GRCh38") == "GRCh38.tar.gz"
     assert refs.get_archive_filename("GRCh38_Legacy") == "GRCh38_Legacy.tar.gz"
+    assert "GRCh38" not in refs.ARCHIVE_FILENAMES
     assert refs.get_archive_filename("mm10") == "mm10.tar.gz"
 
 

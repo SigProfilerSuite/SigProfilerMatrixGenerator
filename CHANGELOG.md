@@ -44,10 +44,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   retaining the CNV48 schema (from `fix/facets-cnv48-tcn1-loh`).
 
 ### Reference Data
-- `GRCh38.tar.gz` now contains the corrected transcription-strand reference.
-  The previously distributed data is preserved as `GRCh38_Legacy.tar.gz`.
-  Both archives must be published under these exact filenames before network
-  installation can succeed.
+- Corrected `GRCh38` continues to resolve to its already-published
+  `GRCh38.tar.gz`; the separately registered `GRCh38_Legacy` archive remains
+  available for old analyses.
 
 ## [1.3.6] - 2025-10-28
 
