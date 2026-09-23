@@ -80,7 +80,7 @@ T:T[C>G]C	0
 T:T[C>G]G	0
 T:T[C>G]T	0
 T:T[C>T]A	0
-T:T[C>T]C	0
+T:T[C>T]C	1
 T:T[C>T]G	0
 T:T[C>T]T	1
 T:T[T>A]A	0

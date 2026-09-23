@@ -29,6 +29,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip build twine
 
+    - name: Clean previous build outputs
+      run: |
+        rm -rf build dist *.egg-info
+
     - name: Build distributions
       run: |
         python -m build
@@ -36,6 +40,10 @@ jobs:
     - name: Check distributions
       run: |
         python -m twine check dist/*
+
+    - name: Verify GRCh38 reference resources
+      run: |
+        python -c "import glob, zipfile; wheel=glob.glob('dist/*.whl')[0]; names=[name.rsplit('/', 1)[-1] for name in zipfile.ZipFile(wheel).namelist()]; assert not any('GRCh38_TSBv2' in name for name in names); assert sum(name.startswith(('context_counts_GRCh38_Legacy_', 'context_distribution_GRCh38_Legacy_')) for name in names) == 48; assert sum(name.startswith(('context_counts_GRCh38_', 'context_distribution_GRCh38_')) and 'GRCh38_Legacy_' not in name for name in names) == 48"
 
     - name: Verify package version
       run: |

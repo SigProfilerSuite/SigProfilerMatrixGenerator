@@ -1,4 +1,5 @@
 import ftplib
+import hashlib
 import io
 import subprocess
 import tarfile
@@ -22,7 +23,11 @@ def test_download_genome_installs_archive_from_ftp(monkeypatch, tmp_path):
     archive_path = tmp_path.resolve() / "tsb" / "test_genome.tar.gz"
     installed_file = tmp_path.resolve() / "tsb" / "test_genome" / "1.txt"
 
-    monkeypatch.setattr(manager, "is_genome_installed", lambda genome: False)
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "test_genome",
+        {"1": hashlib.md5(b"test chromosome contents").hexdigest()},
+    )
     monkeypatch.setattr(
         manager,
         "_download_via_ftplib",
@@ -44,7 +49,11 @@ def test_download_genome_falls_back_to_curl_on_same_mirror(monkeypatch, tmp_path
     manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
     calls = []
 
-    monkeypatch.setattr(manager, "is_genome_installed", lambda genome: False)
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "test_genome",
+        {"1": hashlib.md5(b"test chromosome contents").hexdigest()},
+    )
     monkeypatch.setattr(reference_genome_manager.shutil, "which", lambda name: "curl")
 
     def fail_ftp(server, path, filename, local_filepath):
@@ -153,4 +162,27 @@ def test_download_genome_removes_bad_archive_when_extract_fails(monkeypatch, tmp
 
     assert "could not be extracted" in str(error.value)
     assert "offline_files_path" in str(error.value)
+    assert not archive_path.exists()
+
+
+def test_download_genome_rejects_extracted_payload_that_fails_verification(
+    monkeypatch, tmp_path
+):
+    manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
+    archive_path = tmp_path.resolve() / "tsb" / "test_genome.tar.gz"
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "test_genome",
+        {"1": hashlib.md5(b"expected contents").hexdigest()},
+    )
+    monkeypatch.setattr(
+        manager,
+        "_download_via_ftplib",
+        lambda *args: write_test_archive(args[-1], genome_name="wrong-root"),
+    )
+
+    with pytest.raises(reference_genome_manager.GenomeDownloadError) as error:
+        manager.download_genome("test_genome")
+
+    assert "wrong layout or reference revision" in str(error.value)
     assert not archive_path.exists()

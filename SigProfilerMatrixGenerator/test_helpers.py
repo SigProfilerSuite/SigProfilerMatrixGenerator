@@ -1,6 +1,4 @@
 import os
-import warnings
-
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
@@ -9,6 +7,11 @@ from SigProfilerMatrixGenerator.scripts import (
     SigProfilerMatrixGeneratorFunc as matGen,
     ref_install,
 )
+
+# This module provides the package's manual reference-regression commands. Its
+# filename is historical; prevent pytest from treating the helpers as tests
+# requiring fixtures named ``genome`` and ``test_genome``.
+__test__ = False
 
 reference_dir = ref_install.reference_dir()
 TEST_INPUT_DIR = str(reference_dir.path / "references/tests/") + "/"
@@ -29,6 +32,8 @@ TEST_GENOMES = [
 
 
 def load_and_compare(matrices, solution_dir, exome=False, bed_file=True):
+    if not matrices:
+        raise AssertionError("No matrices were generated for comparison.")
     for key in matrices:
         # Determine the solution file path based on the exome flag
         if exome:
@@ -45,15 +50,10 @@ def load_and_compare(matrices, solution_dir, exome=False, bed_file=True):
             )
 
         # Load the solution file and compare with the generated matrix
-        if os.path.exists(solution_file):
-            solution_df = pd.read_csv(solution_file, sep="\t", index_col=0)
-            assert_frame_equal(matrices[key], solution_df)
-        else:
-            # Nothing to compare against: warn so that a genome without solution
-            # files is not mistaken for a passing test
-            warnings.warn(
-                "No solution file found, skipping comparison: " + solution_file
-            )
+        if not os.path.isfile(solution_file):
+            raise FileNotFoundError(f"Required solution file not found: {solution_file}")
+        solution_df = pd.read_csv(solution_file, sep="\t", index_col=0)
+        assert_frame_equal(matrices[key], solution_df)
 
 
 def test_one_genome(genome, volume, exome=False, bed_file=True):
@@ -108,10 +108,39 @@ def test_one_genome(genome, volume, exome=False, bed_file=True):
         solution_dir = os.path.join(TEST_INPUT_DIR, f"bed_file/solutions/{genome}/")
     else:
         solution_dir = os.path.join(TEST_INPUT_DIR, f"WGS/solutions/{genome}/")
-    # Pass the flags through: load_and_compare defaults to bed_file=True, so
-    # without them the WGS and exome paths looked for ".region" solution files in
-    # the WGS/WES solution directories and silently found nothing.
+    # Forward the modes so WGS/WES do not look for BED (.region) solutions.
+    # This correction was also identified by Luuk Harbers in PR #250.
     load_and_compare(matrices, solution_dir, exome=exome, bed_file=bed_file)
+
+
+def available_test_modes(genome):
+    """Return every WGS/WES/BED regression mode with committed inputs/solutions."""
+    candidates = (
+        ("WGS", False, False),
+        ("WES", True, False),
+        ("bed_file", False, True),
+    )
+    modes = []
+    for directory, exome, bed_file in candidates:
+        input_dir = os.path.join(TEST_INPUT_DIR, directory, genome)
+        solution_dir = os.path.join(
+            TEST_INPUT_DIR, directory, "solutions", genome
+        )
+        if os.path.isdir(input_dir) and os.path.isdir(solution_dir):
+            modes.append((exome, bed_file))
+    if not modes:
+        raise FileNotFoundError(f"No regression inputs and solutions found for {genome}")
+    return modes
+
+
+def run_all_modes_for_genome(genome, volume=None):
+    for exome, bed_file in available_test_modes(genome):
+        test_one_genome(
+            genome,
+            volume=volume,
+            exome=exome,
+            bed_file=bed_file,
+        )
 
 
 def install_genomes(genome_install_list):
@@ -138,7 +167,7 @@ def test_genomes(test_genome, volume=None):
         print("No genomes specified for testing. Please specify a genome or all.")
     elif test_genome[0] == "all":
         for genome in TEST_GENOMES:
-            test_one_genome(genome, volume=volume)
+            run_all_modes_for_genome(genome, volume=volume)
     else:
         for genome in test_genome:
             if genome not in TEST_GENOMES:
@@ -149,7 +178,7 @@ def test_genomes(test_genome, volume=None):
                 )
                 continue
             try:
-                test_one_genome(genome, volume=volume)
+                run_all_modes_for_genome(genome, volume=volume)
                 print("Completed test for " + genome)
             except Exception as e:
                 assert False, "Test failed for " + genome + ":\n" + str(e)
@@ -158,7 +187,7 @@ def test_genomes(test_genome, volume=None):
 def test_all_genomes(volume=None):
     for genome in TEST_GENOMES:
         try:
-            test_one_genome(genome, volume)
+            run_all_modes_for_genome(genome, volume)
             print(f"Completed test for {genome}\n")
         except Exception as e:
             print(f"Test failed for {genome}:\n{str(e)}\n")

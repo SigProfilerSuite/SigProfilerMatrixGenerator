@@ -22,6 +22,40 @@ import numpy as np
 import pandas as pd
 import scipy
 import sigProfilerPlotting as sigPlt
+
+
+NCBI_CHROMOSOME_ALIASES = {
+    "NC_000067.6": "1",
+    "NC_000068.7": "2",
+    "NC_000069.6": "3",
+    "NC_000070.6": "4",
+    "NC_000071.6": "5",
+    "NC_000072.6": "6",
+    "NC_000073.6": "7",
+    "NC_000074.6": "8",
+    "NC_000075.6": "9",
+    "NC_000076.6": "10",
+    "NC_000077.6": "11",
+    "NC_000078.6": "12",
+    "NC_000079.6": "13",
+    "NC_000080.6": "14",
+    "NC_000081.6": "15",
+    "NC_000082.6": "16",
+    "NC_000083.6": "17",
+    "NC_000084.6": "18",
+    "NC_000085.6": "19",
+    "NC_000086.7": "X",
+    "NC_000087.7": "Y",
+    **{
+        f"NC_{accession:06d}.1": chromosome
+        for accession, chromosome in zip(
+            range(60925, 60947), (str(number) for number in range(1, 23))
+        )
+    },
+    "NC_060947.1": "X",
+    "NC_060948.1": "Y",
+    "82503188|ref|NC_007605.1|": "gi_82503188_ref_NC_007605",
+}
 import statsmodels
 
 import SigProfilerMatrixGenerator as sig
@@ -100,6 +134,7 @@ def SigProfilerMatrixGeneratorFunc(
     # 1. get list of all files that were downloaded
     # Terminates the code if the genome reference files have not been created/installed
 
+    reference_name = reference_genome
     reference_dir = ref_install.reference_dir(secondary_chromosome_install_dir=volume)
     ref_dir = str(reference_dir.path)
 
@@ -107,16 +142,17 @@ def SigProfilerMatrixGeneratorFunc(
     genome_manager = reference_genome_manager.ReferenceGenomeManager(volume)
     if not genome_manager.is_genome_installed(reference_genome):
         genome_manager.print_genome_checksum_verification_report(reference_genome)
-        raise Exception(
-            "The specified genome "
-            + reference_genome
-            + " has not been installed\nPlease refer to the SigProfilerMatrixGenerator README for installation instructions:\n\thttps://github.com/SigProfilerSuite/SigProfilerMatrixGenerator"
+        raise reference_genome_manager.ReferenceInstallationError(
+            genome_manager.installation_error_message(reference_name)
         )
 
     # 3. Check the exome interval list up front, rather than failing with a bare
     # FileNotFoundError in exome_check() after every chromosome has been parsed
     if exome:
-        exome_interval_list = reference_dir.get_exome_interval_list(reference_genome)
+        exome_reference = reference_genome_manager.get_reference_assembly(
+            reference_genome
+        )
+        exome_interval_list = reference_dir.get_exome_interval_list(exome_reference)
         if not exome_interval_list.exists():
             supported = sorted(
                 subdir.name
@@ -164,30 +200,7 @@ def SigProfilerMatrixGeneratorFunc(
     }
 
     # Provides a chromosome conversion from NCBI notation
-    ncbi_chrom = {
-        "NC_000067.6": "1",
-        "NC_000068.7": "2",
-        "NC_000069.6": "3",
-        "NC_000070.6": "4",
-        "NC_000071.6": "5",
-        "NC_000072.6": "6",
-        "NC_000073.6": "7",
-        "NC_000074.6": "8",
-        "NC_000075.6": "9",
-        "NC_000076.6": "10",
-        "NC_000077.6": "11",
-        "NC_000078.6": "12",
-        "NC_000079.6": "13",
-        "NC_000080.6": "14",
-        "NC_000081.6": "15",
-        "NC_000082.6": "16",
-        "NC_000083.6": "17",
-        "NC_000084.6": "18",
-        "NC_000085.6": "19",
-        "NC_000086.7": "X",
-        "NC_000087.7": "Y",
-        "82503188|ref|NC_007605.1|": "gi_82503188_ref_NC_007605",
-    }
+    ncbi_chrom = NCBI_CHROMOSOME_ALIASES
 
     # Provides the reference file conversion from binary to base information
     tsb_ref = {
@@ -1194,8 +1207,7 @@ def SigProfilerMatrixGeneratorFunc(
     contexts = ["6144"]
 
     chrom_path = str(reference_dir.get_tsb_dir() / reference_genome) + "/"
-    if "havana" in reference_genome:
-        reference_genome = reference_genome.split("_")[0]
+    reference_genome = reference_genome_manager.get_reference_assembly(reference_name)
     transcript_path = (
         ref_dir + "/references/chromosomes/transcripts/" + reference_genome + "/"
     )
@@ -1305,6 +1317,9 @@ def SigProfilerMatrixGeneratorFunc(
     log_out.write("numpy version: " + np.__version__ + "\n")
 
     log_out.write("\n-------Vital Parameters Used for the execution -------\n")
+    log_out.write(f"Reference data ID: {reference_name}\n")
+    log_out.write(f"Reference assembly: {reference_genome}\n")
+    log_out.write(f"Reference directory: {chrom_path}\n")
     log_out.write(
         "Project: {}\nGenome: {}\nInput File Path: {}\nexome: {}\nbed_file: {}\nchrom_based: {}\nplot: {}\ntsb_stat: {}\nseqInfo: {}\n".format(
             project,
@@ -1350,20 +1365,20 @@ def SigProfilerMatrixGeneratorFunc(
     # Converts the input files to standard text in the temporary folder
     if file_extension == "genome":
         snv, indel, skipped, samples = convertIn.convertTxt(
-            project, vcf_path, reference_genome, output_path
+            project, vcf_path, reference_name, output_path, ncbi_chrom, log_file
         )
     else:
         if file_extension == "txt":
             snv, indel, skipped, samples = convertIn.convertTxt(
-                project, vcf_path, reference_genome, output_path, ncbi_chrom, log_file
+                project, vcf_path, reference_name, output_path, ncbi_chrom, log_file
             )
         elif file_extension == "vcf":
             snv, indel, skipped, samples = convertIn.convertVCF(
-                project, vcf_path, reference_genome, output_path, ncbi_chrom, log_file
+                project, vcf_path, reference_name, output_path, ncbi_chrom, log_file
             )
         elif file_extension == "maf":
             snv, indel, skipped, samples = convertIn.convertMAF(
-                project, vcf_path, reference_genome, output_path, ncbi_chrom, log_file
+                project, vcf_path, reference_name, output_path, ncbi_chrom, log_file
             )
         elif file_extension == "tsv":
             print("ICGC format (.tsv) is no longer supported. Please convert your file to .vcf, .maf, or .txt.")

@@ -133,15 +133,19 @@ def context_distribution(
 
     # Set the context parameter based upon the user input
     if context_input == "96" or context_input == "192" or context_input == "384":
-        context = 3
+        context = 5
+        output_context = 3
     elif context_input == "1536" or context_input == "3072" or context_input == "6144":
         context = 5
+        output_context = 5
     elif (
         context_input == "DINUC" or context_input == "DBS186" or context_input == "DBS"
     ):
         context = 2
+        output_context = 2
     elif context_input == "6" or context_input == "24":
-        context = 1
+        context = 5
+        output_context = 1
     else:
         print("Not a valid context")
         sys.exit()
@@ -166,12 +170,12 @@ def context_distribution(
     # Iterate through each chromosome and open the associated file
     for chrom in chromosomes:
         with open(chromosome_path + chrom + ".txt", "rb") as f:
-            chromosome = f.read().strip()
+            chromosome = f.read()
             chromosome_lengths.append(len(chromosome))
             print(chrom, len(chromosome))
 
             # Iterate through the chromosome base by base
-            for i in range(0, (len(chromosome) - context), 1):
+            for i in range(0, len(chromosome) - context + 1):
                 nuc = ""
                 for l in range(i, i + context, 1):
                     nuc += tsb_ref[chromosome[l]][1]
@@ -191,8 +195,12 @@ def context_distribution(
                         and context_input != "DBS"
                     ):
                         # Only save the pyrimidine context (canonical)
-                        if base == "A" or base == "G":
+                        reverse_strand = base == "A" or base == "G"
+                        if reverse_strand:
                             nuc = revcompl(nuc)
+                        trim = (context - output_context) // 2
+                        if trim:
+                            nuc = nuc[trim:-trim]
 
                         # Adjust the nucleotide representaiton if TSB is desired
                         if (
@@ -203,6 +211,8 @@ def context_distribution(
                             or context_input == "24"
                         ):
                             bias = tsb_ref[chromosome[i + int(context / 2)]][0]
+                            if reverse_strand:
+                                bias = revbias(bias)
                             nuc = bias + ":" + nuc
 
                         # Update the dictionary for the current nucleotide
@@ -342,15 +352,19 @@ def context_distribution_BED(
 
     # Set the context parameter based upon the user input
     if context_input == "96" or context_input == "192" or context_input == "384":
-        context = 3
+        context = 5
+        output_context = 3
     elif context_input == "1536" or context_input == "3072" or context_input == "6144":
         context = 5
+        output_context = 5
     elif (
         context_input == "DINUC" or context_input == "DBS" or context_input == "DBS186"
     ):
         context = 2
+        output_context = 2
     elif context_input == "6" or context_input == "24":
-        context = 1
+        context = 5
+        output_context = 1
     else:
         print("Not a valid context")
         sys.exit()
@@ -445,8 +459,12 @@ def context_distribution_BED(
                             and context_input != "DBS"
                         ):
                             # Only save the pyrimidine context (canonical)
-                            if base == "A" or base == "G":
+                            reverse_strand = base == "A" or base == "G"
+                            if reverse_strand:
                                 nuc = revcompl(nuc)
+                            trim = (context - output_context) // 2
+                            if trim:
+                                nuc = nuc[trim:-trim]
 
                             # Adjust the nucleotide representaiton if TSB is desired
                             if (
@@ -457,6 +475,8 @@ def context_distribution_BED(
                                 or context_input == "24"
                             ):
                                 bias = tsb_ref[chromosome[i + int(context / 2)]][0]
+                                if reverse_strand:
+                                    bias = revbias(bias)
                                 nuc = bias + ":" + nuc
 
                             # Update the dictionary for the current nucleotide
@@ -527,8 +547,12 @@ def context_distribution_BED(
                             and context_input != "DBS"
                         ):
                             # Only save the pyrimidine context (canonical)
-                            if base == "A" or base == "G":
+                            reverse_strand = base == "A" or base == "G"
+                            if reverse_strand:
                                 nuc = revcompl(nuc)
+                            trim = (context - output_context) // 2
+                            if trim:
+                                nuc = nuc[trim:-trim]
 
                             # Adjust the nucleotide representaiton if TSB is desired
                             if (
@@ -539,6 +563,8 @@ def context_distribution_BED(
                                 or context_input == "24"
                             ):
                                 bias = tsb_ref[chromosome[i + int(context / 2)]][0]
+                                if reverse_strand:
+                                    bias = revbias(bias)
                                 nuc = bias + ":" + nuc
 
                             # Update the dictionary for the current nucleotide

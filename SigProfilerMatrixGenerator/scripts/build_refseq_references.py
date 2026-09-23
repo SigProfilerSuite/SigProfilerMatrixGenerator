@@ -37,15 +37,60 @@ Example, for the shipped CHM13-T2T files::
 
 import argparse
 import gzip
+import hashlib
 import io
 import os
 import re
 
 
+EXPECTED_ASSEMBLY_ACCESSION = "GCF_009914755.1"
+EXPECTED_CHROMOSOMES = frozenset(
+    [*(str(chromosome) for chromosome in range(1, 23)), "X", "Y"]
+)
+PINNED_SHA256 = {
+    "assembly_report": "734ed8bd2d4f268ed60e2a310caf9c78c3d9f1f4c28441c90f168ea304ed6910",
+    "gff": "833170d5445e5514537cc15ddec50381dc9798eae8eac3de97762cc6eac1a1cf",
+    "gtf": "fd8a27c06da23b4defc140d1bb03f5f0eb8b5ba780eeee6730617fe709c6a16e",
+}
+
+
 def open_maybe_gzip(path):
+    path = os.fspath(path)
     if path.endswith(".gz"):
         return io.TextIOWrapper(gzip.open(path, "rb"), encoding="utf-8")
     return open(path, encoding="utf-8")
+
+
+def assert_sha256(path, expected):
+    """Verify a pinned source file, unless verification was explicitly disabled."""
+    if not expected:
+        return
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    observed = digest.hexdigest()
+    if observed != expected:
+        raise SystemExit(
+            f"{path} has SHA-256 {observed}, expected {expected}"
+        )
+
+
+def assert_assembly_accession(path, expected):
+    """Verify the assembly identity recorded in an NCBI assembly report."""
+    if not expected:
+        return
+    prefix = "# RefSeq assembly accession:"
+    with open(path, encoding="utf-8") as handle:
+        for line in handle:
+            if line.startswith(prefix):
+                observed = line.removeprefix(prefix).strip()
+                if observed != expected:
+                    raise SystemExit(
+                        f"{path} is assembly {observed!r}, expected {expected!r}"
+                    )
+                return
+    raise SystemExit(f"{path} has no {prefix!r} header")
 
 
 def read_accession_map(assembly_report, bare=False):
@@ -76,6 +121,20 @@ def read_accession_map(assembly_report, bare=False):
     return accession_to_chrom
 
 
+def assert_complete_chromosome_map(accession_to_chrom):
+    observed = {
+        chromosome[3:] if chromosome.startswith("chr") else chromosome
+        for chromosome in accession_to_chrom.values()
+    }
+    if observed != EXPECTED_CHROMOSOMES or len(accession_to_chrom) != len(observed):
+        missing = sorted(EXPECTED_CHROMOSOMES - observed)
+        unexpected = sorted(observed - EXPECTED_CHROMOSOMES)
+        raise SystemExit(
+            "assembly report does not map the expected CHM13 nuclear chromosomes; "
+            f"missing={missing}, unexpected={unexpected}"
+        )
+
+
 def assert_annotation_release(path, expected):
     """Guard against silently mixing annotation releases across subcommands."""
     with open_maybe_gzip(path) as handle:
@@ -96,7 +155,7 @@ def assert_annotation_release(path, expected):
 
 
 def read_intervals(gff, accession_to_chrom, feature):
-    """Half-open [start, end) intervals for `feature`, keyed by chromosome."""
+    """One-based inclusive intervals for `feature`, keyed by chromosome."""
     intervals = {chrom: [] for chrom in accession_to_chrom.values()}
     with open_maybe_gzip(gff) as handle:
         for line in handle:
@@ -108,15 +167,15 @@ def read_intervals(gff, accession_to_chrom, feature):
             chrom = accession_to_chrom.get(fields[0])
             if chrom is None:
                 continue
-            intervals[chrom].append((int(fields[3]) - 1, int(fields[4])))
+            intervals[chrom].append((int(fields[3]), int(fields[4])))
     return intervals
 
 
 def merge(intervals):
-    """Sort and collapse overlapping/abutting intervals."""
+    """Sort and collapse overlapping/abutting one-based inclusive intervals."""
     merged = []
     for start, end in sorted(intervals):
-        if merged and start <= merged[-1][1]:
+        if merged and start <= merged[-1][1] + 1:
             if end > merged[-1][1]:
                 merged[-1][1] = end
         else:
@@ -135,13 +194,22 @@ def chrom_sort_key(chrom):
 
 
 def build_exome_list(args):
+    assert_sha256(args.assembly_report, args.expect_assembly_report_sha256)
+    assert_sha256(args.gff, args.expect_annotation_sha256)
+    assert_assembly_accession(args.assembly_report, args.expect_assembly)
     accession_to_chrom = read_accession_map(args.assembly_report)
-    if not accession_to_chrom:
-        raise SystemExit(f"no nuclear chromosomes found in {args.assembly_report}")
+    assert_complete_chromosome_map(accession_to_chrom)
     print(f"mapped {len(accession_to_chrom)} chromosome accessions")
     assert_annotation_release(args.gff, args.expect_release)
 
     intervals = read_intervals(args.gff, accession_to_chrom, args.feature)
+    empty_chromosomes = sorted(
+        chromosome for chromosome, records in intervals.items() if not records
+    )
+    if empty_chromosomes:
+        raise SystemExit(
+            f"no {args.feature!r} records found for chromosomes {empty_chromosomes}"
+        )
 
     total_intervals = 0
     total_span = 0
@@ -154,7 +222,7 @@ def build_exome_list(args):
             for start, end in merge(intervals[chrom]):
                 out.write(f"{chrom}\t{start}\t{end}\n")
                 total_intervals += 1
-                total_span += end - start
+                total_span += end - start + 1
 
     print(
         f"wrote {total_intervals} intervals covering "
@@ -208,6 +276,16 @@ def read_transcripts(gtf, accession_to_chrom, exclude_sources=(), exclude_biotyp
                 dropped += 1
                 continue
             attributes = dict(ATTRIBUTE_RE.findall(fields[8]))
+            if fields[6] not in {"+", "-"}:
+                raise SystemExit(
+                    f"unsupported transcript strand {fields[6]!r} in {gtf}"
+                )
+            gene_id = attributes.get("gene_id")
+            transcript_id = attributes.get("transcript_id")
+            if not gene_id or not transcript_id:
+                raise SystemExit(
+                    f"transcript record in {gtf} is missing gene_id/transcript_id"
+                )
             if attributes.get("transcript_biotype", "") in exclude_biotypes:
                 dropped += 1
                 continue
@@ -215,13 +293,15 @@ def read_transcripts(gtf, accession_to_chrom, exclude_sources=(), exclude_biotyp
                 (
                     int(fields[3]),
                     (
-                        attributes.get("gene_id", ""),
-                        attributes.get("transcript_id", ""),
+                        gene_id,
+                        transcript_id,
                         chrom,
                         "1" if fields[6] == "+" else "-1",
                         fields[3],
                         fields[4],
-                        attributes.get("gene", attributes.get("gene_id", "")),
+                        # gene_range() groups on this column. NCBI gene symbols
+                        # are not unique; the stable/disambiguated ID is.
+                        gene_id,
                         attributes.get("transcript_biotype", ""),
                     ),
                 )
@@ -232,9 +312,11 @@ def read_transcripts(gtf, accession_to_chrom, exclude_sources=(), exclude_biotyp
 
 
 def build_transcripts(args):
+    assert_sha256(args.assembly_report, args.expect_assembly_report_sha256)
+    assert_sha256(args.gtf, args.expect_annotation_sha256)
+    assert_assembly_accession(args.assembly_report, args.expect_assembly)
     accession_to_chrom = read_accession_map(args.assembly_report, bare=True)
-    if not accession_to_chrom:
-        raise SystemExit(f"no nuclear chromosomes found in {args.assembly_report}")
+    assert_complete_chromosome_map(accession_to_chrom)
     print(f"mapped {len(accession_to_chrom)} chromosome accessions")
     assert_annotation_release(args.gtf, args.expect_release)
 
@@ -244,6 +326,13 @@ def build_transcripts(args):
         exclude_sources=set(args.exclude_source),
         exclude_biotypes=set(args.exclude_biotype),
     )
+    empty_chromosomes = sorted(
+        chromosome for chromosome, records in rows.items() if not records
+    )
+    if empty_chromosomes:
+        raise SystemExit(
+            f"no transcript records found for chromosomes {empty_chromosomes}"
+        )
 
     os.makedirs(args.outdir, exist_ok=True)
     total = 0
@@ -270,6 +359,11 @@ def main():
         default="NCBI RefSeq GCF_009914755.1-RS_2025_08",
         help="required #!annotation-source value; pass an empty string to skip",
     )
+    parser.add_argument(
+        "--expect-assembly",
+        default=EXPECTED_ASSEMBLY_ACCESSION,
+        help="required NCBI assembly accession; pass an empty string to skip",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     exome = subparsers.add_parser(
@@ -290,6 +384,13 @@ def main():
         help="provenance string for the single @ header line",
     )
     exome.add_argument("--output", required=True)
+    exome.add_argument(
+        "--expect-annotation-sha256", default=PINNED_SHA256["gff"]
+    )
+    exome.add_argument(
+        "--expect-assembly-report-sha256",
+        default=PINNED_SHA256["assembly_report"],
+    )
     exome.set_defaults(func=build_exome_list)
 
     transcripts = subparsers.add_parser(
@@ -302,6 +403,13 @@ def main():
         "--assembly-report", required=True, help="matching NCBI assembly report"
     )
     transcripts.add_argument("--outdir", required=True)
+    transcripts.add_argument(
+        "--expect-annotation-sha256", default=PINNED_SHA256["gtf"]
+    )
+    transcripts.add_argument(
+        "--expect-assembly-report-sha256",
+        default=PINNED_SHA256["assembly_report"],
+    )
     transcripts.add_argument(
         "--exclude-source",
         action="append",
@@ -323,6 +431,12 @@ def main():
     args = parser.parse_args()
     if not args.expect_release:
         args.expect_release = None
+    if not args.expect_assembly:
+        args.expect_assembly = None
+    if not args.expect_annotation_sha256:
+        args.expect_annotation_sha256 = None
+    if not args.expect_assembly_report_sha256:
+        args.expect_assembly_report_sha256 = None
     args.func(args)
 
 
