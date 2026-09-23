@@ -186,3 +186,51 @@ def test_download_genome_rejects_extracted_payload_that_fails_verification(
 
     assert "wrong layout or reference revision" in str(error.value)
     assert not archive_path.exists()
+
+
+def test_install_local_genome_extracts_and_verifies_registered_archive(
+    monkeypatch, tmp_path
+):
+    manager = reference_genome_manager.ReferenceGenomeManager(
+        reference_dir=tmp_path / "volume"
+    )
+    archive_directory = tmp_path / "archives"
+    archive_path = archive_directory / "test_genome.tar.gz"
+    write_test_archive(archive_path)
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "test_genome",
+        {"1": hashlib.md5(b"test chromosome contents").hexdigest()},
+    )
+
+    installed = manager.install_local_genome("test_genome", archive_directory)
+
+    assert installed == manager.reference_dir.get_tsb_dir() / "test_genome"
+    assert manager.is_genome_installed("test_genome")
+
+
+def test_install_local_genome_rejects_missing_or_mismatched_archive(
+    monkeypatch, tmp_path
+):
+    manager = reference_genome_manager.ReferenceGenomeManager(
+        reference_dir=tmp_path / "volume"
+    )
+    archive_directory = tmp_path / "archives"
+
+    with pytest.raises(
+        reference_genome_manager.GenomeDownloadError,
+        match="does not exist or is not a regular file",
+    ):
+        manager.install_local_genome("test_genome", archive_directory)
+
+    write_test_archive(archive_directory / "test_genome.tar.gz")
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "test_genome",
+        {"1": hashlib.md5(b"different contents").hexdigest()},
+    )
+    with pytest.raises(
+        reference_genome_manager.GenomeDownloadError,
+        match="do not match the checksums",
+    ):
+        manager.install_local_genome("test_genome", archive_directory)

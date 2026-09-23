@@ -59,9 +59,9 @@ def parse_arguments_install(args: List[str]) -> argparse.Namespace:
         "-l",
         "--local_genome",
         help="""
-            Install an offline reference genome downloaded from the Alexandrov Lab's FTP server.
-            Provide the absolute path to the directory containing the locally-stored
-            <genome>.tar.gz file.
+            Install a reference genome from a local archive without downloading it.
+            Provide the absolute path to the directory containing the locally stored
+            <genome>.tar.gz file (for example, CHM13-T2T.tar.gz).
             For downloads, visit AlexandrovLab's ftp server:
             ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerMatrixGenerator/
             """,

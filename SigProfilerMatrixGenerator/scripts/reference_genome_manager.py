@@ -527,8 +527,7 @@ class ReferenceGenomeManager:
         logging.info(f"{genome_name} has been successfully installed.")
 
     def install_local_genome(self, genome_name, local_genome_dir):
-        """
-        Install a reference genome originating from the FTP server that is stored locally.
+        """Install and verify a locally stored ``<genome>.tar.gz`` archive.
 
         - genome_name (str): The name of the genome.
         - local_genome_dir (Path or str): The local directory path where the genome archive is stored.
@@ -538,26 +537,33 @@ class ReferenceGenomeManager:
         archive_file_path = local_genome_dir / f"{genome_name}.tar.gz"
 
         # Verify that the local genome file exists
-        if not archive_file_path.exists():
-            logging.error(f"Local genome file {archive_file_path} does not exist.")
-            return
+        if not archive_file_path.is_file():
+            raise GenomeDownloadError(
+                f"Local genome archive {archive_file_path} does not exist or is not "
+                "a regular file. Pass the directory containing the exact "
+                f"{genome_name}.tar.gz filename."
+            )
 
         # Extract the archive
         try:
             self._unzip_file(archive_file_path)
-        except tarfile.TarError as e:
-            logging.error(f"Error extracting the archive: {e}")
-            return
+        except (tarfile.TarError, OSError) as e:
+            raise GenomeDownloadError(
+                f"Local genome archive {archive_file_path} could not be extracted."
+            ) from e
 
         # Verify that all necessary files are extracted and have correct checksums
         if not self.is_genome_installed(genome_name):
-            logging.error(f"Installation verification failed for {genome_name}.")
-            self.print_genome_checksum_verification_report(genome_name)
-            return
+            raise GenomeDownloadError(
+                f"Local archive {archive_file_path} was extracted, but the installed "
+                "chromosome files are missing or do not match the checksums "
+                "registered by this version of SigProfilerMatrixGenerator."
+            )
 
         logging.info(
             f"{genome_name} has been successfully installed from the local file."
         )
+        return self.reference_dir.get_tsb_dir() / genome_name
 
     def is_genome_installed(self, genome_name):
         """

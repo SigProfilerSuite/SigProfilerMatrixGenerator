@@ -71,6 +71,30 @@ This section will guide you through the minimum steps required to create mutatio
     SigProfilerMatrixGenerator install GRCh37
     ```
 
+   To install the validated CHM13 archive locally without FTP access, keep the
+   exact filename `CHM13-T2T.tar.gz` and pass the directory that contains it:
+
+    ```bash
+    SigProfilerMatrixGenerator install CHM13-T2T \
+      --local_genome /absolute/path/to/archive-directory
+    ```
+
+   The equivalent Python API is:
+
+    ```python
+    from SigProfilerMatrixGenerator import install as genInstall
+
+    genInstall.install(
+        "CHM13-T2T",
+        offline_files_path="/absolute/path/to/archive-directory",
+    )
+    ```
+
+   Both paths extract the archive into the configured reference location and
+   verify all 24 chromosome files against the checksums registered by the
+   installed package. The directory can be changed with CLI `--volume` or the
+   Python `volume=` parameter.
+
 3. To generate SBS, DBS, or INDEL matrices:
     ```bash
     SigProfilerMatrixGenerator matrix_generator <project> <reference_genome> <path_to_input_files>
