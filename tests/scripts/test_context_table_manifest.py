@@ -32,7 +32,8 @@ def test_context_table_manifest_matches_packaged_source_files():
 def test_context_table_manifest_records_known_irregular_footprints():
     entries = _manifest_entries()
 
-    assert "context_distribution_GRCh37_DBS186_female_BED.csv" in entries
+    assert "context_distribution_GRCh37_DBS186_female_BED.csv" not in entries
+    assert "context_distribution_GRCh37_Legacy_DBS186_female_BED.csv" in entries
     assert "context_distribution_mm10_6_male.csv" not in entries
     assert not any(
         filename.startswith("context_distribution_rn6_DBS") for filename in entries

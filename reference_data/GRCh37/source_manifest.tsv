@@ -1,0 +1,31 @@
+# SigProfilerMatrixGenerator GRCh37 corrected TSB source manifest
+# Assembly: GRCh37.p13, INSDC GCA_000001405.14
+# FASTA base URL: https://ftp.ensembl.org/pub/grch37/release-93/fasta/homo_sapiens/dna/
+# Annotation URL: https://ftp.ensembl.org/pub/grch37/release-93/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.chr.gtf.gz
+# filename	sha256	ensembl_sum	ensembl_blocks
+Homo_sapiens.GRCh37.dna.chromosome.1.fa.gz	2f13339ef278b05fd7d80d60052ba12dbd661b6396024b2043a2c5ada07aab96	22400	66778
+Homo_sapiens.GRCh37.dna.chromosome.2.fa.gz	c4131d1f91d7180a01e54bad1fb0fdfe27729db02ccd7b14477ed6a7d569e44e	34079	70818
+Homo_sapiens.GRCh37.dna.chromosome.3.fa.gz	406a916cb2d6aee96ae930ec8fb8330229d58f8ea85a6e251990f21af4766ec2	40162	57924
+Homo_sapiens.GRCh37.dna.chromosome.4.fa.gz	644ced47c031ddd204fc280d423c1fb16604d8b1316988fbf976255b4814c530	01847	55808
+Homo_sapiens.GRCh37.dna.chromosome.5.fa.gz	11eb7716b6d992c8b60167afaca8930139189fab6d3f0e2f21a7e6175335e82d	45795	52816
+Homo_sapiens.GRCh37.dna.chromosome.6.fa.gz	a52f501ff4c8604e83aaefc7cf6d91747055eb928b4882090c82499daab3bafe	56378	49780
+Homo_sapiens.GRCh37.dna.chromosome.7.fa.gz	18c20b6a00b34466c417323c9a6adb361e0e12658f11bdd429d4e82356e6d2d5	07314	45900
+Homo_sapiens.GRCh37.dna.chromosome.8.fa.gz	f8cbde7f6933ddf4dad69a6d4ed33c8cadb2b8632f5f0214c581893fd6400fd0	04583	42431
+Homo_sapiens.GRCh37.dna.chromosome.9.fa.gz	5daf2e6b833f4d0ea182a905a8a2ea3619b61918ead1363dd43471ad2494f34c	56689	35716
+Homo_sapiens.GRCh37.dna.chromosome.10.fa.gz	18042d89d06631b8ca0f7e3cd5d34ce8f5a812cc16fce5ad5c7cf4aba5df4090	40589	38966
+Homo_sapiens.GRCh37.dna.chromosome.11.fa.gz	44affb43cbe2722bbdf631986d515cf3ddd4096f2177da14626612092c3d3e33	28504	38897
+Homo_sapiens.GRCh37.dna.chromosome.12.fa.gz	514e1550382b3bba6074712d8b80357f8ed5485211b677d6e246202f58e1d445	23819	38606
+Homo_sapiens.GRCh37.dna.chromosome.13.fa.gz	5b45240a317f204f6024eee59d79cbb979f93442fbaec6417d22269ed5f041f4	38169	28514
+Homo_sapiens.GRCh37.dna.chromosome.14.fa.gz	82848abc45f0e9a64b97f41f7294ea382eca47226f893c5a5a408f37d7ddd66d	23000	26238
+Homo_sapiens.GRCh37.dna.chromosome.15.fa.gz	8c76f26921c03fd0d20a0705612790c59aa397870f0f6e5c2f494512fe4671f6	25386	24302
+Homo_sapiens.GRCh37.dna.chromosome.16.fa.gz	15aef894a7ef7b2e9cfd5924a3a33fbd59f8d1b6e5190c928a85249cb4c7c4e2	20912	23257
+Homo_sapiens.GRCh37.dna.chromosome.17.fa.gz	ce461bcf639f0822207156b7a80a4997fa8f5d7b31a2d00e8c3e5298e40e5c6a	40234	22839
+Homo_sapiens.GRCh37.dna.chromosome.18.fa.gz	2d4481de3245d79de871299ed6c7f067dba7494b6950d2ac4949912fdb0d3a3a	04109	22233
+Homo_sapiens.GRCh37.dna.chromosome.19.fa.gz	6face4cdee067e30b0b80e1a2c862a6001a6c92a4afac22c2210dbc96fd8ddb0	58845	16038
+Homo_sapiens.GRCh37.dna.chromosome.20.fa.gz	67a8ad2e59bd707a05d5addc964acc6f6c3813a71a4dc71afaedc102a9e123c1	00484	17643
+Homo_sapiens.GRCh37.dna.chromosome.21.fa.gz	392e9acfdeb62a72a97fead0037362646958a78c59bdacf8448ee6481d8e479a	49209	10466
+Homo_sapiens.GRCh37.dna.chromosome.22.fa.gz	a2c4d852f3c03735936c1f3ddd84a8747a92b82f4cab17a9cdf69017bbe234f7	43822	10284
+Homo_sapiens.GRCh37.dna.chromosome.X.fa.gz	d98b7a967d6bae8eb92d56ed44d74d657236167b790945883302e2f0c423ef2a	27549	44744
+Homo_sapiens.GRCh37.dna.chromosome.Y.fa.gz	16659ca335349c5a0867a275b9266aa4d92fb071557c78663349db7ae30cee99	27424	6829
+Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz	ecd9227e48387e9173b72cb7862357d72377129d1453fad6e5f9639bb625eb8a	01420	6
+Homo_sapiens.GRCh37.87.chr.gtf.gz	12b852b93a7fdb35e0faa749caa50e0cc2408c6d299fb018b27bd0051f2e199d	36102	41396
