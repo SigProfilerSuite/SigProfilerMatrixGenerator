@@ -68,7 +68,7 @@ interchangeable: chromosome checksums, input conversion, and TSB lookup retain
 the full reference-data ID. Run logs record both names and the TSB directory.
 
 `REFERENCE_ASSEMBLIES` explicitly maps the existing `GRCh37_havana`,
-`GRCh38_havana`, `GRCh38_Legacy`, and `mm10_havana` references to their base
+`GRCh38_havana`, `GRCh38_Legacy`, `mm9_Legacy`, and `mm10_havana` references to their base
 assemblies. Unknown names are not shortened by guessing from underscores or the
 word `havana`.
 
@@ -87,14 +87,21 @@ installation continues to use the already-published corrected `GRCh38.tar.gz`.
 The immutable filename mapping applies prospectively and does not rename this
 working archive.
 
+`mm9` identifies the corrected mouse transcription-strand reference and
+resolves to the immutable archive `mm9.tsb-v2.tar.gz`. The previously
+distributed archive remains unchanged at `mm9.tar.gz` and is registered as
+`mm9_Legacy`. Both identities use the same GRCm37 DNA sequence, exome intervals,
+and transcript scope, but have separate chromosome checksums and strand-aware
+context tables.
+
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,
 and files whose checksums do not match. A mismatch may mean a different reference
 revision or damaged files; it does not necessarily mean the genome is absent.
 Verification does not delete or replace files. An installation created by an
-earlier release under the name `GRCh38` will fail verification after upgrading;
-reinstall `GRCh38` to use the correction, or install `GRCh38_Legacy` and select
-that identity to reproduce an earlier analysis.
+earlier release under a corrected default name will fail verification after
+upgrading; reinstall the corrected identity, or install the corresponding
+`*_Legacy` identity to reproduce an earlier analysis.
 
 ## Tests and Release Limits
 

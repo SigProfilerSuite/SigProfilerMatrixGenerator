@@ -1,0 +1,30 @@
+# SigProfilerMatrixGenerator mm9 corrected TSB source manifest
+# Assembly: GRCm37 / NCBIM37, INSDC GCA_000001635.18
+# FASTA base URL: https://ftp.ensembl.org/pub/release-67/fasta/mus_musculus/dna/
+# Annotation URL: https://ftp.ensembl.org/pub/release-67/gtf/mus_musculus/Mus_musculus.NCBIM37.67.gtf.gz
+# FASTA sum values match Ensembl CHECKSUMS; GTF sum is recorded locally because
+# the release-67 GTF directory does not publish a CHECKSUMS file.
+# filename	sha256	bsd_sum	blocks
+Mus_musculus.NCBIM37.67.dna.chromosome.1.fa.gz	ca48832e3c6dafb646afee4e6cdd0706b1fb9122b73047cc77e143cc3e8f6896	58174	54607
+Mus_musculus.NCBIM37.67.dna.chromosome.2.fa.gz	9a59ea61c9d76ee06ee8f27532973a3a1194f01fd95880ddd88c37a2e65a9936	00399	50907
+Mus_musculus.NCBIM37.67.dna.chromosome.3.fa.gz	0297ddaf3bbd325473784ed5963304296c4f1b1612e667a549051b3d8b64b692	06088	44550
+Mus_musculus.NCBIM37.67.dna.chromosome.4.fa.gz	6819b44c1aa68b26666aa2147a36bcfcfdc3af12be197d27f57d577529db5d8b	27312	43231
+Mus_musculus.NCBIM37.67.dna.chromosome.5.fa.gz	2092ce6d5fde7e9d1e535b3cb58510bf7dfcaa9b74e468953046516d052696ca	17924	42120
+Mus_musculus.NCBIM37.67.dna.chromosome.6.fa.gz	6f5522a677b6835fe3f07ef2daaa4ba35df3360958a23bf7fe4d119ee69d3b75	25489	41636
+Mus_musculus.NCBIM37.67.dna.chromosome.7.fa.gz	4686b9b3e28a6734a396270594a7ed5151b7297a616f00dca3658f9722d2bb48	31498	40296
+Mus_musculus.NCBIM37.67.dna.chromosome.8.fa.gz	5c896031578de568e03ea7fc7bf7edf6923542a65febd600853956081affd247	34711	35637
+Mus_musculus.NCBIM37.67.dna.chromosome.9.fa.gz	e4bd0908ee0b1b5f1c184ea63ff67584f34546509d864d0a60a401f6f07c50a1	24919	34487
+Mus_musculus.NCBIM37.67.dna.chromosome.10.fa.gz	c40cfce83b389e57fcb87dc6bff46a7365c6c8034b3e769ff6592f9773cb7504	25057	36182
+Mus_musculus.NCBIM37.67.dna.chromosome.11.fa.gz	62d7bbdd5810274c767f8d7a4dac519eef3414e16bd4bc1c3f75065c36c888e4	54003	33898
+Mus_musculus.NCBIM37.67.dna.chromosome.12.fa.gz	f1a9804583e064608601736907da38436a0f8ba4496b22a311cf10e62a9f7ec3	27218	33501
+Mus_musculus.NCBIM37.67.dna.chromosome.13.fa.gz	4885aaf35511bc5c01d80f16b758b9c80d9ce208900ed02536b9c1fc3c4f9c55	31986	33244
+Mus_musculus.NCBIM37.67.dna.chromosome.14.fa.gz	116442bf781207d6798ce0e2b7b36979a11e1570fd1d25f294f00ebb45eb7cf8	06022	34675
+Mus_musculus.NCBIM37.67.dna.chromosome.15.fa.gz	06d4a02032d6e87113d65bfd9f43bb8f71680074a24897b56b9294616208c2fc	40686	28672
+Mus_musculus.NCBIM37.67.dna.chromosome.16.fa.gz	3d79fdf2f3dd164b57e0dcb2b103a6bfed435fa26b08eda3d5fb8278cdd3d1ef	27143	27118
+Mus_musculus.NCBIM37.67.dna.chromosome.17.fa.gz	71aea2812e6fd0cd3ab1881ce56c1fa1e75ddfe47b495bfd9f2db272c67fcf0c	51861	26166
+Mus_musculus.NCBIM37.67.dna.chromosome.18.fa.gz	c1e6b2bac75da84b4b5587f2777dbcfca34890c07a5267f09e12c9b1f81e31e1	64216	25020
+Mus_musculus.NCBIM37.67.dna.chromosome.19.fa.gz	fc8836e234df1f9bb968e2f16ee3cf6caec50186148a48254ab99f4bfe4ebfe6	56312	16633
+Mus_musculus.NCBIM37.67.dna.chromosome.X.fa.gz	ca65cb0215c94b6287ee7ad33f7c34478b87ece15b1d66c8eb7161b4aa30ade0	08691	45604
+Mus_musculus.NCBIM37.67.dna.chromosome.Y.fa.gz	cf0cabae09eb43d2e0f1f64284d9811b41b4d69f2fc21eabf5de3a638925cc88	55592	778
+Mus_musculus.NCBIM37.67.dna.chromosome.MT.fa.gz	d7a29ce703d15118dbce24157e1fd0e6eba76f9aa0c1f463040ca70047b6049e	45560	6
+Mus_musculus.NCBIM37.67.gtf.gz	db26bfb1e4d487149759d1590e836d7a08152785418b25ee32c0ffc5e28d135f	31256	12475

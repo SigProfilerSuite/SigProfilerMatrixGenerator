@@ -92,6 +92,36 @@ def test_local_install_uses_immutable_archive_filename(monkeypatch, tmp_path):
     assert (tmp_path.resolve() / "tsb" / "test_genome" / "1.txt").is_file()
 
 
+def test_local_install_can_remap_an_immutable_archive_root(monkeypatch, tmp_path):
+    manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
+    archive_dir = tmp_path / "archives"
+    archive_path = archive_dir / "original_name.tar.gz"
+    write_test_archive(archive_path, genome_name="original_name")
+    checksum = reference_genome_manager.hashlib.md5(
+        b"test chromosome contents"
+    ).hexdigest()
+    monkeypatch.setitem(
+        reference_genome_manager.ARCHIVE_FILENAMES,
+        "legacy_name",
+        archive_path.name,
+    )
+    monkeypatch.setitem(
+        reference_genome_manager.ARCHIVE_ROOTS,
+        "legacy_name",
+        "original_name",
+    )
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "legacy_name",
+        {"1": checksum},
+    )
+
+    manager.install_local_genome("legacy_name", archive_dir)
+
+    assert (tmp_path / "tsb" / "legacy_name" / "1.txt").is_file()
+    assert not (tmp_path / "tsb" / "original_name").exists()
+
+
 @pytest.mark.parametrize(
     "genome_name",
     sorted(reference_genome_manager.KNOWN_AFFECTED_UNCORRECTED),
