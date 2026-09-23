@@ -41,9 +41,34 @@ jobs:
       run: |
         python -m twine check dist/*
 
-    - name: Verify GRCh38 reference resources
+    - name: Verify reference resources
       run: |
-        python -c "import glob, zipfile; wheel=glob.glob('dist/*.whl')[0]; names=[name.rsplit('/', 1)[-1] for name in zipfile.ZipFile(wheel).namelist()]; assert not any('GRCh38_TSBv2' in name for name in names); assert sum(name.startswith(('context_counts_GRCh38_Legacy_', 'context_distribution_GRCh38_Legacy_')) for name in names) == 48; assert sum(name.startswith(('context_counts_GRCh38_', 'context_distribution_GRCh38_')) and 'GRCh38_Legacy_' not in name for name in names) == 48"
+        python - <<'PY'
+        import glob
+        import zipfile
+
+        wheel = glob.glob("dist/*.whl")[0]
+        context_prefix = (
+            "SigProfilerMatrixGenerator/references/chromosomes/"
+            "context_distributions/"
+        )
+        with zipfile.ZipFile(wheel) as archive:
+            names = set(archive.namelist())
+            manifest_name = context_prefix + "context_table_manifest.txt"
+            assert manifest_name in names
+            expected = {
+                line.strip()
+                for line in archive.read(manifest_name).decode("utf-8").splitlines()
+                if line.strip() and not line.startswith("#")
+            }
+            observed = {
+                name.removeprefix(context_prefix)
+                for name in names
+                if name.startswith(context_prefix) and name.endswith(".csv")
+            }
+        assert expected == observed
+        assert not any("_TSBv2" in name or "_pending" in name for name in names)
+        PY
 
     - name: Verify package version
       run: |

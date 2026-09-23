@@ -72,6 +72,12 @@ the full reference-data ID. Run logs record both names and the TSB directory.
 assemblies. Unknown names are not shortened by guessing from underscores or the
 word `havana`.
 
+The three Havana references remain available for historical compatibility but
+are known to contain the pre-correction transcript-boundary and overlap defect.
+Their exact source annotations are not available in the repository, so they
+cannot yet be rebuilt authoritatively. Installing or using one emits a runtime
+warning; transcription-strand-aware results may be affected.
+
 `GRCh38` identifies the corrected transcription-strand reference and is the
 default for new analyses. The previously distributed data is registered as
 `GRCh38_Legacy` for reproducing historical results. Both identities share the

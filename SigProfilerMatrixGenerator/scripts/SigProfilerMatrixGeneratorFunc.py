@@ -101,6 +101,7 @@ def SigProfilerMatrixGeneratorFunc(
     # Terminates the code if the genome reference files have not been created/installed
 
     reference_name = reference_genome
+    reference_genome_manager.warn_if_known_affected(reference_name)
     reference_dir = ref_install.reference_dir(secondary_chromosome_install_dir=volume)
     ref_dir = str(reference_dir.path)
 

@@ -61,9 +61,7 @@ def test_corrected_and_legacy_grch38_context_tables_are_packaged():
                 ).is_file()
 
     assert not any(context_dir.glob("*GRCh38_TSBv2*"))
-    assert (
-        context_dir / "context_counts_GRCh38_6144.csv"
-    ).read_bytes() != (
+    assert (context_dir / "context_counts_GRCh38_6144.csv").read_bytes() != (
         context_dir / "context_counts_GRCh38_Legacy_6144.csv"
     ).read_bytes()
 
@@ -112,9 +110,7 @@ def test_public_api_explains_reference_verification_failure(
     assert before == after
 
 
-def test_old_grch38_installation_error_explains_legacy_migration(
-    monkeypatch, tmp_path
-):
+def test_old_grch38_installation_error_explains_legacy_migration(monkeypatch, tmp_path):
     monkeypatch.setitem(refs.CHECKSUMS, "GRCh38", {"1": "not-the-old-checksum"})
     directory = tmp_path / "tsb" / "GRCh38"
     directory.mkdir(parents=True)
@@ -125,3 +121,36 @@ def test_old_grch38_installation_error_explains_legacy_migration(
 
     assert "Reinstall 'GRCh38' for new analyses" in message
     assert "'GRCh38_Legacy'" in message
+
+
+def test_grch38_uses_immutable_corrected_archive_filename():
+    assert refs.get_archive_filename("GRCh38") == "GRCh38.tsb-v2.tar.gz"
+    assert refs.get_archive_filename("GRCh38_Legacy") == "GRCh38_Legacy.tar.gz"
+    assert refs.get_archive_filename("mm10") == "mm10.tar.gz"
+
+
+@pytest.mark.parametrize("reference_name", sorted(refs.KNOWN_AFFECTED_UNCORRECTED))
+def test_matrix_api_warns_for_known_affected_reference(
+    monkeypatch, tmp_path, reference_name
+):
+    monkeypatch.setattr(
+        refs.ReferenceGenomeManager, "is_genome_installed", lambda self, name: False
+    )
+    monkeypatch.setattr(
+        refs.ReferenceGenomeManager,
+        "print_genome_checksum_verification_report",
+        lambda self, name: None,
+    )
+
+    with pytest.warns(
+        refs.KnownAffectedReferenceWarning,
+        match="Transcription-strand-aware results may be affected",
+    ):
+        with pytest.raises(refs.ReferenceInstallationError):
+            api.SigProfilerMatrixGeneratorFunc(
+                "fixture",
+                reference_name,
+                str(tmp_path),
+                volume=str(tmp_path),
+                plot=False,
+            )

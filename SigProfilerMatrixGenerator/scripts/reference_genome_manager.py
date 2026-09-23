@@ -6,6 +6,7 @@ import os
 import shutil
 import logging
 import time
+import warnings
 
 from pathlib import Path
 from SigProfilerMatrixGenerator.scripts import ref_install
@@ -382,6 +383,45 @@ REFERENCE_ASSEMBLIES = {
     "mm10_havana": "mm10",
 }
 
+# Logical reference IDs are stable user-facing names. Physical archive names
+# are immutable so older software can continue downloading the archive whose
+# checksums it expects.
+ARCHIVE_FILENAMES = {
+    "GRCh38": "GRCh38.tsb-v2.tar.gz",
+}
+
+LEGACY_REFERENCES = {
+    "GRCh38": "GRCh38_Legacy",
+}
+
+KNOWN_AFFECTED_UNCORRECTED = frozenset(
+    {"GRCh37_havana", "GRCh38_havana", "mm10_havana"}
+)
+
+
+class KnownAffectedReferenceWarning(UserWarning):
+    """Warn that a retained reference has a known TSB defect."""
+
+
+def get_archive_filename(reference_name):
+    """Return the immutable physical archive for a logical reference ID."""
+    return ARCHIVE_FILENAMES.get(reference_name, f"{reference_name}.tar.gz")
+
+
+def warn_if_known_affected(reference_name):
+    """Warn while retaining historical Havana reference compatibility."""
+    if reference_name not in KNOWN_AFFECTED_UNCORRECTED:
+        return
+    warnings.warn(
+        f"Reference {reference_name!r} uses a historical transcription-strand "
+        "archive known to contain incorrect transcript-boundary and overlap "
+        "labels. No corrected Havana archive is currently available. "
+        "Transcription-strand-aware results may be affected; proceeding for "
+        "historical compatibility.",
+        KnownAffectedReferenceWarning,
+        stacklevel=2,
+    )
+
 
 def get_reference_assembly(reference_name):
     """Resolve explicitly registered shared resources, never guess from a suffix."""
@@ -410,13 +450,14 @@ class ReferenceGenomeManager:
         """
         Downloads the specified genome from the FTP server and installs it in the reference directory.
         """
+        warn_if_known_affected(genome_name)
         if self.is_genome_installed(genome_name):
             logging.info(f"{genome_name} is already installed.")
             return
 
         logging.info(f"Downloading {genome_name}...")
 
-        file_name = f"{genome_name}.tar.gz"
+        file_name = get_archive_filename(genome_name)
         local_filepath = self.reference_dir.get_tsb_dir() / file_name
         local_filepath.parent.mkdir(parents=True, exist_ok=True)
 
@@ -500,8 +541,9 @@ class ReferenceGenomeManager:
         - local_genome_dir (Path or str): The local directory path where the genome archive is stored.
         """
 
+        warn_if_known_affected(genome_name)
         local_genome_dir = Path(local_genome_dir)
-        archive_file_path = local_genome_dir / f"{genome_name}.tar.gz"
+        archive_file_path = local_genome_dir / get_archive_filename(genome_name)
 
         # Verify that the local genome file exists
         if not archive_file_path.exists():
@@ -570,12 +612,14 @@ class ReferenceGenomeManager:
                 "The reference may be a different revision or the files may be damaged."
             )
         migration = ""
-        if genome_name == "GRCh38":
+        legacy_reference = LEGACY_REFERENCES.get(genome_name)
+        if legacy_reference:
             migration = (
                 " Releases before the corrected transcription-strand reference may "
-                "have installed the former GRCh38 data at this location. Reinstall "
-                "'GRCh38' for new analyses, or install and select 'GRCh38_Legacy' "
-                "to reproduce historical results."
+                f"have installed the former {genome_name} data at this location. "
+                "Reinstall "
+                f"{genome_name!r} for new analyses, or install and select "
+                f"{legacy_reference!r} to reproduce historical results."
             )
         return (
             problem + migration + " Existing files have not been removed or replaced. "

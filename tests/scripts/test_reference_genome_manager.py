@@ -40,6 +40,75 @@ def test_download_genome_installs_archive_from_ftp(monkeypatch, tmp_path):
     assert not archive_path.exists()
 
 
+def test_download_genome_uses_immutable_archive_filename(monkeypatch, tmp_path):
+    manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
+    calls = []
+    monkeypatch.setitem(
+        reference_genome_manager.ARCHIVE_FILENAMES,
+        "test_genome",
+        "test_genome.tsb-v2.tar.gz",
+    )
+    monkeypatch.setattr(manager, "is_genome_installed", lambda genome: False)
+
+    def download(server, path, filename, local_filepath):
+        calls.append((filename, local_filepath.name))
+        write_test_archive(local_filepath)
+
+    monkeypatch.setattr(manager, "_download_via_ftplib", download)
+    monkeypatch.setattr(
+        manager,
+        "_download_via_curl",
+        lambda *args: pytest.fail("curl should not be used"),
+    )
+
+    manager.download_genome("test_genome")
+
+    assert calls == [("test_genome.tsb-v2.tar.gz", "test_genome.tsb-v2.tar.gz")]
+    assert (tmp_path.resolve() / "tsb" / "test_genome" / "1.txt").is_file()
+
+
+def test_local_install_uses_immutable_archive_filename(monkeypatch, tmp_path):
+    manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
+    archive_dir = tmp_path / "archives"
+    archive_path = archive_dir / "test_genome.tsb-v2.tar.gz"
+    write_test_archive(archive_path)
+    monkeypatch.setitem(
+        reference_genome_manager.ARCHIVE_FILENAMES,
+        "test_genome",
+        archive_path.name,
+    )
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "test_genome",
+        {
+            "1": reference_genome_manager.hashlib.md5(
+                b"test chromosome contents"
+            ).hexdigest()
+        },
+    )
+
+    manager.install_local_genome("test_genome", archive_dir)
+
+    assert (tmp_path.resolve() / "tsb" / "test_genome" / "1.txt").is_file()
+
+
+@pytest.mark.parametrize(
+    "genome_name",
+    sorted(reference_genome_manager.KNOWN_AFFECTED_UNCORRECTED),
+)
+def test_download_warns_for_known_affected_reference(
+    monkeypatch, tmp_path, genome_name
+):
+    manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
+    monkeypatch.setattr(manager, "is_genome_installed", lambda genome: True)
+
+    with pytest.warns(
+        reference_genome_manager.KnownAffectedReferenceWarning,
+        match="known to contain incorrect",
+    ):
+        manager.download_genome(genome_name)
+
+
 def test_download_genome_falls_back_to_curl_on_same_mirror(monkeypatch, tmp_path):
     manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
     calls = []
