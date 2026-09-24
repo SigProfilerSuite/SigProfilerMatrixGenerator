@@ -87,6 +87,15 @@ installation continues to use the already-published corrected `GRCh38.tar.gz`.
 The immutable filename mapping applies prospectively and does not rename this
 working archive.
 
+`mm10` identifies the corrected mouse transcription-strand reference and
+resolves to `mm10.tar.gz`. A copy of the previously distributed archive is
+available as `mm10_Legacy.tar.gz` and registered as `mm10_Legacy`. Both
+identities use the same GRCm38 DNA sequence, exome intervals, and transcript
+scope, but have separate chromosome checksums and strand-aware context tables.
+Older software will reject the corrected archive because its chromosome
+checksums differ; use a version that registers `mm10_Legacy` to reproduce
+earlier results.
+
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,
 and files whose checksums do not match. A mismatch may mean a different reference
@@ -94,7 +103,8 @@ revision or damaged files; it does not necessarily mean the genome is absent.
 Verification does not delete or replace files. An installation created by an
 earlier release under the name `GRCh38` will fail verification after upgrading;
 reinstall `GRCh38` to use the correction, or install `GRCh38_Legacy` and select
-that identity to reproduce an earlier analysis.
+that identity to reproduce an earlier analysis. The same applies to `mm10` and
+`mm10_Legacy`.
 
 ## Tests and Release Limits
 

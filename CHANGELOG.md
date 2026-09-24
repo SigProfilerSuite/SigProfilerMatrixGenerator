@@ -10,12 +10,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Register `GRCh38_Legacy` with the chromosome checksums and context tables from
   the previously distributed GRCh38 reference so historical results remain
   reproducible.
+- Register `mm10_Legacy` with the chromosome checksums and context tables from
+  the previously distributed mm10 reference so historical results remain
+  reproducible.
 
 ### Changed
 - Promote the corrected transcription-strand reference to the default `GRCh38`
   identity, including validated strand-aware whole-genome and exome context-count
   and distribution tables. Existing installations of the former `GRCh38`
   reference must be reinstalled after upgrading.
+- Promote the corrected transcription-strand reference to the default `mm10`
+  identity, including validated strand-aware whole-genome and exome context-count
+  and distribution tables, and add the whole-genome male `context_distribution_6`
+  table that was missing from the historical package. Existing installations of
+  the former `mm10` reference must be reinstalled after upgrading.
 
 ### Fixed
 - Rebuild SBS context-distribution tables from the shared five-base opportunity
@@ -47,6 +55,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Corrected `GRCh38` continues to resolve to its already-published
   `GRCh38.tar.gz`; the separately registered `GRCh38_Legacy` archive remains
   available for old analyses.
+- Corrected `mm10` resolves to `mm10.tar.gz`; `mm10_Legacy` resolves to a copy
+  of the untouched historical archive named `mm10_Legacy.tar.gz`. Older
+  MatrixGenerator releases cannot verify the corrected archive under the
+  original name and should upgrade before reinstalling.
 
 ## [1.3.6] - 2025-10-28
 

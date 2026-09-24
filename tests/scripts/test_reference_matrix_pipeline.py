@@ -18,6 +18,8 @@ from SigProfilerMatrixGenerator.scripts import (
         "GRCh37",
         "GRCh38",
         "GRCh38_Legacy",
+        "mm10",
+        "mm10_Legacy",
         "GRCh37_havana",
         "GRCh38_havana",
         "mm10_havana",
