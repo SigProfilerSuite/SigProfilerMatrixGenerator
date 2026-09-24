@@ -439,7 +439,7 @@ class KnownAffectedReferenceWarning(UserWarning):
 
 
 def get_archive_filename(reference_name):
-    """Return the immutable physical archive for a logical reference ID."""
+    """Return the physical archive for a logical reference ID."""
     return ARCHIVE_FILENAMES.get(reference_name, f"{reference_name}.tar.gz")
 
 

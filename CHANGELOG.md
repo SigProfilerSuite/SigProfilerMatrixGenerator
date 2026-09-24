@@ -10,7 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Register `GRCh38_Legacy` with the chromosome checksums and context tables from
   the previously distributed GRCh38 reference so historical results remain
   reproducible.
-- Register `GRCh37_Legacy` against the untouched historical `GRCh37.tar.gz`
+- Register `GRCh37_Legacy` against a copy of the untouched historical archive
+  named `GRCh37_Legacy.tar.gz`
   archive and preserve its supporting tables for reproducible older analyses.
 - Record the exact Ensembl GRCh37 FASTA and annotation sources, checksums, and
   retained historical transcript scope used to rebuild the corrected reference.
@@ -22,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   reference must be reinstalled after upgrading.
 - Promote corrected GRCh37 transcription-strand labels and strand-dependent
   opportunity tables to the default `GRCh37` identity.
-- Resolve logical reference names to immutable physical archive filenames and
+- Resolve logical reference names to their physical archive filenames and
   stage archive extraction so a historical internal directory can be safely
   installed under a distinct Legacy identity.
 

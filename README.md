@@ -282,7 +282,7 @@ pytest tests
 An integration test can be run with the following commands:
 
 ```bash
-wget ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerMatrixGenerator/GRCh37.tsb-v2.tar.gz -P ./src/
+wget ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerMatrixGenerator/GRCh37.tar.gz -P ./src/
 pip install .
 SigProfilerMatrixGenerator install GRCh37
 python3 test.py -t GRCh37

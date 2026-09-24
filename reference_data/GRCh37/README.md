@@ -52,7 +52,8 @@ artifact has no runtime consumer and no corresponding male or other-context
 table. It is retained under the `GRCh37_Legacy` identity only and is not part of
 the corrected default table footprint.
 
-The corrected logical reference `GRCh37` resolves to the immutable physical
-archive `GRCh37.tsb-v2.tar.gz`. `GRCh37_Legacy` resolves to the untouched
-historical `GRCh37.tar.gz`; the installer safely remaps its internal `GRCh37/`
-directory to `GRCh37_Legacy/`.
+The corrected logical reference `GRCh37` resolves to `GRCh37.tar.gz`.
+`GRCh37_Legacy` resolves to a copy of the untouched historical archive named
+`GRCh37_Legacy.tar.gz`; the installer safely remaps its internal `GRCh37/`
+directory to `GRCh37_Legacy/`. Existing installations of the former `GRCh37`
+must be reinstalled after upgrading.
