@@ -88,11 +88,13 @@ The immutable filename mapping applies prospectively and does not rename this
 working archive.
 
 `mm9` identifies the corrected mouse transcription-strand reference and
-resolves to the immutable archive `mm9.tsb-v2.tar.gz`. The previously
-distributed archive remains unchanged at `mm9.tar.gz` and is registered as
-`mm9_Legacy`. Both identities use the same GRCm37 DNA sequence, exome intervals,
-and transcript scope, but have separate chromosome checksums and strand-aware
-context tables.
+resolves to `mm9.tar.gz`. A copy of the previously distributed archive is
+available as `mm9_Legacy.tar.gz` and registered as `mm9_Legacy`. Both
+identities use the same GRCm37 DNA sequence, exome intervals, and transcript
+scope, but have separate chromosome checksums and strand-aware context tables.
+Older software will reject the corrected archive because its chromosome
+checksums differ; use a version that registers `mm9_Legacy` to reproduce
+earlier results.
 
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,

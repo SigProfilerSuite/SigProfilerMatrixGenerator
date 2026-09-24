@@ -409,12 +409,10 @@ REFERENCE_ASSEMBLIES = {
     "mm10_havana": "mm10",
 }
 
-# Logical reference IDs are stable user-facing names. Physical archive names
-# are immutable so older software can continue downloading the archive whose
-# checksums it expects.
+# Logical reference IDs are stable user-facing names. The corrected default
+# uses the standard archive name; historical data has a distinct filename.
 ARCHIVE_FILENAMES = {
-    "mm9": "mm9.tsb-v2.tar.gz",
-    "mm9_Legacy": "mm9.tar.gz",
+    "mm9_Legacy": "mm9_Legacy.tar.gz",
 }
 
 # Historical archives can retain their original top-level directory while
@@ -438,7 +436,7 @@ class KnownAffectedReferenceWarning(UserWarning):
 
 
 def get_archive_filename(reference_name):
-    """Return the immutable physical archive for a logical reference ID."""
+    """Return the physical archive for a logical reference ID."""
     return ARCHIVE_FILENAMES.get(reference_name, f"{reference_name}.tar.gz")
 
 

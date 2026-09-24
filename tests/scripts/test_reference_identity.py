@@ -172,9 +172,9 @@ def test_grch38_uses_existing_published_archive_filenames():
     assert refs.get_archive_filename("mm10") == "mm10.tar.gz"
 
 
-def test_mm9_uses_immutable_corrected_and_historical_archives():
-    assert refs.get_archive_filename("mm9") == "mm9.tsb-v2.tar.gz"
-    assert refs.get_archive_filename("mm9_Legacy") == "mm9.tar.gz"
+def test_mm9_uses_default_and_legacy_archive_names():
+    assert refs.get_archive_filename("mm9") == "mm9.tar.gz"
+    assert refs.get_archive_filename("mm9_Legacy") == "mm9_Legacy.tar.gz"
     assert refs.get_archive_root("mm9_Legacy") == "mm9"
 
 

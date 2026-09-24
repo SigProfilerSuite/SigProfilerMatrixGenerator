@@ -44,7 +44,7 @@ historical unstranded tables exactly. The old whole-genome generator omitted
 the final valid window on each of 20 chromosomes; corrected tables include
 those 20 terminal contexts.
 
-The corrected logical reference `mm9` resolves to the immutable physical
-archive `mm9.tsb-v2.tar.gz`. `mm9_Legacy` resolves to the untouched historical
-`mm9.tar.gz`; the installer safely remaps its internal `mm9/` directory to
-`mm9_Legacy/`.
+The corrected logical reference `mm9` resolves to `mm9.tar.gz`.
+`mm9_Legacy` resolves to a copy of the untouched historical archive named
+`mm9_Legacy.tar.gz`; the installer safely remaps its internal `mm9/` directory
+to `mm9_Legacy/`.

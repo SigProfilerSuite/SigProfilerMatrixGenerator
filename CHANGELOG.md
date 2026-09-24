@@ -53,8 +53,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Corrected `GRCh38` continues to resolve to its already-published
   `GRCh38.tar.gz`; the separately registered `GRCh38_Legacy` archive remains
   available for old analyses.
-- Corrected `mm9` resolves to `mm9.tsb-v2.tar.gz`; `mm9_Legacy` resolves to the
-  untouched historical `mm9.tar.gz`.
+- Corrected `mm9` resolves to `mm9.tar.gz`; `mm9_Legacy` resolves to a copy
+  of the untouched historical archive named `mm9_Legacy.tar.gz`. Older
+  MatrixGenerator releases cannot verify the corrected archive under the
+  original name and should upgrade before reinstalling.
 
 ## [1.3.6] - 2025-10-28
 
