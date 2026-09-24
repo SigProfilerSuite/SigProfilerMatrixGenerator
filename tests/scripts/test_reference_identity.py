@@ -102,14 +102,29 @@ def test_corrected_and_legacy_mm10_context_tables_are_packaged():
                     context_dir
                     / f"context_distribution_{reference}_{context}_{gender}_exome.csv"
                 ).is_file()
-        # Every context size ships both genders, including the historically
-        # missing whole-genome male "6" table.
         for context in ("6", "96", "1536"):
             for gender in ("female", "male"):
                 assert (
                     context_dir
-                    / f"context_distribution_{reference}_{context}_{gender}.csv"
+                    / f"context_distribution_{reference}_{context}_{gender}_exome.csv"
                 ).is_file()
+
+    # Every context size ships both WGS genders for the corrected identity,
+    # including the historically missing whole-genome male "6" table.
+    for context in ("6", "96", "1536"):
+        for gender in ("female", "male"):
+            assert (
+                context_dir / f"context_distribution_mm10_{context}_{gender}.csv"
+            ).is_file()
+    # mm10_Legacy preserves the exact historical 47-file footprint: it never
+    # shipped a whole-genome male "6" distribution, and does not gain one now.
+    assert not (
+        context_dir / "context_distribution_mm10_Legacy_6_male.csv"
+    ).is_file()
+    for context in ("96", "1536"):
+        assert (
+            context_dir / f"context_distribution_mm10_Legacy_{context}_male.csv"
+        ).is_file()
 
     assert (context_dir / "context_counts_mm10_6144.csv").read_bytes() != (
         context_dir / "context_counts_mm10_Legacy_6144.csv"

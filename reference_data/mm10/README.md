@@ -56,12 +56,34 @@ They are **not** consistent:
   other TSB revision than what is registered today), not something
   introduced by or related to the TSB strand-labeling defect being fixed
   here.
-- The strand-independent tables (`6`, `96`, `1536`, `DBS`) are internally
-  consistent with the current archive for whole-genome counts, but the
-  single missing file `context_distribution_mm10_6_male.csv` (see below) and
-  small (~1e-6 relative) differences in some gender-restricted proportion
-  files suggest at least one of those tables was also regenerated at a
-  slightly different time than the others.
+- The strand-independent ("sequence-only") tables (`6`, `96`, `1536`, `DBS`)
+  do not depend on TSB state, so their whole-genome **counts** files are
+  byte-identical between the corrected and Legacy identities in every case
+  checked - confirming the underlying per-chromosome tallies genuinely
+  haven't changed. Their whole-genome **distribution** (proportion) files are
+  a different story: recomputing proportions directly from that shared,
+  identical counts file reproduces the corrected distribution file exactly,
+  but does **not** reproduce the shipped Legacy distribution file for three
+  of the four context types. Concretely (max relative difference, WGS only):
+
+  | context | female | male | note |
+  |---|---|---|---|
+  | `6` | 2.2e-06 | (no historical file; see below) | float-noise only |
+  | `96` | 2.5e-02 | 2.5e-02 | concentrated at chr19, rare trinucleotide contexts (e.g. `ACG`/`GCG`) |
+  | `1536` | 2.5e-02 | 2.5e-02 | concentrated at chr19, rare pentanucleotide contexts |
+  | `DBS` | 2.5e-02 | 2.5e-02 | concentrated at chr19, the `CG` dinucleotide |
+
+  In other words, the shipped historical distribution files for `96`,
+  `1536`, and `DBS` are internally inconsistent with the shipped historical
+  counts file they should have been derived from - a real ~2.5% discrepancy
+  concentrated on one chromosome, not a rounding artifact. This is the same
+  symptom as the strand-aware drift above (a historical file that doesn't
+  reconcile with other historical files it should match), just affecting
+  sequence-only tables too. Separately, the shipped
+  `context_distribution_mm10_6_female_exome.csv` includes a stray `Y` column
+  despite being labeled "female" (female gender excludes Y by construction) -
+  noted here, not investigated further; it does not affect any value used by
+  this correction.
 - This same investigation also explained a header artifact present in every
   currently-shipped `*_exome.csv` file across every genome (GRCh37, mm9,
   mm10 alike): `context_distribution_BED`'s `chromosomes_sort = chromosomes`
@@ -92,9 +114,13 @@ a `_female` variant except context `6`, which was missing
 under male gender; only the corresponding whole-genome male distribution file
 was never produced or was lost. Context `6` does not use transcription-strand
 data at all (only nucleotide identity), so it is unaffected by the TSB
-correction and safe to regenerate from either archive. It was regenerated
-here from the corrected archive using the unmodified generation logic and is
-now included for both `mm10` and `mm10_Legacy`.
+correction and could safely be derived from either archive. It was
+regenerated from the corrected archive using the unmodified generation logic
+and is included for the corrected `mm10` identity only, where it fills a real
+gap. `mm10_Legacy` preserves the exact historical 47-file footprint and does
+not gain this file, since it never shipped historically; "safe to derive"
+is not the same claim as "was previously shipped," and Legacy's purpose is
+the latter.
 
 ## Validation of the regeneration method
 

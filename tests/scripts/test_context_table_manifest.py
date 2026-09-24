@@ -34,9 +34,11 @@ def test_context_table_manifest_records_known_irregular_footprints():
 
     assert "context_distribution_GRCh37_DBS186_female_BED.csv" in entries
     # The historically missing whole-genome male "6" table has been rebuilt
-    # and is now packaged for both the corrected and Legacy mm10 identities.
+    # and is packaged for the corrected mm10 identity, which fills a real
+    # gap. mm10_Legacy preserves the exact historical 47-file footprint and
+    # does not gain this file, since it never shipped historically.
     assert "context_distribution_mm10_6_male.csv" in entries
-    assert "context_distribution_mm10_Legacy_6_male.csv" in entries
+    assert "context_distribution_mm10_Legacy_6_male.csv" not in entries
     assert not any(
         filename.startswith("context_distribution_rn6_DBS") for filename in entries
     )
