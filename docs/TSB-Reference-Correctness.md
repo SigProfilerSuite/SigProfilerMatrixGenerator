@@ -68,7 +68,7 @@ interchangeable: chromosome checksums, input conversion, and TSB lookup retain
 the full reference-data ID. Run logs record both names and the TSB directory.
 
 `REFERENCE_ASSEMBLIES` explicitly maps the existing `GRCh37_havana`,
-`GRCh38_havana`, `GRCh38_Legacy`, and `mm10_havana` references to their base
+`GRCh38_havana`, `GRCh38_Legacy`, `mm10_havana`, and `mm39_Legacy` references to their base
 assemblies. Unknown names are not shortened by guessing from underscores or the
 word `havana`.
 
@@ -86,6 +86,14 @@ own chromosome checksums and strand-dependent context tables. Network
 installation continues to use the already-published corrected `GRCh38.tar.gz`.
 The immutable filename mapping applies prospectively and does not rename this
 working archive.
+
+`mm39` likewise identifies the corrected GRCm39 transcription-strand
+reference; `mm39_Legacy` retains the previously distributed bytes for
+reproducibility. Both share the GRCm39 sequence and exome intervals, but use
+separate chromosome checksums and opportunity tables. The corrected archive
+uses `mm39.tar.gz`; the historical archive uses `mm39_Legacy.tar.gz`. An
+existing `mm39` installation must be reinstalled after upgrading. The source
+and validation record is in `reference_data/mm39/README.md`.
 
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,

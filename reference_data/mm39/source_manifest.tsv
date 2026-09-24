@@ -1,0 +1,28 @@
+# SigProfilerMatrixGenerator mm39 source manifest
+# Assembly: GRCm39, INSDC GCA_000001635.9
+# FASTA: https://ftp.ensembl.org/pub/release-103/fasta/mus_musculus/dna/
+# Annotation: https://ftp.ensembl.org/pub/release-103/gtf/mus_musculus/Mus_musculus.GRCm39.103.chr.gtf.gz
+# filename	sha256	bsd_sum	blocks
+Mus_musculus.GRCm39.dna.chromosome.1.fa.gz	2701fdc2ae95aed3c057de89a4114e1e2bb19266dae52860a187acca21123de8	43249	56982
+Mus_musculus.GRCm39.dna.chromosome.10.fa.gz	7faf9bbd5cd15300d898729fe25f192f395b69e5048d2dfc68f6d0d9ed7fb735	56772	37743
+Mus_musculus.GRCm39.dna.chromosome.11.fa.gz	5e0d1b00acbe6cc4076887f7f78783ca6fddf30d0ce872c02839f10cb8e2d125	20487	35291
+Mus_musculus.GRCm39.dna.chromosome.12.fa.gz	c754e9ac506b53f6a67899df57a2453ebf59f4e794896b3c66f0fb5cc6d4c2d4	47159	34720
+Mus_musculus.GRCm39.dna.chromosome.13.fa.gz	1d188bc08dca9e4a0545ee4f3249eb43fa94319ddccdf289d16a83daa769f00a	58198	34852
+Mus_musculus.GRCm39.dna.chromosome.14.fa.gz	220e9db3e1a9f1ab4068a2ce49b2b00b27c162b4f7c750e039ded331f08a4ee4	26354	35994
+Mus_musculus.GRCm39.dna.chromosome.15.fa.gz	d23245ee0522c5a4613ce676cdcec24655e6f6927b47527ae2e50a2fadb9c2ec	33458	29977
+Mus_musculus.GRCm39.dna.chromosome.16.fa.gz	b6b5b85c66e5cd34955c4d4459efcf99fe6c89c009386340d5f40a464f4565b3	27416	28172
+Mus_musculus.GRCm39.dna.chromosome.17.fa.gz	2d167090779905e137feaf6227caacf56ab2be4e1ea9cb4a3b54435869ec82a1	42110	27253
+Mus_musculus.GRCm39.dna.chromosome.18.fa.gz	ba6aea6585b90551ac56ab267987ba0fdbfa3547cf835f3f8eae829ccef2c213	8434	26018
+Mus_musculus.GRCm39.dna.chromosome.19.fa.gz	ad69c0e22bb9e0be1490915b9107a135d765813f33a9b3cf1a21fa597d2b2960	42619	17317
+Mus_musculus.GRCm39.dna.chromosome.2.fa.gz	823bcdb0bec1a50443b4bf24d0fda9df11bc66663ccdebd8c0d073f2c52be5de	27766	52965
+Mus_musculus.GRCm39.dna.chromosome.3.fa.gz	5704f36126614d259389fc2c83798be25968acdb23d54038c1a0ccefcf8f70f1	44536	46462
+Mus_musculus.GRCm39.dna.chromosome.4.fa.gz	2d6b352ed30dc827b25566808144bbf73e751cbbc2e505f178a5456769823ae9	27386	45295
+Mus_musculus.GRCm39.dna.chromosome.5.fa.gz	53ec6e51cc71714e3d2fb86a671460a1bf4e49d0acaa50c069740021436fc0bd	3286	43938
+Mus_musculus.GRCm39.dna.chromosome.6.fa.gz	2731881d32ec3dbadbc27cdb7c43f5dff49b2bad8658c8eb76544d4fd81689ae	16395	43410
+Mus_musculus.GRCm39.dna.chromosome.7.fa.gz	77add3b17ce1ce07ab19689f04be034a866bff99b9f426f63ddf5148dcbbaea3	35864	41928
+Mus_musculus.GRCm39.dna.chromosome.8.fa.gz	0c1000dd10cdf916e6f02c176d495731a59e431f24ad49388bd9f66948b87596	43153	37307
+Mus_musculus.GRCm39.dna.chromosome.9.fa.gz	05a5f9efd97edb221c356b9bc242608b9ce07c04e716320e6a71961419613841	60878	35989
+Mus_musculus.GRCm39.dna.chromosome.MT.fa.gz	d52a2b7dc6de483461c1d0bf6ed715c473337e5197d62d18467049e26370dc05	17649	6
+Mus_musculus.GRCm39.dna.chromosome.X.fa.gz	bf4703988dc8a9417dfbda67ea083ae7bb39c7ea95709b8a581021c25c6f745d	59093	48414
+Mus_musculus.GRCm39.dna.chromosome.Y.fa.gz	db0f3420d98251feeb11ae10c336fe471f18ae6e357deab0800326c70cf4c6f2	3583	26133
+Mus_musculus.GRCm39.103.chr.gtf.gz	27bb50f792696bb30bd1b7cbbf25426a5c3bbbf25da92c310abda7f47044cc7d	29092	29650

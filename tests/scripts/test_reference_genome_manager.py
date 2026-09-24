@@ -92,6 +92,28 @@ def test_local_install_uses_immutable_archive_filename(monkeypatch, tmp_path):
     assert (tmp_path.resolve() / "tsb" / "test_genome" / "1.txt").is_file()
 
 
+def test_local_install_remaps_legacy_archive_root(monkeypatch, tmp_path):
+    manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
+    archive_dir = tmp_path / "archives"
+    archive_path = archive_dir / "mm39_Legacy.tar.gz"
+    write_test_archive(archive_path, genome_name="mm39")
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "mm39_Legacy",
+        {"1": reference_genome_manager.hashlib.md5(
+            b"test chromosome contents"
+        ).hexdigest()},
+    )
+
+    manager.install_local_genome("mm39_Legacy", archive_dir)
+
+    assert manager.is_genome_installed("mm39_Legacy")
+    assert (tmp_path.resolve() / "tsb/mm39_Legacy/1.txt").read_bytes() == (
+        b"test chromosome contents"
+    )
+    assert not (tmp_path.resolve() / "tsb/mm39").exists()
+
+
 @pytest.mark.parametrize(
     "genome_name",
     sorted(reference_genome_manager.KNOWN_AFFECTED_UNCORRECTED),
