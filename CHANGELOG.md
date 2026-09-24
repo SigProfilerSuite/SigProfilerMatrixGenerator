@@ -7,17 +7,55 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Register `GRCh38_Legacy` with the chromosome checksums and context tables from
+  the previously distributed GRCh38 reference so historical results remain
+  reproducible.
 - Added support for the T2T-CHM13v2.0 human reference genome (CHM13-T2T), nuclear chromosomes only (1–22, X, Y), distributed via the AlexandrovLab FTP.
 - Added `scripts/build_refseq_references.py`, the developer tool that derives both the CHM13-T2T exome interval list and its per-chromosome transcript files from a pinned NCBI RefSeq annotation release, so the shipped files can be regenerated and audited rather than only described. Replaces `scripts/build_exome_interval_list.py`, whose behaviour is now the `exome-list` subcommand.
 - Added an exome interval list for CHM13-T2T, so `exome=True` is supported alongside WGS. It is annotation-derived (union of all CDS features in NCBI RefSeq annotation release `GCF_009914755.1-RS_2025_08`, merged; 213,010 intervals over 36.4 Mb) rather than a capture-kit definition, so CHM13-T2T exome matrices are not directly comparable to GRCh38 exome matrices. See `docs/Currently-Supported-Genomes.md` for the full derivation.
 
-### Fixed
-- `test_one_genome()` now forwards `exome`/`bed_file` to `load_and_compare()`. Without them those parameters kept their defaults (`exome=False`, `bed_file=True`), so the WGS and exome paths looked for `.region` solution files in the `WGS/solutions` and `WES/solutions` directories, where the files are named `.all` and `.exome`. Nothing matched, and for every genome only the bed_file path was ever actually asserted.
-
 ### Changed
+- Promote the corrected transcription-strand reference to the default `GRCh38`
+  identity, including validated strand-aware whole-genome and exome context-count
+  and distribution tables. Existing installations of the former `GRCh38`
+  reference must be reinstalled after upgrading.
 - Regenerated the CHM13-T2T transcript files, and with them the whole TSB reference payload, against NCBI RefSeq annotation release `GCF_009914755.1-RS_2025_08`. The previous files came from an earlier release that was never recorded, so neither they nor the TSB files derived from them could be reproduced from any pinned source. All 24 per-chromosome checksums in `CHECKSUMS` change as a result. Note that RS_2025_08 annotates 4,993 transcripts on chrY against 882 before, almost all Gnomon-predicted lncRNA models in the Yq12 satellite region newly resolved by T2T, so transcriptional strand assignments on chrY shift substantially.
 - `exome=True` now fails immediately with an actionable message naming the missing interval list and the genomes that do support exome downsampling, instead of raising a bare `FileNotFoundError` after every chromosome has already been parsed.
 - Exome interval list paths are resolved through `ReferenceDir.get_exome_dir()` / `get_exome_interval_list()` rather than being assembled by hand in several places.
+
+### Fixed
+- Rebuild SBS context-distribution tables from the shared five-base opportunity
+  set, preserve valid binary chromosome bytes, include the final valid window,
+  and reverse T/U labels when purine contexts are canonicalized.
+- Preserve full reference IDs during input conversion and in execution logs;
+  explicitly map existing Havana editions to their shared assembly resources.
+- Distinguish missing, incomplete, unregistered, and checksum-mismatched
+  references in matrix-generation errors without modifying installed files.
+- Supply required conversion arguments for `.genome` text input.
+- Corrected TSB reference generation at inclusive transcript ends and across
+  nested or overlapping transcripts on either strand.
+- Read SBS strand labels at the mutation's own position and reject positions
+  without the required left flanking sequence instead of wrapping around.
+- Compare WGS and exome regression matrices against the correct expected files,
+  and fail when required comparisons are missing. The mode-forwarding correction
+  was also contributed by Luuk Harbers in PR #250.
+- Read combined and headerless transcript annotations without dropping the first
+  record. Correctly combine non-adjacent records for the same gene in the internal
+  gene-range reader; the public gene-strand analysis option remains unsupported.
+- Use the registered reference chromosome list for VCF, text, and MAF conversion
+  instead of inferring chromosomes from transcript filenames.
+- Preserve the first BED data row after a header, and fix region comparisons
+  when the lower bound after applying the cushion is zero.
+- Classify FACETS total-copy-number-one segments in existing LOH channels,
+  retaining the CNV48 schema (from `fix/facets-cnv48-tcn1-loh`).
+
+### Reference Data
+- `GRCh38.tar.gz` now contains the corrected transcription-strand reference.
+  The previously distributed data is preserved as `GRCh38_Legacy.tar.gz`.
+  Both archives must be published under these exact filenames before network
+  installation can succeed.
+- `CHM13-T2T.tar.gz` must be published on the AlexandrovLab FTP server before
+  `SigProfilerMatrixGenerator install CHM13-T2T` can succeed.
 
 ## [1.3.6] - 2025-10-28
 
