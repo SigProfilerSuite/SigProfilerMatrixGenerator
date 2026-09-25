@@ -22,9 +22,9 @@ maps it to the installed `rn7_Legacy/` directory. Do not repackage it.
   chromosome, strand, and inclusive coordinates. Three anomalous chromosome 4
   records are omitted from the corrected strand map; see
   [excluded_transcript_ids.txt](excluded_transcript_ids.txt). The GTF has 22
-  additional transcripts outside the historical bundled set. Gene-name text
-  differs in many rows because the bundle uses a biotype when the GTF has no
-  gene name; gene names are not used for strand-state encoding.
+  additional transcripts outside the historical bundled set. Many gene names
+  differ between the historical bundle and Ensembl 105, and some names are
+  absent from the GTF. Gene names are not used for strand-state encoding.
 
 The corrected chromosome files retain the historical DNA sequence exactly.
 All 2,633,489,728 registered bases were independently compared with the UCSC
