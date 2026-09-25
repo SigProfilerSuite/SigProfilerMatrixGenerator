@@ -44,6 +44,16 @@ an independent count of valid five-base windows in the source FASTA gives
 mutation counts remain the same; strand-aware counts and opportunity-based
 normalization can change.
 
+The large whole-genome difference has a separate, pre-existing cause: in
+each old SBS6, SBS96, SBS1536, and SBS6144 table, chromosome 5's entire
+column is a copy of chromosome 2's column. The copied column totals
+252,176,227 opportunities, whereas chromosome 5 has 166,025,864 valid
+five-base windows in the source FASTA. That accounts for 86,150,363 excess
+opportunities. Each of the other 21 chromosomes was short by one boundary
+window, giving the net difference of 86,150,342. The old exome and DBS
+tables do not have the chromosome 2/5 duplication. These original values
+remain unchanged under `rn6_Legacy` for reproducibility.
+
 ## Release
 
 Upload both archive files from that evidence directory to the reference FTP
