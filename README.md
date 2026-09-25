@@ -253,6 +253,14 @@ Epstein-Barr Virus [EBV] NC_007605.1, Nov 2005. Last updated Aug 2018. This geno
 
 CanFam3.1 [dog] GCA_000002285.2, Sep 2011. Last updated Jun 2019. This genome was downloaded from ENSEMBL database version 100.
 
+The corrected `dog` reference is the default for new analyses. The former
+reference is available as `dog_Legacy` to reproduce historical results. Both
+use the same DNA sequence; transcription-strand labels can differ. Existing
+`dog` installations must be reinstalled after the new archive is published.
+The bundled transcript coordinates match Ensembl release 93 far better than
+release 100; see [dog reference correction](reference_data/dog/README.md) for
+the source comparison and checksums.
+
 WBcel235 [c_elegans] GCA_000002985.3, Oct 2014. Last updated Jan 2019. This genome was downloaded from ENSEMBL database version 100.
 
 *One can specify "_havana" to the end of the genome to include annotations in t-cell receptor genes and IG clusters (available for GRCh37, GRCh38, and mm10). These historical Havana references are known to contain the pre-correction transcription-strand boundary and overlap defect. No corrected Havana archives are currently available. MatrixGenerator emits a runtime warning and continues so that historical analyses remain reproducible; transcription-strand-aware results may be affected.*

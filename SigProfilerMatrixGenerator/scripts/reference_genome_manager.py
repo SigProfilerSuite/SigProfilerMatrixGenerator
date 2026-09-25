@@ -5,6 +5,7 @@ import subprocess
 import os
 import shutil
 import logging
+import tempfile
 import time
 import warnings
 
@@ -310,6 +311,47 @@ CHECKSUMS = {
         "MtDNA": "48983f530959780de0125f74a87d4fc1",
     },
     "dog": {
+        "1": "d99391c1f906418c1913f5da40ea3917",
+        "2": "45fb05209e5ce8a036b6ee6ba6dcfec5",
+        "3": "795b37a2f2049829824099ff4ca3bb9a",
+        "4": "7f68ca5708f14944eca78d39cb771000",
+        "5": "d23714eb6f159a8f64d08e16b435ffdc",
+        "6": "b4d94832afcb1f1e2d493b2dff50b5c7",
+        "7": "443c1db4d4c0aeccac0c92ff1d321811",
+        "8": "51b18c8d6b2b7dfaada726103866e983",
+        "9": "3768518ad3bb71835589f355a4689c01",
+        "10": "ae8a96aa0744f95d9739805c58066e72",
+        "11": "b09e18a5cd20b0a4f7baa4f2cb0c8b52",
+        "12": "0115be78e1a713939c886f8e3bc042bc",
+        "13": "3cda96a5f9b8305bd1540b91caba8ccd",
+        "14": "10c9438236529c7e1077d1505a408c0a",
+        "15": "e2c8312d124f3434381ec897832685cb",
+        "16": "43a147b9c96673c391416a5a9ccb30fa",
+        "17": "c955886edf3768e55d387c274ebbe54b",
+        "18": "439ca6e16ab3baeefd60e804d4cda962",
+        "19": "050b8dd0ff7afd15e888f6db51513c72",
+        "20": "44910c8e307d206f03496b8a26db4409",
+        "21": "7995b27cc08eee717e889913e7c7114a",
+        "22": "45ba459d6bf6829110374ff3f904d858",
+        "23": "fed5745b219d1f7403dc03719d432888",
+        "24": "8b64c66bad4ab1f7399a95a4d3d2fb7b",
+        "25": "873792a92d718eab7f98b50a534bfe6c",
+        "26": "ab8b7f42127236f7dbb52b34dd4477e6",
+        "27": "5880a2d51496483f2df63d95883a5f69",
+        "28": "a3a7a0f1831958d50343f0986fd21684",
+        "29": "0476e0eefbc1349d8fca0ab65015f7b2",
+        "30": "46ffe2161ebb7c1cc29d9d6f04e106d2",
+        "31": "3b98601b4a22cffe288a0040940f27b1",
+        "32": "9236168c5d2f5328bb00d8a11eb7a292",
+        "33": "18e3352156979390f5eeb486efede8cb",
+        "34": "d080cda614650e3f6c38912ae89db5a0",
+        "35": "522db1bb90b00af2ccbffdf493850fc2",
+        "36": "1c882dacc9b497903d0136f85fb5a14d",
+        "37": "69eb8c74aa557c9c0a49e55eb500c345",
+        "38": "7425beb1d641fb7ace176745f2777f2d",
+        "X": "4e1f89041edf681aeedb47bce38ba506",
+    },
+    "dog_Legacy": {
         "1": "bef8283c1a36f9aef0e407de2ff6af00",
         "2": "9cc961192bb5e58b3847060c3e9c1cfc",
         "3": "d33263fa2de6666b41e140cb7a8da66c",
@@ -381,16 +423,22 @@ REFERENCE_ASSEMBLIES = {
     "GRCh38_havana": "GRCh38",
     "GRCh38_Legacy": "GRCh38",
     "mm10_havana": "mm10",
+    "dog_Legacy": "dog",
 }
 
-# Logical reference IDs are stable user-facing names. Physical archive names
-# are immutable so older software can continue downloading the archive whose
-# checksums it expects.
+# Corrected references use their standard archive names. Legacy references
+# have distinct physical filenames while sharing assembly resources.
 ARCHIVE_FILENAMES = {
+    "dog_Legacy": "dog_Legacy.tar.gz",
+}
+
+ARCHIVE_ROOTS = {
+    "dog_Legacy": "dog",
 }
 
 LEGACY_REFERENCES = {
     "GRCh38": "GRCh38_Legacy",
+    "dog": "dog_Legacy",
 }
 
 KNOWN_AFFECTED_UNCORRECTED = frozenset(
@@ -403,8 +451,13 @@ class KnownAffectedReferenceWarning(UserWarning):
 
 
 def get_archive_filename(reference_name):
-    """Return the immutable physical archive for a logical reference ID."""
+    """Return the physical archive for a logical reference ID."""
     return ARCHIVE_FILENAMES.get(reference_name, f"{reference_name}.tar.gz")
+
+
+def get_archive_root(reference_name):
+    """Return the top-level directory stored inside a reference archive."""
+    return ARCHIVE_ROOTS.get(reference_name, reference_name)
 
 
 def warn_if_known_affected(reference_name):
@@ -520,7 +573,7 @@ class ReferenceGenomeManager:
             )
 
         try:
-            self._unzip_file(local_filepath)
+            self._unzip_file(local_filepath, genome_name)
         except (tarfile.TarError, OSError) as e:
             self._remove_partial_archive(local_filepath)
             raise GenomeDownloadError(
@@ -551,7 +604,7 @@ class ReferenceGenomeManager:
 
         # Extract the archive
         try:
-            self._unzip_file(archive_file_path)
+            self._unzip_file(archive_file_path, genome_name)
         except tarfile.TarError as e:
             logging.error(f"Error extracting the archive: {e}")
             return
@@ -778,14 +831,32 @@ class ReferenceGenomeManager:
         )
         return "\n".join(message)
 
-    def _unzip_file(self, file_path):
-        with tarfile.open(file_path, "r:gz") as tar:
-            extraction_options = {}
-            if hasattr(tarfile, "data_filter"):
-                extraction_options["filter"] = "data"
-            tar.extractall(
-                path=self.reference_dir.get_tsb_dir(), **extraction_options
-            )
+    def _unzip_file(self, file_path, genome_name):
+        tsb_dir = self.reference_dir.get_tsb_dir()
+        tsb_dir.mkdir(parents=True, exist_ok=True)
+        archive_root = get_archive_root(genome_name)
+        if archive_root == genome_name:
+            with tarfile.open(file_path, "r:gz") as tar:
+                extraction_options = {}
+                if hasattr(tarfile, "data_filter"):
+                    extraction_options["filter"] = "data"
+                tar.extractall(path=tsb_dir, **extraction_options)
+            return
+
+        with tempfile.TemporaryDirectory(prefix="spmg-reference-", dir=tsb_dir) as stage:
+            stage = Path(stage)
+            with tarfile.open(file_path, "r:gz") as tar:
+                extraction_options = {}
+                if hasattr(tarfile, "data_filter"):
+                    extraction_options["filter"] = "data"
+                tar.extractall(path=stage, **extraction_options)
+            extracted = stage / archive_root
+            if not extracted.is_dir():
+                raise tarfile.ReadError(
+                    f"Archive {file_path} does not contain the expected "
+                    f"top-level directory {archive_root!r}."
+                )
+            shutil.copytree(extracted, tsb_dir / genome_name, dirs_exist_ok=True)
 
     def _verify_checksum(self, file_path, checksum):
         """

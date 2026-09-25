@@ -92,6 +92,55 @@ def test_local_install_uses_immutable_archive_filename(monkeypatch, tmp_path):
     assert (tmp_path.resolve() / "tsb" / "test_genome" / "1.txt").is_file()
 
 
+def test_local_install_remaps_dog_legacy_archive_root(monkeypatch, tmp_path):
+    manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
+    archive_dir = tmp_path / "archives"
+    archive_path = archive_dir / "dog_Legacy.tar.gz"
+    write_test_archive(archive_path, genome_name="dog")
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "dog_Legacy",
+        {"1": reference_genome_manager.hashlib.md5(
+            b"test chromosome contents"
+        ).hexdigest()},
+    )
+
+    manager.install_local_genome("dog_Legacy", archive_dir)
+
+    assert manager.is_genome_installed("dog_Legacy")
+    assert (tmp_path.resolve() / "tsb/dog_Legacy/1.txt").read_bytes() == (
+        b"test chromosome contents"
+    )
+    assert not (tmp_path.resolve() / "tsb/dog").exists()
+
+
+def test_download_remaps_dog_legacy_archive_root(monkeypatch, tmp_path):
+    manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "dog_Legacy",
+        {"1": reference_genome_manager.hashlib.md5(
+            b"test chromosome contents"
+        ).hexdigest()},
+    )
+    monkeypatch.setattr(
+        manager,
+        "_download_via_ftplib",
+        lambda *args: write_test_archive(args[-1], genome_name="dog"),
+    )
+    monkeypatch.setattr(
+        manager,
+        "_download_via_curl",
+        lambda *args: pytest.fail("curl should not run after the FTP download"),
+    )
+
+    manager.download_genome("dog_Legacy")
+
+    assert manager.is_genome_installed("dog_Legacy")
+    assert (tmp_path.resolve() / "tsb/dog_Legacy/1.txt").is_file()
+    assert not (tmp_path.resolve() / "tsb/dog").exists()
+
+
 @pytest.mark.parametrize(
     "genome_name",
     sorted(reference_genome_manager.KNOWN_AFFECTED_UNCORRECTED),

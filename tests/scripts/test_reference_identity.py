@@ -16,6 +16,8 @@ from SigProfilerMatrixGenerator.scripts import reference_genome_manager as refs
         ("GRCh38_havana", "GRCh38"),
         ("GRCh38_Legacy", "GRCh38"),
         ("mm10_havana", "mm10"),
+        ("dog", "dog"),
+        ("dog_Legacy", "dog"),
         ("custom_genome_name", "custom_genome_name"),
         ("contains_havana_but_not_registered", "contains_havana_but_not_registered"),
     ],
@@ -64,6 +66,22 @@ def test_corrected_and_legacy_grch38_context_tables_are_packaged():
     assert (context_dir / "context_counts_GRCh38_6144.csv").read_bytes() != (
         context_dir / "context_counts_GRCh38_Legacy_6144.csv"
     ).read_bytes()
+
+
+def test_corrected_and_legacy_dog_registrations_have_historical_chromosomes():
+    expected = {*(str(chromosome) for chromosome in range(1, 39)), "X"}
+    assert set(refs.CHECKSUMS["dog"]) == expected
+    assert set(refs.CHECKSUMS["dog_Legacy"]) == expected
+    assert refs.CHECKSUMS["dog"] != refs.CHECKSUMS["dog_Legacy"]
+    assert refs.get_archive_filename("dog") == "dog.tar.gz"
+    assert refs.get_archive_filename("dog_Legacy") == "dog_Legacy.tar.gz"
+
+    context_dir = (
+        Path(__file__).resolve().parents[2]
+        / "SigProfilerMatrixGenerator/references/chromosomes/context_distributions"
+    )
+    assert not list(context_dir.glob("context_*_dog_*.csv"))
+    assert not list(context_dir.glob("context_*_dog_Legacy_*.csv"))
 
 
 @pytest.mark.parametrize(
@@ -121,6 +139,19 @@ def test_old_grch38_installation_error_explains_legacy_migration(monkeypatch, tm
 
     assert "Reinstall 'GRCh38' for new analyses" in message
     assert "'GRCh38_Legacy'" in message
+
+
+def test_old_dog_installation_error_explains_legacy_migration(monkeypatch, tmp_path):
+    monkeypatch.setitem(refs.CHECKSUMS, "dog", {"1": "not-the-old-checksum"})
+    directory = tmp_path / "tsb" / "dog"
+    directory.mkdir(parents=True)
+    (directory / "1.txt").write_bytes(b"former dog reference")
+    manager = refs.ReferenceGenomeManager(str(tmp_path))
+
+    message = manager.installation_error_message("dog")
+
+    assert "Reinstall 'dog' for new analyses" in message
+    assert "'dog_Legacy'" in message
 
 
 def test_grch38_uses_existing_published_archive_filenames():

@@ -7,11 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Preserve the previously distributed dog reference as `dog_Legacy` for
+  historical reproduction.
 - Register `GRCh38_Legacy` with the chromosome checksums and context tables from
   the previously distributed GRCh38 reference so historical results remain
   reproducible.
 
 ### Changed
+- Rebuild the default dog chromosome reference with corrected transcript
+  strand states. Existing local dog installations must be reinstalled after
+  the new archive is published.
 - Promote the corrected transcription-strand reference to the default `GRCh38`
   identity, including validated strand-aware whole-genome and exome context-count
   and distribution tables. Existing installations of the former `GRCh38`
