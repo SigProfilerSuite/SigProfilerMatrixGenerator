@@ -92,6 +92,55 @@ def test_local_install_uses_immutable_archive_filename(monkeypatch, tmp_path):
     assert (tmp_path.resolve() / "tsb" / "test_genome" / "1.txt").is_file()
 
 
+def test_local_install_remaps_c_elegans_legacy_archive_root(monkeypatch, tmp_path):
+    manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
+    archive_dir = tmp_path / "archives"
+    archive_path = archive_dir / "c_elegans_Legacy.tar.gz"
+    write_test_archive(archive_path, genome_name="c_elegans")
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "c_elegans_Legacy",
+        {"1": reference_genome_manager.hashlib.md5(
+            b"test chromosome contents"
+        ).hexdigest()},
+    )
+
+    manager.install_local_genome("c_elegans_Legacy", archive_dir)
+
+    assert manager.is_genome_installed("c_elegans_Legacy")
+    assert (tmp_path.resolve() / "tsb/c_elegans_Legacy/1.txt").read_bytes() == (
+        b"test chromosome contents"
+    )
+    assert not (tmp_path.resolve() / "tsb/c_elegans").exists()
+
+
+def test_download_remaps_c_elegans_legacy_archive_root(monkeypatch, tmp_path):
+    manager = reference_genome_manager.ReferenceGenomeManager(reference_dir=tmp_path)
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS,
+        "c_elegans_Legacy",
+        {"1": reference_genome_manager.hashlib.md5(
+            b"test chromosome contents"
+        ).hexdigest()},
+    )
+    monkeypatch.setattr(
+        manager,
+        "_download_via_ftplib",
+        lambda *args: write_test_archive(args[-1], genome_name="c_elegans"),
+    )
+    monkeypatch.setattr(
+        manager,
+        "_download_via_curl",
+        lambda *args: pytest.fail("curl should not run after the FTP download"),
+    )
+
+    manager.download_genome("c_elegans_Legacy")
+
+    assert manager.is_genome_installed("c_elegans_Legacy")
+    assert (tmp_path.resolve() / "tsb/c_elegans_Legacy/1.txt").is_file()
+    assert not (tmp_path.resolve() / "tsb/c_elegans").exists()
+
+
 @pytest.mark.parametrize(
     "genome_name",
     sorted(reference_genome_manager.KNOWN_AFFECTED_UNCORRECTED),
