@@ -112,6 +112,29 @@ def SigProfilerMatrixGeneratorFunc(
             genome_manager.installation_error_message(reference_name)
         )
 
+    # 3. Check the exome interval list up front, rather than failing with a bare
+    # FileNotFoundError in exome_check() after every chromosome has been parsed.
+    # Resolve the assembly first, as exome_check() does, so that registered
+    # editions such as GRCh38_Legacy or *_havana find their shared interval list
+    if exome:
+        exome_interval_list = reference_dir.get_exome_interval_list(
+            reference_genome_manager.get_reference_assembly(reference_name)
+        )
+        if not exome_interval_list.exists():
+            supported = sorted(
+                subdir.name
+                for subdir in reference_dir.get_exome_dir().iterdir()
+                if (subdir / (subdir.name + "_exome.interval_list")).exists()
+            )
+            raise FileNotFoundError(
+                "exome=True is not supported for the genome "
+                + reference_genome
+                + ": no exome interval list was found at\n\t"
+                + str(exome_interval_list)
+                + "\nGenomes with exome support: "
+                + ", ".join(supported)
+            )
+
     # Instantiates all of the required variables and references
     if not os.path.exists(path_to_input_files):
         print(
@@ -1598,6 +1621,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -1730,6 +1754,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -1881,6 +1906,7 @@ def SigProfilerMatrixGeneratorFunc(
                             for genome in [
                                 "GRCh37",
                                 "GRCh38",
+                                "CHM13-T2T",
                                 "dog",
                                 "ebv",
                                 "mm10",
@@ -2014,6 +2040,7 @@ def SigProfilerMatrixGeneratorFunc(
                             for genome in [
                                 "GRCh37",
                                 "GRCh38",
+                                "CHM13-T2T",
                                 "dog",
                                 "ebv",
                                 "mm10",
@@ -2241,6 +2268,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2371,6 +2399,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2503,6 +2532,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2638,6 +2668,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2769,6 +2800,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
