@@ -7,11 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Register `rn6_Legacy` with the chromosome checksums and 38 supporting tables
+  from the previously distributed rat reference.
 - Register `GRCh38_Legacy` with the chromosome checksums and context tables from
   the previously distributed GRCh38 reference so historical results remain
   reproducible.
 
 ### Changed
+- Promote the corrected transcription-strand reference to the default `rn6`
+  identity, rebuilding its 38 historical supporting tables. Existing local
+  `rn6` installations must be reinstalled after upgrading.
 - Promote the corrected transcription-strand reference to the default `GRCh38`
   identity, including validated strand-aware whole-genome and exome context-count
   and distribution tables. Existing installations of the former `GRCh38`
@@ -44,6 +49,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   retaining the CNV48 schema (from `fix/facets-cnv48-tcn1-loh`).
 
 ### Reference Data
+- Corrected `rn6` uses `rn6.tar.gz`; the original bytes are retained as
+  `rn6_Legacy.tar.gz` for reproducing historical analyses.
 - Corrected `GRCh38` continues to resolve to its already-published
   `GRCh38.tar.gz`; the separately registered `GRCh38_Legacy` archive remains
   available for old analyses.
