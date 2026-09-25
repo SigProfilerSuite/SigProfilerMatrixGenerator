@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   and distribution tables. Existing installations of the former `GRCh38`
   reference must be reinstalled after upgrading.
 - Regenerated the CHM13-T2T transcript files, and with them the whole TSB reference payload, against NCBI RefSeq annotation release `GCF_009914755.1-RS_2025_08`. The previous files came from an earlier release that was never recorded, so neither they nor the TSB files derived from them could be reproduced from any pinned source. All 24 per-chromosome checksums in `CHECKSUMS` change as a result. Note that RS_2025_08 annotates 4,993 transcripts on chrY against 882 before, almost all Gnomon-predicted lncRNA models in the Yq12 satellite region newly resolved by T2T, so transcriptional strand assignments on chrY shift substantially.
+- Rebuilt the CHM13-T2T TSB payload with the corrected transcription-strand generator (inclusive transcript ends, nested and overlapping transcripts), so its 24 checksums in `CHECKSUMS` change again. The transcript files and the CHM13-T2T regression solutions are unchanged.
 - `exome=True` now fails immediately with an actionable message naming the missing interval list and the genomes that do support exome downsampling, instead of raising a bare `FileNotFoundError` after every chromosome has already been parsed.
 - Exome interval list paths are resolved through `ReferenceDir.get_exome_dir()` / `get_exome_interval_list()` rather than being assembled by hand in several places.
 
