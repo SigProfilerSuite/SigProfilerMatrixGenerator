@@ -1,0 +1,3 @@
+source	url	published_checksum	sha256
+UCSC_rn7_FASTA	https://hgdownload.soe.ucsc.edu/goldenPath/rn7/bigZips/rn7.fa.gz	MD5:13b53eca79c1bf9cd32e573499fc7652	6062bd0240af0cee10aafad4d88adaa1f7a4d0c9ddbd4587f4c7dbd132a149c4
+Ensembl_105_GTF	https://ftp.ensembl.org/pub/release-105/gtf/rattus_norvegicus/Rattus_norvegicus.mRatBN7.2.105.chr.gtf.gz	BSD-sum:50541:16877	5f974266340d2124494444708d7e3bee2e159be5a88d58c96181d57bd60d152c

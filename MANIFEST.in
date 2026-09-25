@@ -1,5 +1,6 @@
 # Documentation
 include README.md
+recursive-include reference_data/rn7 *
 
 # CNV/SV
 recursive-include SigProfilerMatrixGenerator/references/CNV *

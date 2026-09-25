@@ -16,6 +16,8 @@ from SigProfilerMatrixGenerator.scripts import reference_genome_manager as refs
         ("GRCh38_havana", "GRCh38"),
         ("GRCh38_Legacy", "GRCh38"),
         ("mm10_havana", "mm10"),
+        ("rn7", "rn7"),
+        ("rn7_Legacy", "rn7"),
         ("custom_genome_name", "custom_genome_name"),
         ("contains_havana_but_not_registered", "contains_havana_but_not_registered"),
     ],
@@ -64,6 +66,27 @@ def test_corrected_and_legacy_grch38_context_tables_are_packaged():
     assert (context_dir / "context_counts_GRCh38_6144.csv").read_bytes() != (
         context_dir / "context_counts_GRCh38_Legacy_6144.csv"
     ).read_bytes()
+
+
+def test_corrected_and_legacy_rn7_retain_historical_table_footprint():
+    expected_chromosomes = {*(str(chromosome) for chromosome in range(1, 21)),
+                            "X", "Y", "MT"}
+    assert set(refs.CHECKSUMS["rn7"]) == expected_chromosomes
+    assert set(refs.CHECKSUMS["rn7_Legacy"]) == expected_chromosomes
+    assert refs.CHECKSUMS["rn7"] != refs.CHECKSUMS["rn7_Legacy"]
+    assert refs.get_archive_filename("rn7") == "rn7.tar.gz"
+    assert refs.get_archive_filename("rn7_Legacy") == "rn7_Legacy.tar.gz"
+
+    context_dir = (
+        Path(__file__).resolve().parents[2]
+        / "SigProfilerMatrixGenerator/references/chromosomes/context_distributions"
+    )
+    for reference in ("rn7", "rn7_Legacy"):
+        files = [path for path in context_dir.glob(f"context_*_{reference}_*.csv")
+                 if reference != "rn7" or "_rn7_Legacy_" not in path.name]
+        assert len(files) == 48
+        assert (context_dir / f"context_counts_{reference}_DBS186_exome.csv").is_file()
+        assert (context_dir / f"context_distribution_{reference}_6144_male.csv").is_file()
 
 
 @pytest.mark.parametrize(
@@ -121,6 +144,19 @@ def test_old_grch38_installation_error_explains_legacy_migration(monkeypatch, tm
 
     assert "Reinstall 'GRCh38' for new analyses" in message
     assert "'GRCh38_Legacy'" in message
+
+
+def test_old_rn7_installation_error_explains_legacy_migration(monkeypatch, tmp_path):
+    monkeypatch.setitem(refs.CHECKSUMS, "rn7", {"1": "not-the-old-checksum"})
+    directory = tmp_path / "tsb" / "rn7"
+    directory.mkdir(parents=True)
+    (directory / "1.txt").write_bytes(b"former rn7 reference")
+    manager = refs.ReferenceGenomeManager(str(tmp_path))
+
+    message = manager.installation_error_message("rn7")
+
+    assert "Reinstall 'rn7' for new analyses" in message
+    assert "'rn7_Legacy'" in message
 
 
 def test_grch38_uses_existing_published_archive_filenames():

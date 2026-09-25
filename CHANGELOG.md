@@ -7,17 +7,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Preserve the previously distributed rat rn7 reference and its 48 opportunity
+  tables under the `rn7_Legacy` identity for historical reproduction.
 - Register `GRCh38_Legacy` with the chromosome checksums and context tables from
   the previously distributed GRCh38 reference so historical results remain
   reproducible.
 
 ### Changed
+- Rebuild the default `rn7` chromosome reference with corrected transcript
+  strand states and regenerate its whole-genome and exome opportunity tables.
+  Existing local rn7 installations must be reinstalled after the archives are
+  published.
 - Promote the corrected transcription-strand reference to the default `GRCh38`
   identity, including validated strand-aware whole-genome and exome context-count
   and distribution tables. Existing installations of the former `GRCh38`
   reference must be reinstalled after upgrading.
 
 ### Fixed
+- Allow rn7 and rn7_Legacy whole-exome and BED matrix generation through the
+  chromosome-order lookups used by those workflows.
 - Rebuild SBS context-distribution tables from the shared five-base opportunity
   set, preserve valid binary chromosome bytes, include the final valid window,
   and reverse T/U labels when purine contexts are canonicalized.

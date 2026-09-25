@@ -5,6 +5,7 @@ import subprocess
 import os
 import shutil
 import logging
+import tempfile
 import time
 import warnings
 
@@ -276,6 +277,31 @@ CHECKSUMS = {
         "MT": "cb841662629aa1b6c1b7b0b3a8f689d1",
     },
     "rn7": {
+        "1": "4223957602ab952f577448954119ad51",
+        "2": "7b8604c3205b96aa54dbb83cda3afc9f",
+        "3": "c7709577c57cbee64f5af79f876b7712",
+        "4": "21a12cab102071dd3679b665bea519c2",
+        "5": "cafe87526948246719e07064df511150",
+        "6": "9f88d410574c1befa4360cb2d80f0ab3",
+        "7": "4fdaa7c8e51b0f9363a9526735d02464",
+        "8": "1979f365d56505cd87cc05e9ddb7a51f",
+        "9": "ac871a14a0ef0f532632548342fa3875",
+        "10": "a85e03f4d7bf9bb10b82fe142b803378",
+        "11": "905a560d7d5a4fb1e05b2a0bf7a91133",
+        "12": "5805391037dc30b87855a7ec3ec4a8d7",
+        "13": "b792b4d285b245987d76e99124ca537b",
+        "14": "1f7d0d57ff78cd4d495883aab84a8b39",
+        "15": "cafe33510dadbd7b139ceadd9283b73c",
+        "16": "ad2957876319f35912f7062ac8552675",
+        "17": "dd05f6fee71c2f61a681129a4697f34c",
+        "18": "16ffacebd8683afd5335e20abc6f82ee",
+        "19": "93590952e85be9dd0d64eeb95695f5a9",
+        "20": "a40b81d49229664515213a33190861dc",
+        "Y": "c8c6a066bf61693a1461a4e2661e607b",
+        "X": "4cd5bb09e80374e83c2198cf94bdad5f",
+        "MT": "2dd39abfd72116dd3bb423fc79000dc5",
+    },
+    "rn7_Legacy": {
         "1": "9c9a4ee818dd0baac1035486df990409",
         "2": "771b58630048ebc9476663dcffdc7700",
         "3": "f98c53989fa3b54d2a695b964512df74",
@@ -381,16 +407,22 @@ REFERENCE_ASSEMBLIES = {
     "GRCh38_havana": "GRCh38",
     "GRCh38_Legacy": "GRCh38",
     "mm10_havana": "mm10",
+    "rn7_Legacy": "rn7",
 }
 
-# Logical reference IDs are stable user-facing names. Physical archive names
-# are immutable so older software can continue downloading the archive whose
-# checksums it expects.
+# Corrected references use their standard archive names. Legacy references
+# have distinct physical filenames while sharing assembly resources.
 ARCHIVE_FILENAMES = {
+    "rn7_Legacy": "rn7_Legacy.tar.gz",
+}
+
+ARCHIVE_ROOTS = {
+    "rn7_Legacy": "rn7",
 }
 
 LEGACY_REFERENCES = {
     "GRCh38": "GRCh38_Legacy",
+    "rn7": "rn7_Legacy",
 }
 
 KNOWN_AFFECTED_UNCORRECTED = frozenset(
@@ -403,8 +435,13 @@ class KnownAffectedReferenceWarning(UserWarning):
 
 
 def get_archive_filename(reference_name):
-    """Return the immutable physical archive for a logical reference ID."""
+    """Return the physical archive for a logical reference ID."""
     return ARCHIVE_FILENAMES.get(reference_name, f"{reference_name}.tar.gz")
+
+
+def get_archive_root(reference_name):
+    """Return the top-level directory stored inside a reference archive."""
+    return ARCHIVE_ROOTS.get(reference_name, reference_name)
 
 
 def warn_if_known_affected(reference_name):
@@ -520,7 +557,7 @@ class ReferenceGenomeManager:
             )
 
         try:
-            self._unzip_file(local_filepath)
+            self._unzip_file(local_filepath, genome_name)
         except (tarfile.TarError, OSError) as e:
             self._remove_partial_archive(local_filepath)
             raise GenomeDownloadError(
@@ -551,7 +588,7 @@ class ReferenceGenomeManager:
 
         # Extract the archive
         try:
-            self._unzip_file(archive_file_path)
+            self._unzip_file(archive_file_path, genome_name)
         except tarfile.TarError as e:
             logging.error(f"Error extracting the archive: {e}")
             return
@@ -778,14 +815,32 @@ class ReferenceGenomeManager:
         )
         return "\n".join(message)
 
-    def _unzip_file(self, file_path):
-        with tarfile.open(file_path, "r:gz") as tar:
-            extraction_options = {}
-            if hasattr(tarfile, "data_filter"):
-                extraction_options["filter"] = "data"
-            tar.extractall(
-                path=self.reference_dir.get_tsb_dir(), **extraction_options
-            )
+    def _unzip_file(self, file_path, genome_name):
+        tsb_dir = self.reference_dir.get_tsb_dir()
+        tsb_dir.mkdir(parents=True, exist_ok=True)
+        archive_root = get_archive_root(genome_name)
+        if archive_root == genome_name:
+            with tarfile.open(file_path, "r:gz") as tar:
+                extraction_options = {}
+                if hasattr(tarfile, "data_filter"):
+                    extraction_options["filter"] = "data"
+                tar.extractall(path=tsb_dir, **extraction_options)
+            return
+
+        with tempfile.TemporaryDirectory(prefix="spmg-reference-", dir=tsb_dir) as stage:
+            stage = Path(stage)
+            with tarfile.open(file_path, "r:gz") as tar:
+                extraction_options = {}
+                if hasattr(tarfile, "data_filter"):
+                    extraction_options["filter"] = "data"
+                tar.extractall(path=stage, **extraction_options)
+            extracted = stage / archive_root
+            if not extracted.is_dir():
+                raise tarfile.ReadError(
+                    f"Archive {file_path} does not contain the expected "
+                    f"top-level directory {archive_root!r}."
+                )
+            shutil.copytree(extracted, tsb_dir / genome_name, dirs_exist_ok=True)
 
     def _verify_checksum(self, file_path, checksum):
         """
