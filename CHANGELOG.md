@@ -13,6 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Register `mm10_Legacy` with the chromosome checksums and context tables from
   the previously distributed mm10 reference so historical results remain
   reproducible.
+- Register `GRCh37_Legacy` against a copy of the untouched historical archive
+  named `GRCh37_Legacy.tar.gz` and preserve its supporting tables for
+  reproducible older analyses.
+- Record the exact Ensembl GRCh37 FASTA and annotation sources, checksums, and
+  retained historical transcript scope used to rebuild the corrected reference.
 
 ### Changed
 - Promote the corrected transcription-strand reference to the default `GRCh38`
@@ -24,6 +29,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   and distribution tables, and add the whole-genome male `context_distribution_6`
   table that was missing from the historical package. Existing installations of
   the former `mm10` reference must be reinstalled after upgrading.
+- Promote corrected GRCh37 transcription-strand labels and strand-dependent
+  opportunity tables to the default `GRCh37` identity.
+- Resolve logical reference names to their physical archive filenames and
+  stage archive extraction so a historical internal directory can be safely
+  installed under a distinct Legacy identity.
 
 ### Fixed
 - Rebuild SBS context-distribution tables from the shared five-base opportunity
@@ -59,6 +69,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   of the untouched historical archive named `mm10_Legacy.tar.gz`. Older
   MatrixGenerator releases cannot verify the corrected archive under the
   original name and should upgrade before reinstalling.
+- Corrected `GRCh37` resolves to `GRCh37.tar.gz`.
+  `GRCh37_Legacy` resolves to `GRCh37_Legacy.tar.gz` with the historical bytes.
+  Older MatrixGenerator releases cannot verify the corrected archive under
+  the original name and should upgrade before reinstalling.
 
 ## [1.3.6] - 2025-10-28
 

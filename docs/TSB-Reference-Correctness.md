@@ -67,10 +67,10 @@ assembly identifies shared resources such as exome intervals. These are not
 interchangeable: chromosome checksums, input conversion, and TSB lookup retain
 the full reference-data ID. Run logs record both names and the TSB directory.
 
-`REFERENCE_ASSEMBLIES` explicitly maps the existing `GRCh37_havana`,
-`GRCh38_havana`, `GRCh38_Legacy`, and `mm10_havana` references to their base
-assemblies. Unknown names are not shortened by guessing from underscores or the
-word `havana`.
+`REFERENCE_ASSEMBLIES` explicitly maps the existing `GRCh37_Legacy`,
+`GRCh37_havana`, `GRCh38_havana`, `GRCh38_Legacy`, and `mm10_havana`
+references to their base assemblies. Unknown names are not shortened by
+guessing from underscores or the word `havana`.
 
 The three Havana references remain available for historical compatibility but
 are known to contain the pre-correction transcript-boundary and overlap defect.
@@ -95,6 +95,13 @@ scope, but have separate chromosome checksums and strand-aware context tables.
 Older software will reject the corrected archive because its chromosome
 checksums differ; use a version that registers `mm10_Legacy` to reproduce
 earlier results.
+
+The same registration applies to GRCh37. `GRCh37` resolves to the corrected
+`GRCh37.tar.gz` archive. `GRCh37_Legacy` resolves to a copy of the untouched
+historical archive named `GRCh37_Legacy.tar.gz`, whose internal `GRCh37/`
+directory is staged and installed as `GRCh37_Legacy/`. Older software will
+reject the corrected archive because its chromosome checksums differ; use a
+version that registers `GRCh37_Legacy` to reproduce earlier results.
 
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,

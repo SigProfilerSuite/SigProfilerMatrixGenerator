@@ -11,6 +11,7 @@ from SigProfilerMatrixGenerator.scripts import reference_genome_manager as refs
     "name,assembly",
     [
         ("GRCh37", "GRCh37"),
+        ("GRCh37_Legacy", "GRCh37"),
         ("GRCh38", "GRCh38"),
         ("GRCh37_havana", "GRCh37"),
         ("GRCh38_havana", "GRCh38"),
@@ -47,6 +48,18 @@ def test_corrected_and_legacy_mm10_registrations_have_all_primary_chromosomes():
     assert set(refs.CHECKSUMS["mm10"]) == expected
     assert set(refs.CHECKSUMS["mm10_Legacy"]) == expected
     assert refs.CHECKSUMS["mm10"] != refs.CHECKSUMS["mm10_Legacy"]
+
+
+def test_corrected_and_legacy_grch37_registrations_have_all_primary_chromosomes():
+    expected = {
+        *(str(chromosome) for chromosome in range(1, 23)),
+        "X",
+        "Y",
+        "MT",
+    }
+    assert set(refs.CHECKSUMS["GRCh37"]) == expected
+    assert set(refs.CHECKSUMS["GRCh37_Legacy"]) == expected
+    assert refs.CHECKSUMS["GRCh37"] != refs.CHECKSUMS["GRCh37_Legacy"]
 
 
 def test_corrected_and_legacy_grch38_context_tables_are_packaged():
@@ -131,6 +144,35 @@ def test_corrected_and_legacy_mm10_context_tables_are_packaged():
     ).read_bytes()
 
 
+def test_corrected_and_legacy_grch37_context_tables_are_packaged():
+    context_dir = (
+        Path(__file__).resolve().parents[2]
+        / "SigProfilerMatrixGenerator"
+        / "references"
+        / "chromosomes"
+        / "context_distributions"
+    )
+    for reference in ("GRCh37", "GRCh37_Legacy"):
+        for context in ("24", "384", "6144", "DBS186"):
+            assert (context_dir / f"context_counts_{reference}_{context}.csv").is_file()
+            assert (
+                context_dir / f"context_counts_{reference}_{context}_exome.csv"
+            ).is_file()
+            for gender in ("female", "male"):
+                assert (
+                    context_dir
+                    / f"context_distribution_{reference}_{context}_{gender}.csv"
+                ).is_file()
+                assert (
+                    context_dir
+                    / f"context_distribution_{reference}_{context}_{gender}_exome.csv"
+                ).is_file()
+
+    assert (context_dir / "context_counts_GRCh37_6144.csv").read_bytes() != (
+        context_dir / "context_counts_GRCh37_Legacy_6144.csv"
+    ).read_bytes()
+
+
 @pytest.mark.parametrize(
     "status,message",
     [
@@ -212,6 +254,12 @@ def test_mm10_uses_default_and_legacy_archive_names():
     assert refs.get_archive_filename("mm10_Legacy") == "mm10_Legacy.tar.gz"
     assert refs.get_archive_root("mm10_Legacy") == "mm10"
     assert "mm10" not in refs.ARCHIVE_FILENAMES
+
+
+def test_grch37_uses_default_and_legacy_archive_names():
+    assert refs.get_archive_filename("GRCh37") == "GRCh37.tar.gz"
+    assert refs.get_archive_filename("GRCh37_Legacy") == "GRCh37_Legacy.tar.gz"
+    assert refs.get_archive_root("GRCh37_Legacy") == "GRCh37"
 
 
 @pytest.mark.parametrize("reference_name", sorted(refs.KNOWN_AFFECTED_UNCORRECTED))
