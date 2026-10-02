@@ -161,6 +161,10 @@ $ python3
 <br>
 This example installs the custom human 37 assembly reference files but you can install any of the available [genome assemblies][30]. The installation will use bash commands as default. 
 
+To reproduce an analysis that used a previously distributed reference archive,
+install and select its `_Legacy` identity instead. See the
+[Legacy reference guide](Legacy-References.md) for supported names and examples.
+
 If the server has firewall in place, **wget** will not work. The `genInstall.install` command has an additional `rsync` parameter that must be set to **True** which acts as a wget equivalent.
 ```
 $ python3

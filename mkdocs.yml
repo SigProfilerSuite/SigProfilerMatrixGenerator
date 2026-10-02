@@ -66,6 +66,7 @@ nav:
     - Python: Installation-Python.md
     - R: Installation-R.md
     - Supported Genomes: Currently-Supported-Genomes.md
+    - Legacy References: Legacy-References.md
     - Reference Correctness: TSB-Reference-Correctness.md
   - Usage:
     - SBS, ID, DBS Input: Using-the-Tool-SBS-ID-DBS-Input.md
