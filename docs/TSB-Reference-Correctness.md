@@ -67,18 +67,32 @@ assembly identifies shared resources such as exome intervals. These are not
 interchangeable: chromosome checksums, input conversion, and TSB lookup retain
 the full reference-data ID. Run logs record both names and the TSB directory.
 
-`REFERENCE_ASSEMBLIES` explicitly maps the existing `GRCh37_havana`,
-`GRCh38_havana`, `GRCh38_Legacy`, and `mm10_havana` references to their base
-assemblies. Unknown names are not shortened by guessing from underscores or the
-word `havana`.
+`REFERENCE_ASSEMBLIES` explicitly maps the existing `GRCh37_Legacy`,
+`GRCh37_havana`, `GRCh38_havana`, `GRCh38_Legacy`, and `mm10_havana`
+references to their base assemblies. Unknown names are not shortened by
+guessing from underscores or the word `havana`.
+
+The three Havana references remain available for historical compatibility but
+are known to contain the pre-correction transcript-boundary and overlap defect.
+Their exact source annotations are not available in the repository, so they
+cannot yet be rebuilt authoritatively. Installing or using one emits a runtime
+warning; transcription-strand-aware results may be affected.
 
 `GRCh38` identifies the corrected transcription-strand reference and is the
 default for new analyses. The previously distributed data is registered as
 `GRCh38_Legacy` for reproducing historical results. Both identities share the
 GRCh38 DNA assembly, exome intervals, and transcript resources, but have their
 own chromosome checksums and strand-dependent context tables. Network
-installation requires publication of independently checksummed `GRCh38.tar.gz`
-and `GRCh38_Legacy.tar.gz` archives under those exact filenames.
+installation continues to use the already-published corrected `GRCh38.tar.gz`.
+The immutable filename mapping applies prospectively and does not rename this
+working archive.
+
+The same registration applies to GRCh37. `GRCh37` resolves to the corrected
+`GRCh37.tar.gz` archive. `GRCh37_Legacy` resolves to a copy of the untouched
+historical archive named `GRCh37_Legacy.tar.gz`, whose internal `GRCh37/`
+directory is staged and installed as `GRCh37_Legacy/`. Older software will
+reject the corrected archive because its chromosome checksums differ; use a
+version that registers `GRCh37_Legacy` to reproduce earlier results.
 
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,

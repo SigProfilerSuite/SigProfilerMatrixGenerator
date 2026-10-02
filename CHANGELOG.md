@@ -10,12 +10,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Register `GRCh38_Legacy` with the chromosome checksums and context tables from
   the previously distributed GRCh38 reference so historical results remain
   reproducible.
+- Register `GRCh37_Legacy` against a copy of the untouched historical archive
+  named `GRCh37_Legacy.tar.gz`
+  archive and preserve its supporting tables for reproducible older analyses.
+- Record the exact Ensembl GRCh37 FASTA and annotation sources, checksums, and
+  retained historical transcript scope used to rebuild the corrected reference.
 
 ### Changed
 - Promote the corrected transcription-strand reference to the default `GRCh38`
   identity, including validated strand-aware whole-genome and exome context-count
   and distribution tables. Existing installations of the former `GRCh38`
   reference must be reinstalled after upgrading.
+- Promote corrected GRCh37 transcription-strand labels and strand-dependent
+  opportunity tables to the default `GRCh37` identity.
+- Resolve logical reference names to their physical archive filenames and
+  stage archive extraction so a historical internal directory can be safely
+  installed under a distinct Legacy identity.
 
 ### Fixed
 - Rebuild SBS context-distribution tables from the shared five-base opportunity
@@ -44,10 +54,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   retaining the CNV48 schema (from `fix/facets-cnv48-tcn1-loh`).
 
 ### Reference Data
-- `GRCh38.tar.gz` now contains the corrected transcription-strand reference.
-  The previously distributed data is preserved as `GRCh38_Legacy.tar.gz`.
-  Both archives must be published under these exact filenames before network
-  installation can succeed.
+- Corrected `GRCh38` continues to resolve to its already-published
+  `GRCh38.tar.gz`; the separately registered `GRCh38_Legacy` archive remains
+  available for old analyses.
+- Corrected `GRCh37` resolves to `GRCh37.tar.gz`.
+  `GRCh37_Legacy` resolves to `GRCh37_Legacy.tar.gz` with the historical bytes.
+  Older MatrixGenerator releases cannot verify the corrected archive under
+  the original name and should upgrade before reinstalling.
 
 ## [1.3.6] - 2025-10-28
 

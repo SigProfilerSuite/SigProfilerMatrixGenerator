@@ -83,7 +83,7 @@ View the table below for the full list of parameters.
 | ------ | ----------- | ----------- | ----------- |
 | Required |  |  |  |
 |  | project | String | The name of the project. |
-|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, dog, ebv, GRCh37, GRCh38, GRCh38_Legacy, mm9, mm10, mm39, rn6, yeast} |
+|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, dog, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm10, mm39, rn6, yeast} |
 |  | path_to_input_files | String | The path to the input files. |
 | Optional |  |  |  |
 |  | exome | Boolean | Downsamples mutational matrices to the exome regions of the genome. Default value False. |
@@ -235,6 +235,11 @@ references use the same GRCh38 DNA sequence.
 GRCh37.p13 [GRCh37] (Genome Reference Consortium Human Reference 37), INSDC
 Assembly GCA_000001405.14, Feb 2009. Released April 2011. Last updated September 2013. This genome was downloaded from ENSEMBL database version 93.37.
 
+`GRCh37` uses the corrected transcription-strand reference for new analyses.
+Use `GRCh37_Legacy` only to reproduce results generated with the historical
+pre-correction archive. Both identities use the same GRCh37.p13 DNA assembly;
+strand-independent contexts are unchanged.
+
 GRCm39 [mm39] (Genome Reference Consortium Mouse Reference 39), INSDC
 Assembly GCA_000001635.9, Jun 2020. Last updated August 2020. This genome was downloaded from ENSEMBL database version 103.
 
@@ -255,7 +260,7 @@ CanFam3.1 [dog] GCA_000002285.2, Sep 2011. Last updated Jun 2019. This genome wa
 
 WBcel235 [c_elegans] GCA_000002985.3, Oct 2014. Last updated Jan 2019. This genome was downloaded from ENSEMBL database version 100.
 
-*One can specify "_havana" to the end of the genome to include annotations in t-cell receptor genes and IG clusters (available for GRCh37, GRCh38, and mm10).
+*One can specify "_havana" to the end of the genome to include annotations in t-cell receptor genes and IG clusters (available for GRCh37, GRCh38, and mm10). These historical Havana references are known to contain the pre-correction transcription-strand boundary and overlap defect. No corrected Havana archives are currently available. MatrixGenerator emits a runtime warning and continues so that historical analyses remain reproducible; transcription-strand-aware results may be affected.*
 
 **LOG FILES**
 
