@@ -22,6 +22,7 @@ from SigProfilerMatrixGenerator.scripts import reference_genome_manager as refs
         ("mm39_Legacy", "mm39"),
         ("rn6_Legacy", "rn6"),
         ("rn7_Legacy", "rn7"),
+        ("dog_Legacy", "dog"),
         ("custom_genome_name", "custom_genome_name"),
         ("contains_havana_but_not_registered", "contains_havana_but_not_registered"),
     ],
@@ -116,6 +117,22 @@ def test_corrected_and_legacy_rn7_retain_historical_table_footprint():
         assert len(files) == 48
         assert (context_dir / f"context_counts_{reference}_DBS186_exome.csv").is_file()
         assert (context_dir / f"context_distribution_{reference}_6144_male.csv").is_file()
+
+
+def test_corrected_and_legacy_dog_registrations_have_historical_chromosomes():
+    expected = {*(str(chromosome) for chromosome in range(1, 39)), "X"}
+    assert set(refs.CHECKSUMS["dog"]) == expected
+    assert set(refs.CHECKSUMS["dog_Legacy"]) == expected
+    assert refs.CHECKSUMS["dog"] != refs.CHECKSUMS["dog_Legacy"]
+    assert refs.get_archive_filename("dog") == "dog.tar.gz"
+    assert refs.get_archive_filename("dog_Legacy") == "dog_Legacy.tar.gz"
+
+    context_dir = (
+        Path(__file__).resolve().parents[2]
+        / "SigProfilerMatrixGenerator/references/chromosomes/context_distributions"
+    )
+    assert not list(context_dir.glob("context_*_dog_*.csv"))
+    assert not list(context_dir.glob("context_*_dog_Legacy_*.csv"))
 
 
 def test_corrected_and_legacy_grch38_context_tables_are_packaged():

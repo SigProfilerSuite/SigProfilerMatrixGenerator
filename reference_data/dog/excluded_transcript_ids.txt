@@ -1,0 +1,4 @@
+# Historical bundled dog row excluded from the corrected strand map.
+# Bundle: chr24:41492796-41493767, protein_coding.
+# Ensembl 93: chr24:41492787-41493767, pseudogene.
+ENSCAFT00000018875
