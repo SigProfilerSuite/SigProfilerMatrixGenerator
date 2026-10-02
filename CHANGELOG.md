@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Register `mm39_Legacy` with the original mm39 archive checksums and
+  opportunity tables for reproducibility.
 - Register `GRCh38_Legacy` with the chromosome checksums and context tables from
   the previously distributed GRCh38 reference so historical results remain
   reproducible.
@@ -22,6 +24,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   tables so earlier analyses remain reproducible.
 
 ### Changed
+- Rebuild the default `mm39` transcription-strand chromosome data and its
+  whole-genome and exome opportunity tables from validated GRCm39 sources.
+  Existing mm39 installations must be reinstalled after upgrading. Raw
+  sequence-only mutation counts retain the same DNA, but opportunity-based
+  normalization can change because historical context tables had drifted.
 - Promote the corrected transcription-strand reference to the default `GRCh38`
   identity, including validated strand-aware whole-genome and exome context-count
   and distribution tables. Existing installations of the former `GRCh38`
@@ -68,6 +75,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   chromosomes while retaining the historical transcript scope.
 
 ### Reference Data
+- Publish corrected `mm39.tar.gz` and preserve the former archive byte-for-byte
+  as `mm39_Legacy.tar.gz` before releasing this change.
 - Corrected `GRCh38` continues to resolve to its already-published
   `GRCh38.tar.gz`; the separately registered `GRCh38_Legacy` archive remains
   available for old analyses.

@@ -19,6 +19,7 @@ from SigProfilerMatrixGenerator.scripts import reference_genome_manager as refs
         ("mm9_Legacy", "mm9"),
         ("mm10_havana", "mm10"),
         ("mm10_Legacy", "mm10"),
+        ("mm39_Legacy", "mm39"),
         ("custom_genome_name", "custom_genome_name"),
         ("contains_havana_but_not_registered", "contains_havana_but_not_registered"),
     ],
@@ -62,6 +63,13 @@ def test_corrected_and_legacy_grch37_registrations_have_all_primary_chromosomes(
     assert set(refs.CHECKSUMS["GRCh37"]) == expected
     assert set(refs.CHECKSUMS["GRCh37_Legacy"]) == expected
     assert refs.CHECKSUMS["GRCh37"] != refs.CHECKSUMS["GRCh37_Legacy"]
+
+
+def test_corrected_and_legacy_mm39_registrations_have_all_primary_chromosomes():
+    expected = {*(str(chromosome) for chromosome in range(1, 20)), "X", "Y"}
+    assert set(refs.CHECKSUMS["mm39"]) == expected
+    assert set(refs.CHECKSUMS["mm39_Legacy"]) == expected
+    assert refs.CHECKSUMS["mm39"] != refs.CHECKSUMS["mm39_Legacy"]
 
 
 def test_corrected_and_legacy_grch38_context_tables_are_packaged():
@@ -146,8 +154,8 @@ def test_corrected_and_legacy_mm10_context_tables_are_packaged():
     ).read_bytes()
 
 
-@pytest.mark.parametrize("reference_name", ["GRCh37", "mm9"])
-def test_corrected_and_legacy_grch37_or_mm9_context_tables_are_packaged(reference_name):
+@pytest.mark.parametrize("reference_name", ["GRCh37", "mm9", "mm39"])
+def test_corrected_and_legacy_context_tables_are_packaged(reference_name):
     context_dir = (
         Path(__file__).resolve().parents[2]
         / "SigProfilerMatrixGenerator"
@@ -269,6 +277,12 @@ def test_mm9_uses_default_and_legacy_archive_names():
     assert refs.get_archive_filename("mm9") == "mm9.tar.gz"
     assert refs.get_archive_filename("mm9_Legacy") == "mm9_Legacy.tar.gz"
     assert refs.get_archive_root("mm9_Legacy") == "mm9"
+
+
+def test_mm39_default_and_legacy_archive_names():
+    assert refs.get_archive_filename("mm39") == "mm39.tar.gz"
+    assert refs.get_archive_filename("mm39_Legacy") == "mm39_Legacy.tar.gz"
+    assert refs.get_archive_root("mm39_Legacy") == "mm39"
 
 
 @pytest.mark.parametrize("reference_name", sorted(refs.KNOWN_AFFECTED_UNCORRECTED))

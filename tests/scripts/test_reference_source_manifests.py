@@ -31,6 +31,13 @@ ROOT = Path(__file__).resolve().parents[2]
             23,
             "Mus_musculus.GRCm38.94.chr.gtf.gz",
         ),
+        (
+            "mm39",
+            "Mus_musculus.GRCm39.dna.chromosome",
+            range(1, 20),
+            23,
+            "Mus_musculus.GRCm39.103.chr.gtf.gz",
+        ),
     ],
 )
 def test_source_manifest_is_complete_and_uses_sha256(
@@ -60,7 +67,12 @@ def test_source_manifest_is_complete_and_uses_sha256(
 
 @pytest.mark.parametrize(
     "reference,count,prefix",
-    [("GRCh37", 54, "ENST"), ("mm9", 21, "ENSMUST"), ("mm10", 58, "ENSMUST")],
+    [
+        ("GRCh37", 54, "ENST"),
+        ("mm9", 21, "ENSMUST"),
+        ("mm10", 58, "ENSMUST"),
+        ("mm39", 76, "ENSMUST"),
+    ],
 )
 def test_annotation_exclusions_are_explicit(reference, count, prefix):
     path = ROOT / "reference_data" / reference / "excluded_transcript_ids.txt"

@@ -242,6 +242,26 @@ strand-independent contexts are unchanged.
 
 GRCm39 [mm39] (Genome Reference Consortium Mouse Reference 39), INSDC
 Assembly GCA_000001635.9, Jun 2020. Last updated August 2020. This genome was downloaded from ENSEMBL database version 103.
+The corrected `mm39` reference should be used for new analyses. Its DNA sequence
+is unchanged, but corrected transcription-strand annotations can change
+strand-aware mutation matrices. Rebuilt opportunity tables may also change
+opportunity-based normalization, including sequence-only contexts; the raw
+sequence-only mutation counts are unchanged. Install `mm39_Legacy` only to
+reproduce results
+from the previously distributed mm39 reference. After upgrading, an old local
+`mm39` installation will fail checksum verification; reinstall `mm39` to obtain
+the corrected archive. The two identities can be installed side by side.
+
+```python
+from SigProfilerMatrixGenerator import install as genInstall
+
+genInstall.install("mm39")
+genInstall.install("mm39_Legacy")  # Historical results only
+```
+
+The corrected archive is `mm39.tar.gz`; the original archive is preserved
+byte-for-byte as `mm39_Legacy.tar.gz`. Source and validation details are in
+[`reference_data/mm39/README.md`](reference_data/mm39/README.md).
 
 GRCm38.p6 [mm10] (Genome Reference Consortium Mouse Reference 38), INDSDC
 Assembly GCA_000001635.8, Jan 2012. Released July 2012. Last updated March 2018. This genome was downloaded from ENSEMBL database version 93.38.
