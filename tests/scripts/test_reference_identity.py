@@ -20,6 +20,7 @@ from SigProfilerMatrixGenerator.scripts import reference_genome_manager as refs
         ("mm10_havana", "mm10"),
         ("mm10_Legacy", "mm10"),
         ("mm39_Legacy", "mm39"),
+        ("rn6_Legacy", "rn6"),
         ("custom_genome_name", "custom_genome_name"),
         ("contains_havana_but_not_registered", "contains_havana_but_not_registered"),
     ],
@@ -70,6 +71,28 @@ def test_corrected_and_legacy_mm39_registrations_have_all_primary_chromosomes():
     assert set(refs.CHECKSUMS["mm39"]) == expected
     assert set(refs.CHECKSUMS["mm39_Legacy"]) == expected
     assert refs.CHECKSUMS["mm39"] != refs.CHECKSUMS["mm39_Legacy"]
+
+
+def test_corrected_and_legacy_rn6_retain_historical_table_footprint():
+    expected = {*(str(chromosome) for chromosome in range(1, 21)), "X", "Y", "MT"}
+    assert set(refs.CHECKSUMS["rn6"]) == expected
+    assert set(refs.CHECKSUMS["rn6_Legacy"]) == expected
+    assert refs.CHECKSUMS["rn6"] != refs.CHECKSUMS["rn6_Legacy"]
+    assert refs.get_archive_filename("rn6") == "rn6.tar.gz"
+    assert refs.get_archive_filename("rn6_Legacy") == "rn6_Legacy.tar.gz"
+
+    context_dir = (
+        Path(__file__).resolve().parents[2]
+        / "SigProfilerMatrixGenerator/references/chromosomes/context_distributions"
+    )
+    for reference in ("rn6", "rn6_Legacy"):
+        files = [
+            path for path in context_dir.glob(f"context_*_{reference}_*.csv")
+            if reference != "rn6" or "_rn6_Legacy_" not in path.name
+        ]
+        assert len(files) == 38
+        assert not list(context_dir.glob(f"context_distribution_{reference}_DBS*.csv"))
+        assert (context_dir / f"context_counts_{reference}_DBS.csv").is_file()
 
 
 def test_corrected_and_legacy_grch38_context_tables_are_packaged():

@@ -27,6 +27,8 @@ from SigProfilerMatrixGenerator.scripts import (
         "GRCh37_havana",
         "GRCh38_havana",
         "mm10_havana",
+        "rn6",
+        "rn6_Legacy",
     ],
 )
 @pytest.mark.parametrize("input_format", ["vcf", "txt", "maf", "genome"])

@@ -291,6 +291,16 @@ references use the same mm9 DNA sequence.
 Rnor_6.0 [rn6] INSDC Assembly GCA_000001895.4, Jul 2014. Released Jun 2015. Last updated Jan 2017.
 This genome was downloaded from ENSEMBL database version 96.6.
 
+The default `rn6` reference has corrected transcription-strand labels. The
+previously distributed chromosome files are available as `rn6_Legacy` only to
+reproduce old analyses. Both references use identical DNA, so raw sequence-only
+matrices such as SBS96 and ID83 should match. Strand-aware matrices and
+opportunity-based normalization may differ. The corrected archive is
+`rn6.tar.gz`; the original archive is retained byte-for-byte as
+`rn6_Legacy.tar.gz`. Reinstall an existing `rn6` reference after upgrading.
+Source and validation details are in
+[`reference_data/rn6/README.md`](reference_data/rn6/README.md).
+
 mRatBN7.2 [rn7] (Wellcome Sanger Institute Rat Genome Assembly), INSDC Assembly GCA_015227675.2, Nov 2020. Last updated March 31, 2021 (`rn7.fa.gz` from UCSC). Downloaded from UCSC: [rn7 bigZips](http://hgdownload.soe.ucsc.edu/goldenPath/rn7/bigZips/).
 
 Epstein-Barr Virus [EBV] NC_007605.1, Nov 2005. Last updated Aug 2018. This genome was downloaded from the NCBI database: https://www.ncbi.nlm.nih.gov/nuccore/82503188/.
