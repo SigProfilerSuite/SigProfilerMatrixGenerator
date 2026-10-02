@@ -47,6 +47,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   identity. Existing mm9 installations must be reinstalled after upgrading.
 
 ### Fixed
+- Allow rn7 and rn7_Legacy whole-exome and BED matrix generation through the
+  chromosome-order lookups used by those workflows.
 - Rebuild SBS context-distribution tables from the shared five-base opportunity
   set, preserve valid binary chromosome bytes, include the final valid window,
   and reverse T/U labels when purine contexts are canonicalized.

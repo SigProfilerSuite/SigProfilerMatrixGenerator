@@ -400,6 +400,31 @@ CHECKSUMS = {
         "MT": "cb841662629aa1b6c1b7b0b3a8f689d1",
     },
     "rn7": {
+        "1": "4223957602ab952f577448954119ad51",
+        "2": "7b8604c3205b96aa54dbb83cda3afc9f",
+        "3": "c7709577c57cbee64f5af79f876b7712",
+        "4": "21a12cab102071dd3679b665bea519c2",
+        "5": "cafe87526948246719e07064df511150",
+        "6": "9f88d410574c1befa4360cb2d80f0ab3",
+        "7": "4fdaa7c8e51b0f9363a9526735d02464",
+        "8": "1979f365d56505cd87cc05e9ddb7a51f",
+        "9": "ac871a14a0ef0f532632548342fa3875",
+        "10": "a85e03f4d7bf9bb10b82fe142b803378",
+        "11": "905a560d7d5a4fb1e05b2a0bf7a91133",
+        "12": "5805391037dc30b87855a7ec3ec4a8d7",
+        "13": "b792b4d285b245987d76e99124ca537b",
+        "14": "1f7d0d57ff78cd4d495883aab84a8b39",
+        "15": "cafe33510dadbd7b139ceadd9283b73c",
+        "16": "ad2957876319f35912f7062ac8552675",
+        "17": "dd05f6fee71c2f61a681129a4697f34c",
+        "18": "16ffacebd8683afd5335e20abc6f82ee",
+        "19": "93590952e85be9dd0d64eeb95695f5a9",
+        "20": "a40b81d49229664515213a33190861dc",
+        "Y": "c8c6a066bf61693a1461a4e2661e607b",
+        "X": "4cd5bb09e80374e83c2198cf94bdad5f",
+        "MT": "2dd39abfd72116dd3bb423fc79000dc5",
+    },
+    "rn7_Legacy": {
         "1": "9c9a4ee818dd0baac1035486df990409",
         "2": "771b58630048ebc9476663dcffdc7700",
         "3": "f98c53989fa3b54d2a695b964512df74",
@@ -510,6 +535,7 @@ REFERENCE_ASSEMBLIES = {
     "mm10_Legacy": "mm10",
     "mm39_Legacy": "mm39",
     "rn6_Legacy": "rn6",
+    "rn7_Legacy": "rn7",
 }
 
 # Logical reference IDs are stable user-facing names. The corrected default
@@ -520,6 +546,7 @@ ARCHIVE_FILENAMES = {
     "mm9_Legacy": "mm9_Legacy.tar.gz",
     "mm39_Legacy": "mm39_Legacy.tar.gz",
     "rn6_Legacy": "rn6_Legacy.tar.gz",
+    "rn7_Legacy": "rn7_Legacy.tar.gz",
 }
 
 # An immutable historical archive can retain its original top-level directory
@@ -530,6 +557,7 @@ ARCHIVE_ROOTS = {
     "mm9_Legacy": "mm9",
     "mm39_Legacy": "mm39",
     "rn6_Legacy": "rn6",
+    "rn7_Legacy": "rn7",
 }
 
 LEGACY_REFERENCES = {
@@ -539,6 +567,7 @@ LEGACY_REFERENCES = {
     "mm9": "mm9_Legacy",
     "mm39": "mm39_Legacy",
     "rn6": "rn6_Legacy",
+    "rn7": "rn7_Legacy",
 }
 
 KNOWN_AFFECTED_UNCORRECTED = frozenset(
