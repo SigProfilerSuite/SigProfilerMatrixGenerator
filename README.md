@@ -324,6 +324,15 @@ the source comparison and checksums.
 
 WBcel235 [c_elegans] GCA_000002985.3, Oct 2014. Last updated Jan 2019. This genome was downloaded from ENSEMBL database version 100.
 
+The corrected `c_elegans` reference is the default for new analyses. The
+former reference is available as `c_elegans_Legacy` to reproduce historical
+results. Both use the same DNA sequence; transcription-strand labels can
+differ. Existing `c_elegans` installations must be reinstalled after the new
+archive is published. All bundled transcripts match Ensembl release 100
+exactly; see
+[c_elegans reference correction](reference_data/c_elegans/README.md) for the
+source comparison and checksums.
+
 *One can specify "_havana" to the end of the genome to include annotations in t-cell receptor genes and IG clusters (available for GRCh37, GRCh38, and mm10). These historical Havana references are known to contain the pre-correction transcription-strand boundary and overlap defect. No corrected Havana archives are currently available. MatrixGenerator emits a runtime warning and continues so that historical analyses remain reproducible; transcription-strand-aware results may be affected.*
 
 **LOG FILES**

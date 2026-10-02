@@ -1,0 +1,12 @@
+# Ensembl release 100 protein-coding transcripts outside the historical bundled c_elegans set.
+2L52.1a.1
+B0348.5a.1
+MTCE.25.1
+MTCE.26.1
+MTCE.3.1
+MTCE.31.1
+MTCE.34.1
+MTCE.35.1
+Y38C1AB.4.1
+Y73B3A.1.1
+cTel54X.1.1

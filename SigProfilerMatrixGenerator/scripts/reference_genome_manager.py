@@ -450,6 +450,15 @@ CHECKSUMS = {
         "MT": "e23feef31e91545a122a4d305f982d5c",
     },
     "c_elegans": {
+        "I": "179075cdd54162779376cc827fb0d4fe",
+        "II": "3dd42d254396fb843ad173a76c91ea98",
+        "III": "1461266364b4f034a5aafb009b054cd4",
+        "IV": "bb0198d7392284a788053ba05a15d673",
+        "V": "4b01f5fcf3f5ebd8121324993b9e07c8",
+        "X": "7872929ebb8df8d3e241237dded810d3",
+        "MtDNA": "761eb16ac833944d866227e32cd913b9",
+    },
+    "c_elegans_Legacy": {
         "I": "5a3ea8cf3dfbc641716b7bc805edcaae",
         "II": "bf82edaa92809dd2fea2b791c38c9728",
         "III": "d2df34b6743f41d3964549fc76c5f1a2",
@@ -578,6 +587,7 @@ REFERENCE_ASSEMBLIES = {
     "rn6_Legacy": "rn6",
     "rn7_Legacy": "rn7",
     "dog_Legacy": "dog",
+    "c_elegans_Legacy": "c_elegans",
 }
 
 # Logical reference IDs are stable user-facing names. The corrected default
@@ -590,6 +600,7 @@ ARCHIVE_FILENAMES = {
     "rn6_Legacy": "rn6_Legacy.tar.gz",
     "rn7_Legacy": "rn7_Legacy.tar.gz",
     "dog_Legacy": "dog_Legacy.tar.gz",
+    "c_elegans_Legacy": "c_elegans_Legacy.tar.gz",
 }
 
 # An immutable historical archive can retain its original top-level directory
@@ -602,6 +613,7 @@ ARCHIVE_ROOTS = {
     "rn6_Legacy": "rn6",
     "rn7_Legacy": "rn7",
     "dog_Legacy": "dog",
+    "c_elegans_Legacy": "c_elegans",
 }
 
 LEGACY_REFERENCES = {
@@ -613,6 +625,7 @@ LEGACY_REFERENCES = {
     "rn6": "rn6_Legacy",
     "rn7": "rn7_Legacy",
     "dog": "dog_Legacy",
+    "c_elegans": "c_elegans_Legacy",
 }
 
 KNOWN_AFFECTED_UNCORRECTED = frozenset(
