@@ -200,6 +200,29 @@ $ python3
 SigProfilerMatrixGenerator cnv_matrix_generator BATTENBERG ./SigProfilerMatrixGenerator/references/CNV/example_input/Battenberg_test.tsv BATTENBERG-TEST ./SigProfilerMatrixGenerator/references/CNV/example_output/
 ```
 
+## Reproducing earlier analyses
+
+The corrected reference archives use the usual genome names (for example,
+`GRCh38`). The previously distributed archives remain available under matching
+`_Legacy` names (for example, `GRCh38_Legacy`). To rerun an earlier analysis,
+install the Legacy reference and pass that same name to matrix generation:
+
+```bash
+SigProfilerMatrixGenerator install GRCh38_Legacy
+SigProfilerMatrixGenerator matrix_generator previous_project GRCh38_Legacy /path/to/original_inputs
+```
+
+Replace `GRCh38` with the genome used in the original analysis. Legacy archives
+are available for `GRCh38`, `GRCh37`, `mm9`, `mm10`, `mm39`, `rn6`, `rn7`, `dog`,
+and `c_elegans`. An older reference already installed as `GRCh38` is not
+automatically renamed to `GRCh38_Legacy`; install the Legacy identity explicitly.
+Use the corrected name for new analyses. For an exact reproduction, also retain
+the original input data, software versions, and analysis settings: the Legacy
+archive alone cannot reproduce differences caused by software changes.
+
+See the [Legacy reference guide](docs/Legacy-References.md) for Python and
+offline installation instructions.
+
 **SUPPORTED GENOMES**
 
 This tool currently supports the following genomes:

@@ -11,6 +11,9 @@
 
 These are the currently supported genomes:
 
+For analyses made with the formerly distributed reference archives, see the
+[Legacy reference guide](Legacy-References.md) for installation and usage.
+
 - [GRCh38.p12 [GRCh38]][6] <br>
 *GRCh38.p12 [GRCh38] (Genome Reference Consortium Human Reference 38), INSDC Assembly GCA_000001405.27, Dec 2013. Released July 2014. Last updated January 2018. <br>This genome was downloaded from ENSEMBL database version 93.38.*
 
@@ -26,7 +29,7 @@ new analyses. `GRCh37_Legacy` retains the historical labels for reproducibility.
 `mm39` uses corrected transcription-strand data for new analyses. The
 previously distributed reference is available as `mm39_Legacy` for reproducing
 historical results; existing local `mm39` installations must be reinstalled
-after upgrading. See [the mm39 reference record](../reference_data/mm39/README.md).
+after upgrading. See [the mm39 reference record](https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator/blob/master/reference_data/mm39/README.md).
 
 - [GRCm38.p6 [mm10]][9] <br>
 *GRCm38.p6 [mm10] (Genome Reference Consortium Mouse Reference 38), INDSDC Assembly GCA_000001635.8, Jan 2012. Released July 2012. Last updated March 2018. <br>This genome was downloaded from ENSEMBL database release 94 (previously documented as "93.38"; see `reference_data/mm10/README.md`). Use `mm10` for corrected transcription-strand annotation; use `mm10_Legacy` only to reproduce historical results.*

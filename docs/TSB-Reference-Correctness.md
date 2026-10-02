@@ -129,6 +129,8 @@ Verification does not delete or replace files. An installation created by an
 earlier release under a corrected default name will fail verification after
 upgrading; reinstall the corrected identity, or install the corresponding
 `*_Legacy` identity to reproduce an earlier analysis.
+See the [Legacy reference guide](Legacy-References.md) for installation and
+matrix-generation examples.
 
 ## Tests and Release Limits
 
