@@ -1,0 +1,38 @@
+# SigProfilerMatrixGenerator mm10 corrected TSB source manifest
+# Assembly: GRCm38.p6, INSDC GCA_000001635.8
+# FASTA base URL: https://ftp.ensembl.org/pub/release-94/fasta/mus_musculus/dna/
+# Annotation URL: https://ftp.ensembl.org/pub/release-94/gtf/mus_musculus/Mus_musculus.GRCm38.94.chr.gtf.gz
+# The historical package documented Ensembl database version "93.38". Verifying
+# the bundled transcript set against every candidate release found an exact,
+# zero-diff match only at Ensembl release 94 (0 bundled transcripts retired or
+# reclassified, 58 additional protein-coding transcripts present in release 94
+# absent from the bundle). Release 94 is used as the actual annotation source;
+# see README.md for the verification method. FASTA sequence content is
+# byte-identical between release 93 and release 94 (confirmed by direct
+# decompressed diff for all 22 chromosomes); only the gzip container differs,
+# so the FASTA sha256/bsd sum values below are release-94-specific but the
+# underlying sequence matches release 93 as well.
+# filename	sha256	bsd_sum	blocks
+Mus_musculus.GRCm38.dna.chromosome.1.fa.gz	7ff173368a1d0b7dbaa27192caad3ff7f1ea0ff6e188b7c69b908301f9020bfa	08120	56978
+Mus_musculus.GRCm38.dna.chromosome.2.fa.gz	b0bc2c61e9752815df9dc112db7129a5b9d4c5b315f431e9f78dcb946058ffc6	41936	52960
+Mus_musculus.GRCm38.dna.chromosome.3.fa.gz	09111c0ce3dc0f976b649426c3f36a89cbc4e94bd813b9ba97de2f72e3f986f4	19269	46430
+Mus_musculus.GRCm38.dna.chromosome.4.fa.gz	5a1190cfaa36a296fece9b2e08b1489057e47f28a3142e22805875fad5606c58	02439	45109
+Mus_musculus.GRCm38.dna.chromosome.5.fa.gz	356a2478b1278190e38d7e634b653dfaf1a1db504792ba04a94d7f26f0d981e4	20440	43922
+Mus_musculus.GRCm38.dna.chromosome.6.fa.gz	5e174ee5eedea1ac08eb51ad499e18f235f39c178f39d497370c3ea03e852329	60368	43399
+Mus_musculus.GRCm38.dna.chromosome.7.fa.gz	8768668b195a0babb18833857c932d423f50e58086ae21d40a1f040e51326729	41717	41991
+Mus_musculus.GRCm38.dna.chromosome.8.fa.gz	a8d73b3e4e62a3e5a0cbd51b1bb8f2d301de0374a6b8b9fcaa7216ea75fed221	44482	37288
+Mus_musculus.GRCm38.dna.chromosome.9.fa.gz	e8aa36be3ffecc8aa57b3438f9ec31aaa1cd4453052ac219afb016884350e38f	45653	35988
+Mus_musculus.GRCm38.dna.chromosome.10.fa.gz	beb131f12c6393735c4f1d5e6609dcc26f9d8c261552d92dbed7c5841661be55	00180	37721
+Mus_musculus.GRCm38.dna.chromosome.11.fa.gz	b1a3de949d8f35c303691d42ae27ab818ffbbea7257df5af60e27d28a151472e	13222	35278
+Mus_musculus.GRCm38.dna.chromosome.12.fa.gz	b3cb992e41bf468d31e63853a63709ea6f85a2992f4c5a20bc038b1e6260c391	02485	34722
+Mus_musculus.GRCm38.dna.chromosome.13.fa.gz	49f08eec49b9cb7381a3a18114ea2b1f31fb3c05f52b9bf8318f5239ab2f9fbe	22599	34812
+Mus_musculus.GRCm38.dna.chromosome.14.fa.gz	f07d0a6449c1989f73c6e393222bc1a9d596d2897ae0815ec119467e334a9ab3	58485	36068
+Mus_musculus.GRCm38.dna.chromosome.15.fa.gz	266c21dcb71cf53b44a53028f79e4b6a626db80da7d83cb1e0006ec0da06bf4f	62645	29909
+Mus_musculus.GRCm38.dna.chromosome.16.fa.gz	3aa4ae2d06bb9c44167edcffc572b29c18cf4bff7157bdd82b98b8752226d495	52919	28224
+Mus_musculus.GRCm38.dna.chromosome.17.fa.gz	c85fe1cd8c40faa658729dce21864a9307a188838daa1d5a47421ce378149fb9	31022	27222
+Mus_musculus.GRCm38.dna.chromosome.18.fa.gz	b7a85f2eae95b5f26828c5024eefd1267e7c6b68a93871c374ada5f9596ec0a6	45843	25976
+Mus_musculus.GRCm38.dna.chromosome.19.fa.gz	919ae62c79b3bf2d1819cd19f7eea1e3f50dc8f3b897c69f72085e99056760f1	09562	17315
+Mus_musculus.GRCm38.dna.chromosome.X.fa.gz	7cc894ad20598ecf29d8258adb9537173b280afd8526d531b1c0841fd3c0c580	52516	48225
+Mus_musculus.GRCm38.dna.chromosome.Y.fa.gz	f06de1c4d41a422633c0be2725cd2353f4d73e137172f572e08151925e8b0ae2	11879	26032
+Mus_musculus.GRCm38.dna.chromosome.MT.fa.gz	12d6fd1c6f6b8819190a89db4282243c80511b624ee4cf397b02451efe9be0df	58977	6
+Mus_musculus.GRCm38.94.chr.gtf.gz	e6578d784e2499d817dc690775c8a4ea2bb076bf0bd64da1d6b252dfee28d16f	12294	28700

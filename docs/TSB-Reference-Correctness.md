@@ -68,7 +68,9 @@ interchangeable: chromosome checksums, input conversion, and TSB lookup retain
 the full reference-data ID. Run logs record both names and the TSB directory.
 
 `REFERENCE_ASSEMBLIES` explicitly maps the existing `GRCh37_Legacy`,
-`GRCh37_havana`, `GRCh38_havana`, `GRCh38_Legacy`, and `mm10_havana`
+`GRCh37_havana`, `GRCh38_havana`, `GRCh38_Legacy`, `mm9_Legacy`,
+`mm10_havana`, `mm10_Legacy`, `mm39_Legacy`, `rn6_Legacy`,
+`rn7_Legacy`, `dog_Legacy`, and `c_elegans_Legacy`
 references to their base assemblies. Unknown names are not shortened by
 guessing from underscores or the word `havana`.
 
@@ -87,6 +89,15 @@ installation continues to use the already-published corrected `GRCh38.tar.gz`.
 The immutable filename mapping applies prospectively and does not rename this
 working archive.
 
+`mm10` identifies the corrected mouse transcription-strand reference and
+resolves to `mm10.tar.gz`. A copy of the previously distributed archive is
+available as `mm10_Legacy.tar.gz` and registered as `mm10_Legacy`. Both
+identities use the same GRCm38 DNA sequence, exome intervals, and transcript
+scope, but have separate chromosome checksums and strand-aware context tables.
+Older software will reject the corrected archive because its chromosome
+checksums differ; use a version that registers `mm10_Legacy` to reproduce
+earlier results.
+
 The same registration applies to GRCh37. `GRCh37` resolves to the corrected
 `GRCh37.tar.gz` archive. `GRCh37_Legacy` resolves to a copy of the untouched
 historical archive named `GRCh37_Legacy.tar.gz`, whose internal `GRCh37/`
@@ -94,14 +105,30 @@ directory is staged and installed as `GRCh37_Legacy/`. Older software will
 reject the corrected archive because its chromosome checksums differ; use a
 version that registers `GRCh37_Legacy` to reproduce earlier results.
 
+`mm9` identifies the corrected mouse transcription-strand reference and
+resolves to `mm9.tar.gz`. A copy of the previously distributed archive is
+available as `mm9_Legacy.tar.gz` and registered as `mm9_Legacy`. Both
+identities use the same GRCm37 DNA sequence, exome intervals, and transcript
+scope, but have separate chromosome checksums and strand-aware context tables.
+Older software will reject the corrected archive because its chromosome
+checksums differ; use a version that registers `mm9_Legacy` to reproduce
+earlier results.
+
+The same corrected-default and historical-Legacy naming applies to `mm39`,
+`rn6`, `rn7`, `dog`, and `c_elegans`. Their corrected archives retain the
+standard `<genome>.tar.gz` names, while the previous bytes are available as
+`<genome>_Legacy.tar.gz`. The corrected archives must be used with software
+that registers their new chromosome checksums. Each genome's source and
+validation details are recorded under `reference_data/<genome>/`.
+
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,
 and files whose checksums do not match. A mismatch may mean a different reference
 revision or damaged files; it does not necessarily mean the genome is absent.
 Verification does not delete or replace files. An installation created by an
-earlier release under the name `GRCh38` will fail verification after upgrading;
-reinstall `GRCh38` to use the correction, or install `GRCh38_Legacy` and select
-that identity to reproduce an earlier analysis.
+earlier release under a corrected default name will fail verification after
+upgrading; reinstall the corrected identity, or install the corresponding
+`*_Legacy` identity to reproduce an earlier analysis.
 
 ## Tests and Release Limits
 

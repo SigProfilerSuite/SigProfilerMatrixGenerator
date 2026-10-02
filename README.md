@@ -83,7 +83,7 @@ View the table below for the full list of parameters.
 | ------ | ----------- | ----------- | ----------- |
 | Required |  |  |  |
 |  | project | String | The name of the project. |
-|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, dog, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm10, mm39, rn6, yeast} |
+|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, c_elegans_Legacy, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast} |
 |  | path_to_input_files | String | The path to the input files. |
 | Optional |  |  |  |
 |  | exome | Boolean | Downsamples mutational matrices to the exome regions of the genome. Default value False. |
@@ -242,23 +242,96 @@ strand-independent contexts are unchanged.
 
 GRCm39 [mm39] (Genome Reference Consortium Mouse Reference 39), INSDC
 Assembly GCA_000001635.9, Jun 2020. Last updated August 2020. This genome was downloaded from ENSEMBL database version 103.
+The corrected `mm39` reference should be used for new analyses. Its DNA sequence
+is unchanged, but corrected transcription-strand annotations can change
+strand-aware mutation matrices. Rebuilt opportunity tables may also change
+opportunity-based normalization, including sequence-only contexts; the raw
+sequence-only mutation counts are unchanged. Install `mm39_Legacy` only to
+reproduce results
+from the previously distributed mm39 reference. After upgrading, an old local
+`mm39` installation will fail checksum verification; reinstall `mm39` to obtain
+the corrected archive. The two identities can be installed side by side.
+
+```python
+from SigProfilerMatrixGenerator import install as genInstall
+
+genInstall.install("mm39")
+genInstall.install("mm39_Legacy")  # Historical results only
+```
+
+The corrected archive is `mm39.tar.gz`; the original archive is preserved
+byte-for-byte as `mm39_Legacy.tar.gz`. Source and validation details are in
+[`reference_data/mm39/README.md`](reference_data/mm39/README.md).
 
 GRCm38.p6 [mm10] (Genome Reference Consortium Mouse Reference 38), INDSDC
-Assembly GCA_000001635.8, Jan 2012. Released July 2012. Last updated March 2018. This genome was downloaded from ENSEMBL database version 93.38.
+Assembly GCA_000001635.8, Jan 2012. Released July 2012. Last updated March 2018. The corrected reference was rebuilt from Ensembl release 94 sources; see [`reference_data/mm10/README.md`](reference_data/mm10/README.md). Use `mm10` for new analyses and `mm10_Legacy` only to reproduce historical results. Reinstall an existing `mm10` reference after upgrading.
 
 GRCm37 [mm9] (Release 67, NCBIM37), INDSDC Assembly GCA_000001635.18.
-Released Jan 2011. Last updated March 2012. This genome was downloaded from ENSEMBL database version release 67.
+Released Jan 2011. Last updated March 2012. This genome was downloaded from
+ENSEMBL database version release 67. The current `mm9` reference includes
+corrected transcription-strand annotation and should be used for new analyses.
+The previously distributed data remains available as `mm9_Legacy` for
+reproducing historical results. Existing `mm9` installations must be
+reinstalled after upgrading.
+
+```python
+from SigProfilerMatrixGenerator import install as genInstall
+
+# Corrected reference for new analyses
+genInstall.install("mm9")
+
+# Former reference data, only for reproducing historical results
+genInstall.install("mm9_Legacy")
+```
+
+The migration can change transcription-strand-aware matrices. Sequence-only
+matrices such as SBS96 and ID83 are expected to remain unchanged because both
+references use the same mm9 DNA sequence.
 
 Rnor_6.0 [rn6] INSDC Assembly GCA_000001895.4, Jul 2014. Released Jun 2015. Last updated Jan 2017.
 This genome was downloaded from ENSEMBL database version 96.6.
 
+The default `rn6` reference has corrected transcription-strand labels. The
+previously distributed chromosome files are available as `rn6_Legacy` only to
+reproduce old analyses. Both references use identical DNA, so raw sequence-only
+matrices such as SBS96 and ID83 should match. Strand-aware matrices and
+opportunity-based normalization may differ. The corrected archive is
+`rn6.tar.gz`; the original archive is retained byte-for-byte as
+`rn6_Legacy.tar.gz`. Reinstall an existing `rn6` reference after upgrading.
+Source and validation details are in
+[`reference_data/rn6/README.md`](reference_data/rn6/README.md).
+
 mRatBN7.2 [rn7] (Wellcome Sanger Institute Rat Genome Assembly), INSDC Assembly GCA_015227675.2, Nov 2020. Last updated March 31, 2021 (`rn7.fa.gz` from UCSC). Downloaded from UCSC: [rn7 bigZips](http://hgdownload.soe.ucsc.edu/goldenPath/rn7/bigZips/).
+
+The corrected `rn7` reference is the default for new analyses. The former
+reference is available as `rn7_Legacy` to reproduce historical results. Both
+use the same DNA sequence; transcription-strand labels and opportunity tables
+may differ. Existing `rn7` installations must be reinstalled after upgrading.
+See [rn7 reference correction](reference_data/rn7/README.md)
+for source checksums, validation, and release details.
 
 Epstein-Barr Virus [EBV] NC_007605.1, Nov 2005. Last updated Aug 2018. This genome was downloaded from the NCBI database: https://www.ncbi.nlm.nih.gov/nuccore/82503188/.
 
 CanFam3.1 [dog] GCA_000002285.2, Sep 2011. Last updated Jun 2019. This genome was downloaded from ENSEMBL database version 100.
 
+The corrected `dog` reference is the default for new analyses. The former
+reference is available as `dog_Legacy` to reproduce historical results. Both
+use the same DNA sequence; transcription-strand labels can differ. Existing
+`dog` installations must be reinstalled after upgrading.
+The bundled transcript coordinates match Ensembl release 93 far better than
+release 100; see [dog reference correction](reference_data/dog/README.md) for
+the source comparison and checksums.
+
 WBcel235 [c_elegans] GCA_000002985.3, Oct 2014. Last updated Jan 2019. This genome was downloaded from ENSEMBL database version 100.
+
+The corrected `c_elegans` reference is the default for new analyses. The
+former reference is available as `c_elegans_Legacy` to reproduce historical
+results. Both use the same DNA sequence; transcription-strand labels can
+differ. Existing `c_elegans` installations must be reinstalled after upgrading.
+All bundled transcripts match Ensembl release 100
+exactly; see
+[c_elegans reference correction](reference_data/c_elegans/README.md) for the
+source comparison and checksums.
 
 *One can specify "_havana" to the end of the genome to include annotations in t-cell receptor genes and IG clusters (available for GRCh37, GRCh38, and mm10). These historical Havana references are known to contain the pre-correction transcription-strand boundary and overlap defect. No corrected Havana archives are currently available. MatrixGenerator emits a runtime warning and continues so that historical analyses remain reproducible; transcription-strand-aware results may be affected.*
 

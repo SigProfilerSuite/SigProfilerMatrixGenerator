@@ -1,0 +1,7 @@
+# Bundled rn7 chromosome 4 rows excluded from the corrected TSB build.
+# ENSRNOT00000021670 has coordinates 157662200-157668121 in the bundle,
+# whereas Ensembl 105 has 157646243-157695509.
+# ENSRNOT00000120322 and ENSRNOT00000120323 are absent from Ensembl 105.
+ENSRNOT00000021670
+ENSRNOT00000120322
+ENSRNOT00000120323

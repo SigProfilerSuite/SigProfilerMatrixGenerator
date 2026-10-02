@@ -7,27 +7,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Register `mm39_Legacy` with the original mm39 archive checksums and
+  opportunity tables for reproducibility.
 - Register `GRCh38_Legacy` with the chromosome checksums and context tables from
   the previously distributed GRCh38 reference so historical results remain
   reproducible.
+- Register `mm10_Legacy` with the chromosome checksums and context tables from
+  the previously distributed mm10 reference so historical results remain
+  reproducible.
 - Register `GRCh37_Legacy` against a copy of the untouched historical archive
-  named `GRCh37_Legacy.tar.gz`
-  archive and preserve its supporting tables for reproducible older analyses.
+  named `GRCh37_Legacy.tar.gz` and preserve its supporting tables for
+  reproducible older analyses.
 - Record the exact Ensembl GRCh37 FASTA and annotation sources, checksums, and
   retained historical transcript scope used to rebuild the corrected reference.
+- Register `mm9_Legacy` with the untouched historical mm9 archive and context
+  tables so earlier analyses remain reproducible.
+- Register `rn6_Legacy`, `rn7_Legacy`, `dog_Legacy`, and `c_elegans_Legacy`
+  against the historical chromosome archives for reproducible older analyses.
 
 ### Changed
+- Rebuild the default `mm39` transcription-strand chromosome data and its
+  whole-genome and exome opportunity tables from validated GRCm39 sources.
+  Existing mm39 installations must be reinstalled after upgrading. Raw
+  sequence-only mutation counts retain the same DNA, but opportunity-based
+  normalization can change because historical context tables had drifted.
 - Promote the corrected transcription-strand reference to the default `GRCh38`
   identity, including validated strand-aware whole-genome and exome context-count
   and distribution tables. Existing installations of the former `GRCh38`
   reference must be reinstalled after upgrading.
+- Promote the corrected transcription-strand reference to the default `mm10`
+  identity, including validated strand-aware whole-genome and exome context-count
+  and distribution tables, and add the whole-genome male `context_distribution_6`
+  table that was missing from the historical package. Existing installations of
+  the former `mm10` reference must be reinstalled after upgrading.
 - Promote corrected GRCh37 transcription-strand labels and strand-dependent
   opportunity tables to the default `GRCh37` identity.
 - Resolve logical reference names to their physical archive filenames and
   stage archive extraction so a historical internal directory can be safely
   installed under a distinct Legacy identity.
+- Promote the corrected transcription-strand reference to the default `mm9`
+  identity. Existing mm9 installations must be reinstalled after upgrading.
+- Promote corrected `rn6`, `rn7`, `dog`, and `c_elegans` chromosome labels to
+  their default identities; retain their existing DNA sequences.
 
 ### Fixed
+- Allow rn7 and rn7_Legacy whole-exome and BED matrix generation through the
+  chromosome-order lookups used by those workflows.
 - Rebuild SBS context-distribution tables from the shared five-base opportunity
   set, preserve valid binary chromosome bytes, include the final valid window,
   and reverse T/U labels when purine contexts are canonicalized.
@@ -52,15 +77,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   when the lower bound after applying the cushion is zero.
 - Classify FACETS total-copy-number-one segments in existing LOH channels,
   retaining the CNV48 schema (from `fix/facets-cnv48-tcn1-loh`).
+- Correct mm9 transcript ends and overlapping-transcript states across all
+  chromosomes while retaining the historical transcript scope.
 
 ### Reference Data
+- Publish corrected `mm39.tar.gz` and preserve the former archive byte-for-byte
+  as `mm39_Legacy.tar.gz` before releasing this change.
 - Corrected `GRCh38` continues to resolve to its already-published
   `GRCh38.tar.gz`; the separately registered `GRCh38_Legacy` archive remains
   available for old analyses.
+- Corrected `mm10` resolves to `mm10.tar.gz`; `mm10_Legacy` resolves to a copy
+  of the untouched historical archive named `mm10_Legacy.tar.gz`. Older
+  MatrixGenerator releases cannot verify the corrected archive under the
+  original name and should upgrade before reinstalling.
 - Corrected `GRCh37` resolves to `GRCh37.tar.gz`.
   `GRCh37_Legacy` resolves to `GRCh37_Legacy.tar.gz` with the historical bytes.
   Older MatrixGenerator releases cannot verify the corrected archive under
   the original name and should upgrade before reinstalling.
+- Corrected `mm9` resolves to `mm9.tar.gz`; `mm9_Legacy` resolves to a copy
+  of the untouched historical archive named `mm9_Legacy.tar.gz`. Older
+  MatrixGenerator releases cannot verify the corrected archive under the
+  original name and should upgrade before reinstalling.
 
 ## [1.3.6] - 2025-10-28
 

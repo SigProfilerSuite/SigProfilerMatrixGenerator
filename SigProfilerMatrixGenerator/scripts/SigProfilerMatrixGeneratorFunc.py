@@ -1605,6 +1605,7 @@ def SigProfilerMatrixGeneratorFunc(
                             "mm9",
                             "mm39",
                             "rn6",
+                            "rn7",
                         ]
                     },
                 }
@@ -1737,6 +1738,7 @@ def SigProfilerMatrixGeneratorFunc(
                             "mm9",
                             "mm39",
                             "rn6",
+                            "rn7",
                         ]
                     },
                 }
@@ -1888,6 +1890,7 @@ def SigProfilerMatrixGeneratorFunc(
                                 "mm9",
                                 "mm39",
                                 "rn6",
+                                "rn7",
                             ]
                         },
                     }
@@ -2021,6 +2024,7 @@ def SigProfilerMatrixGeneratorFunc(
                                 "mm9",
                                 "mm39",
                                 "rn6",
+                                "rn7",
                             ]
                         },
                     }
@@ -2248,6 +2252,7 @@ def SigProfilerMatrixGeneratorFunc(
                             "mm9",
                             "mm39",
                             "rn6",
+                            "rn7",
                         ]
                     },
                 }
@@ -2378,6 +2383,7 @@ def SigProfilerMatrixGeneratorFunc(
                             "mm9",
                             "mm39",
                             "rn6",
+                            "rn7",
                         ]
                     },
                 }
@@ -2510,6 +2516,7 @@ def SigProfilerMatrixGeneratorFunc(
                             "mm9",
                             "mm39",
                             "rn6",
+                            "rn7",
                         ]
                     },
                 }
@@ -2645,6 +2652,7 @@ def SigProfilerMatrixGeneratorFunc(
                             "mm9",
                             "mm39",
                             "rn6",
+                            "rn7",
                         ]
                     },
                 }
@@ -2776,6 +2784,7 @@ def SigProfilerMatrixGeneratorFunc(
                             "mm9",
                             "mm39",
                             "rn6",
+                            "rn7",
                         ]
                     },
                 }
