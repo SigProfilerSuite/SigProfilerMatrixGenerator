@@ -27,7 +27,7 @@ new analyses. `GRCh37_Legacy` retains the historical labels for reproducibility.
 *GRCm38.p6 [mm10] (Genome Reference Consortium Mouse Reference 38), INDSDC Assembly GCA_000001635.8, Jan 2012. Released July 2012. Last updated March 2018. <br>This genome was downloaded from ENSEMBL database release 94 (previously documented as "93.38"; see `reference_data/mm10/README.md`). Use `mm10` for corrected transcription-strand annotation; use `mm10_Legacy` only to reproduce historical results.*
 
 - [GRCm37 [mm9]][10] <br>
-*GRCm37 [mm9] (Release 67, NCBIM37), INDSDC Assembly GCA_000001635.18. Released Jan 2011. Last updated March 2012. <br>This genome was downloaded from ENSEMBL database version release 67.*
+*GRCm37 [mm9] (Release 67, NCBIM37), INDSDC Assembly GCA_000001635.18. Released Jan 2011. Last updated March 2012. <br>This genome was downloaded from ENSEMBL database version release 67. Use `mm9` for corrected transcription-strand annotation; use `mm9_Legacy` only to reproduce historical results.*
 
 - [rn6 [Rnor_6.0]][11] <br>
 *Rnor_6.0, INSDC Assembly GCA_000001895.4, Jul 2014. Released Jun 2015. Last updated Jan 2017. <br>This genome was downloaded from ENSEMBL database version 96.6.* 

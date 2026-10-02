@@ -83,7 +83,7 @@ View the table below for the full list of parameters.
 | ------ | ----------- | ----------- | ----------- |
 | Required |  |  |  |
 |  | project | String | The name of the project. |
-|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, dog, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm10, mm39, rn6, yeast} |
+|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, dog, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, rn6, yeast} |
 |  | path_to_input_files | String | The path to the input files. |
 | Optional |  |  |  |
 |  | exome | Boolean | Downsamples mutational matrices to the exome regions of the genome. Default value False. |
@@ -247,7 +247,26 @@ GRCm38.p6 [mm10] (Genome Reference Consortium Mouse Reference 38), INDSDC
 Assembly GCA_000001635.8, Jan 2012. Released July 2012. Last updated March 2018. This genome was downloaded from ENSEMBL database version 93.38.
 
 GRCm37 [mm9] (Release 67, NCBIM37), INDSDC Assembly GCA_000001635.18.
-Released Jan 2011. Last updated March 2012. This genome was downloaded from ENSEMBL database version release 67.
+Released Jan 2011. Last updated March 2012. This genome was downloaded from
+ENSEMBL database version release 67. The current `mm9` reference includes
+corrected transcription-strand annotation and should be used for new analyses.
+The previously distributed data remains available as `mm9_Legacy` for
+reproducing historical results. Existing `mm9` installations must be
+reinstalled after upgrading.
+
+```python
+from SigProfilerMatrixGenerator import install as genInstall
+
+# Corrected reference for new analyses
+genInstall.install("mm9")
+
+# Former reference data, only for reproducing historical results
+genInstall.install("mm9_Legacy")
+```
+
+The migration can change transcription-strand-aware matrices. Sequence-only
+matrices such as SBS96 and ID83 are expected to remain unchanged because both
+references use the same mm9 DNA sequence.
 
 Rnor_6.0 [rn6] INSDC Assembly GCA_000001895.4, Jul 2014. Released Jun 2015. Last updated Jan 2017.
 This genome was downloaded from ENSEMBL database version 96.6.

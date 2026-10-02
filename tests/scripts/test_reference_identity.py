@@ -16,6 +16,7 @@ from SigProfilerMatrixGenerator.scripts import reference_genome_manager as refs
         ("GRCh37_havana", "GRCh37"),
         ("GRCh38_havana", "GRCh38"),
         ("GRCh38_Legacy", "GRCh38"),
+        ("mm9_Legacy", "mm9"),
         ("mm10_havana", "mm10"),
         ("mm10_Legacy", "mm10"),
         ("custom_genome_name", "custom_genome_name"),
@@ -38,16 +39,17 @@ def test_corrected_and_legacy_grch38_registrations_have_all_primary_chromosomes(
     assert refs.CHECKSUMS["GRCh38"] != refs.CHECKSUMS["GRCh38_Legacy"]
 
 
-def test_corrected_and_legacy_mm10_registrations_have_all_primary_chromosomes():
+@pytest.mark.parametrize("reference", ["mm9", "mm10"])
+def test_corrected_and_legacy_mouse_registrations_have_all_primary_chromosomes(reference):
     expected = {
         *(str(chromosome) for chromosome in range(1, 20)),
         "X",
         "Y",
         "MT",
     }
-    assert set(refs.CHECKSUMS["mm10"]) == expected
-    assert set(refs.CHECKSUMS["mm10_Legacy"]) == expected
-    assert refs.CHECKSUMS["mm10"] != refs.CHECKSUMS["mm10_Legacy"]
+    assert set(refs.CHECKSUMS[reference]) == expected
+    assert set(refs.CHECKSUMS[f"{reference}_Legacy"]) == expected
+    assert refs.CHECKSUMS[reference] != refs.CHECKSUMS[f"{reference}_Legacy"]
 
 
 def test_corrected_and_legacy_grch37_registrations_have_all_primary_chromosomes():
@@ -144,7 +146,8 @@ def test_corrected_and_legacy_mm10_context_tables_are_packaged():
     ).read_bytes()
 
 
-def test_corrected_and_legacy_grch37_context_tables_are_packaged():
+@pytest.mark.parametrize("reference_name", ["GRCh37", "mm9"])
+def test_corrected_and_legacy_grch37_or_mm9_context_tables_are_packaged(reference_name):
     context_dir = (
         Path(__file__).resolve().parents[2]
         / "SigProfilerMatrixGenerator"
@@ -152,7 +155,7 @@ def test_corrected_and_legacy_grch37_context_tables_are_packaged():
         / "chromosomes"
         / "context_distributions"
     )
-    for reference in ("GRCh37", "GRCh37_Legacy"):
+    for reference in (reference_name, f"{reference_name}_Legacy"):
         for context in ("24", "384", "6144", "DBS186"):
             assert (context_dir / f"context_counts_{reference}_{context}.csv").is_file()
             assert (
@@ -168,8 +171,8 @@ def test_corrected_and_legacy_grch37_context_tables_are_packaged():
                     / f"context_distribution_{reference}_{context}_{gender}_exome.csv"
                 ).is_file()
 
-    assert (context_dir / "context_counts_GRCh37_6144.csv").read_bytes() != (
-        context_dir / "context_counts_GRCh37_Legacy_6144.csv"
+    assert (context_dir / f"context_counts_{reference_name}_6144.csv").read_bytes() != (
+        context_dir / f"context_counts_{reference_name}_Legacy_6144.csv"
     ).read_bytes()
 
 
@@ -260,6 +263,12 @@ def test_grch37_uses_default_and_legacy_archive_names():
     assert refs.get_archive_filename("GRCh37") == "GRCh37.tar.gz"
     assert refs.get_archive_filename("GRCh37_Legacy") == "GRCh37_Legacy.tar.gz"
     assert refs.get_archive_root("GRCh37_Legacy") == "GRCh37"
+
+
+def test_mm9_uses_default_and_legacy_archive_names():
+    assert refs.get_archive_filename("mm9") == "mm9.tar.gz"
+    assert refs.get_archive_filename("mm9_Legacy") == "mm9_Legacy.tar.gz"
+    assert refs.get_archive_root("mm9_Legacy") == "mm9"
 
 
 @pytest.mark.parametrize("reference_name", sorted(refs.KNOWN_AFFECTED_UNCORRECTED))

@@ -185,6 +185,30 @@ CHECKSUMS = {
         "X": "57623734b88f441f5499955d2c83a6f9",
     },
     "mm9": {
+        "1": "5f65319bacb4952edc561940fcace9eb",
+        "2": "87a9aa0ef7f34185a90ccb07be59a159",
+        "3": "47c46472582568b8342489e78cd385e1",
+        "4": "db5deb83a0bb9fda6077c42a2e421107",
+        "5": "78b8c1cd2ae7e485675a8593e73021d2",
+        "6": "474137e10dcaa3b50542b4d9d4a844e9",
+        "7": "9820cc60bf4f63e2f814cbf68596f44d",
+        "8": "0337632adc2f7ab16d65f844c2c6324d",
+        "9": "63a83d6b1201e758a83cd4754ae07d24",
+        "10": "fa0cb1cbf857f30f17e4fd247799ed12",
+        "11": "d30dacd49662f25e75db28fa118a1cbe",
+        "12": "7926b6e1dc055b9cb23a470118d6bbd8",
+        "13": "071a9acc7cc55686ed8fb404e394a4d4",
+        "14": "7bf93838f8dd617d665ab1074d8de6e3",
+        "15": "1cf3164af28f650ff58533f7cb33163e",
+        "16": "4aca215bbbfb25d998cdc5bedbba75be",
+        "17": "abf8b3b44e32a059b7e116163048c0fa",
+        "18": "581414717579b44b6a2b45e993ecae9e",
+        "19": "7ee5b852ce6977c2dd34009ac6725af7",
+        "Y": "ba1b33219fe3609b903e5aac6658aa73",
+        "X": "6db4acac7c2b998cc87ebe25bead10b2",
+        "MT": "cf34482585a78200e0090469c134b086",
+    },
+    "mm9_Legacy": {
         "1": "c5afc4b3f7f2119696214511d7a04341",
         "2": "a7b467475a1b032d2c893dac1c419a28",
         "3": "f922bc529a17324f1cd858f9a8723d65",
@@ -433,6 +457,7 @@ REFERENCE_ASSEMBLIES = {
     "GRCh37_havana": "GRCh37",
     "GRCh38_havana": "GRCh38",
     "GRCh38_Legacy": "GRCh38",
+    "mm9_Legacy": "mm9",
     "mm10_havana": "mm10",
     "mm10_Legacy": "mm10",
 }
@@ -442,6 +467,7 @@ REFERENCE_ASSEMBLIES = {
 ARCHIVE_FILENAMES = {
     "mm10_Legacy": "mm10_Legacy.tar.gz",
     "GRCh37_Legacy": "GRCh37_Legacy.tar.gz",
+    "mm9_Legacy": "mm9_Legacy.tar.gz",
 }
 
 # An immutable historical archive can retain its original top-level directory
@@ -449,12 +475,14 @@ ARCHIVE_FILENAMES = {
 ARCHIVE_ROOTS = {
     "mm10_Legacy": "mm10",
     "GRCh37_Legacy": "GRCh37",
+    "mm9_Legacy": "mm9",
 }
 
 LEGACY_REFERENCES = {
     "GRCh37": "GRCh37_Legacy",
     "GRCh38": "GRCh38_Legacy",
     "mm10": "mm10_Legacy",
+    "mm9": "mm9_Legacy",
 }
 
 KNOWN_AFFECTED_UNCORRECTED = frozenset(
