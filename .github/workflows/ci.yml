@@ -55,15 +55,14 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ./src/
-        key: ${{ runner.os }}-src-grch37-tsb-v2
-        restore-keys: |
-          ${{ runner.os }}-src-
+        key: ${{ runner.os }}-src-grch37-6eb14374
     
     - name: Download corrected GRCh37 archive if not present
       run: |
-        if [ ! -f ./src/GRCh37.tsb-v2.tar.gz ]; then
-          wget --connect-timeout=10 --tries=20 ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerMatrixGenerator/GRCh37.tsb-v2.tar.gz -P ./src/
+        if [ ! -f ./src/GRCh37.tar.gz ]; then
+          wget --connect-timeout=10 --tries=20 ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerMatrixGenerator/GRCh37.tar.gz -P ./src/
         fi
+        echo '6eb14374fbaabe4b1f4c15bc9ca8d2cb58025ce73776864632ef6308bd19aaa3  ./src/GRCh37.tar.gz' | sha256sum --check
     
     - name: Install package with tests
       run: |
