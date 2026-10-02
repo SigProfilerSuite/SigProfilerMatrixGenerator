@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   retained historical transcript scope used to rebuild the corrected reference.
 - Register `mm9_Legacy` with the untouched historical mm9 archive and context
   tables so earlier analyses remain reproducible.
+- Register `rn6_Legacy`, `rn7_Legacy`, `dog_Legacy`, and `c_elegans_Legacy`
+  against the historical chromosome archives for reproducible older analyses.
 
 ### Changed
 - Rebuild the default `mm39` transcription-strand chromosome data and its
@@ -45,6 +47,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   installed under a distinct Legacy identity.
 - Promote the corrected transcription-strand reference to the default `mm9`
   identity. Existing mm9 installations must be reinstalled after upgrading.
+- Promote corrected `rn6`, `rn7`, `dog`, and `c_elegans` chromosome labels to
+  their default identities; retain their existing DNA sequences.
 
 ### Fixed
 - Allow rn7 and rn7_Legacy whole-exome and BED matrix generation through the

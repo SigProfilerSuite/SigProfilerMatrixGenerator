@@ -83,7 +83,7 @@ View the table below for the full list of parameters.
 | ------ | ----------- | ----------- | ----------- |
 | Required |  |  |  |
 |  | project | String | The name of the project. |
-|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, dog, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, rn6, yeast} |
+|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, c_elegans_Legacy, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast} |
 |  | path_to_input_files | String | The path to the input files. |
 | Optional |  |  |  |
 |  | exome | Boolean | Downsamples mutational matrices to the exome regions of the genome. Default value False. |
@@ -264,7 +264,7 @@ byte-for-byte as `mm39_Legacy.tar.gz`. Source and validation details are in
 [`reference_data/mm39/README.md`](reference_data/mm39/README.md).
 
 GRCm38.p6 [mm10] (Genome Reference Consortium Mouse Reference 38), INDSDC
-Assembly GCA_000001635.8, Jan 2012. Released July 2012. Last updated March 2018. This genome was downloaded from ENSEMBL database version 93.38.
+Assembly GCA_000001635.8, Jan 2012. Released July 2012. Last updated March 2018. The corrected reference was rebuilt from Ensembl release 94 sources; see [`reference_data/mm10/README.md`](reference_data/mm10/README.md). Use `mm10` for new analyses and `mm10_Legacy` only to reproduce historical results. Reinstall an existing `mm10` reference after upgrading.
 
 GRCm37 [mm9] (Release 67, NCBIM37), INDSDC Assembly GCA_000001635.18.
 Released Jan 2011. Last updated March 2012. This genome was downloaded from
@@ -306,8 +306,8 @@ mRatBN7.2 [rn7] (Wellcome Sanger Institute Rat Genome Assembly), INSDC Assembly 
 The corrected `rn7` reference is the default for new analyses. The former
 reference is available as `rn7_Legacy` to reproduce historical results. Both
 use the same DNA sequence; transcription-strand labels and opportunity tables
-may differ. Existing `rn7` installations must be reinstalled after the new
-archive is published. See [rn7 reference correction](reference_data/rn7/README.md)
+may differ. Existing `rn7` installations must be reinstalled after upgrading.
+See [rn7 reference correction](reference_data/rn7/README.md)
 for source checksums, validation, and release details.
 
 Epstein-Barr Virus [EBV] NC_007605.1, Nov 2005. Last updated Aug 2018. This genome was downloaded from the NCBI database: https://www.ncbi.nlm.nih.gov/nuccore/82503188/.
@@ -317,7 +317,7 @@ CanFam3.1 [dog] GCA_000002285.2, Sep 2011. Last updated Jun 2019. This genome wa
 The corrected `dog` reference is the default for new analyses. The former
 reference is available as `dog_Legacy` to reproduce historical results. Both
 use the same DNA sequence; transcription-strand labels can differ. Existing
-`dog` installations must be reinstalled after the new archive is published.
+`dog` installations must be reinstalled after upgrading.
 The bundled transcript coordinates match Ensembl release 93 far better than
 release 100; see [dog reference correction](reference_data/dog/README.md) for
 the source comparison and checksums.
@@ -327,8 +327,8 @@ WBcel235 [c_elegans] GCA_000002985.3, Oct 2014. Last updated Jan 2019. This geno
 The corrected `c_elegans` reference is the default for new analyses. The
 former reference is available as `c_elegans_Legacy` to reproduce historical
 results. Both use the same DNA sequence; transcription-strand labels can
-differ. Existing `c_elegans` installations must be reinstalled after the new
-archive is published. All bundled transcripts match Ensembl release 100
+differ. Existing `c_elegans` installations must be reinstalled after upgrading.
+All bundled transcripts match Ensembl release 100
 exactly; see
 [c_elegans reference correction](reference_data/c_elegans/README.md) for the
 source comparison and checksums.

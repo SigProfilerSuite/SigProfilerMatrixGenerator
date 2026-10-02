@@ -69,7 +69,8 @@ the full reference-data ID. Run logs record both names and the TSB directory.
 
 `REFERENCE_ASSEMBLIES` explicitly maps the existing `GRCh37_Legacy`,
 `GRCh37_havana`, `GRCh38_havana`, `GRCh38_Legacy`, `mm9_Legacy`,
-`mm10_havana`, and `mm10_Legacy`
+`mm10_havana`, `mm10_Legacy`, `mm39_Legacy`, `rn6_Legacy`,
+`rn7_Legacy`, `dog_Legacy`, and `c_elegans_Legacy`
 references to their base assemblies. Unknown names are not shortened by
 guessing from underscores or the word `havana`.
 
@@ -112,6 +113,13 @@ scope, but have separate chromosome checksums and strand-aware context tables.
 Older software will reject the corrected archive because its chromosome
 checksums differ; use a version that registers `mm9_Legacy` to reproduce
 earlier results.
+
+The same corrected-default and historical-Legacy naming applies to `mm39`,
+`rn6`, `rn7`, `dog`, and `c_elegans`. Their corrected archives retain the
+standard `<genome>.tar.gz` names, while the previous bytes are available as
+`<genome>_Legacy.tar.gz`. The corrected archives must be used with software
+that registers their new chromosome checksums. Each genome's source and
+validation details are recorded under `reference_data/<genome>/`.
 
 The matrix API raises `ReferenceInstallationError` when verification fails.
 Its message distinguishes an unknown name, missing files, an incomplete install,

@@ -353,6 +353,19 @@ def test_grch37_uses_default_and_legacy_archive_names():
     assert refs.get_archive_root("GRCh37_Legacy") == "GRCh37"
 
 
+@pytest.mark.parametrize(
+    "reference",
+    ["GRCh37", "mm9", "mm10", "mm39", "rn6", "rn7", "dog", "c_elegans"],
+)
+def test_combined_reference_release_preserves_default_and_legacy_mapping(reference):
+    legacy = f"{reference}_Legacy"
+    assert refs.LEGACY_REFERENCES[reference] == legacy
+    assert refs.get_reference_assembly(legacy) == reference
+    assert refs.get_archive_filename(reference) == f"{reference}.tar.gz"
+    assert refs.get_archive_filename(legacy) == f"{legacy}.tar.gz"
+    assert refs.get_archive_root(legacy) == reference
+
+
 def test_mm9_uses_default_and_legacy_archive_names():
     assert refs.get_archive_filename("mm9") == "mm9.tar.gz"
     assert refs.get_archive_filename("mm9_Legacy") == "mm9_Legacy.tar.gz"

@@ -53,7 +53,7 @@ def parse_arguments_install(args: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Install reference genome files.")
     parser.add_argument(
         "genome",
-        help="The reference genome to install. Supported genomes include {c_elegans, dog, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm10, mm10_Legacy, mm39, rn6, rn7, yeast}.",
+        help="The reference genome to install. Supported genomes include {c_elegans, c_elegans_Legacy, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast}.",
     )
     parser.add_argument(
         "-l",
@@ -86,7 +86,7 @@ def parse_arguments_matrix_generator(args: List[str]) -> argparse.Namespace:
     parser.add_argument("project", help="The name of the project.")
     parser.add_argument(
         "reference_genome",
-        help="The name of the reference genome. Supported values {c_elegans, dog, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm10, mm10_Legacy, mm39, rn6, rn7, yeast}.",
+        help="The name of the reference genome. Supported values {c_elegans, c_elegans_Legacy, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast}.",
     )
     parser.add_argument("path_to_input_files", help="The path to the input files.")
 
