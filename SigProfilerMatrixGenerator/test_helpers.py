@@ -8,12 +8,18 @@ from SigProfilerMatrixGenerator.scripts import (
     ref_install,
 )
 
+# This module provides the package's manual reference-regression commands. Its
+# filename is historical; prevent pytest from treating the helpers as tests
+# requiring fixtures named ``genome`` and ``test_genome``.
+__test__ = False
+
 reference_dir = ref_install.reference_dir()
 TEST_INPUT_DIR = str(reference_dir.path / "references/tests/") + "/"
-BED_FILE_DIR = str(reference_dir.path / "references/chromosomes/exome") + "/"
+BED_FILE_DIR = str(reference_dir.get_exome_dir()) + "/"
 FILE_PREF = "test_example"
 TEST_GENOMES = [
     "c_elegans",
+    "CHM13-T2T",
     "dog",
     "GRCh37",
     "GRCh38",
@@ -72,9 +78,7 @@ def test_one_genome(genome, volume, exome=False, bed_file=True):
             os.path.join(TEST_INPUT_DIR + "bed_file", genome),
             plot=False,
             exome=False,
-            bed_file=os.path.join(
-                BED_FILE_DIR + genome + "/" + genome + "_exome.interval_list"
-            ),
+            bed_file=str(reference_dir.get_exome_interval_list(genome)),
             chrom_based=False,
             tsb_stat=False,
             seqInfo=False,
@@ -109,6 +113,36 @@ def test_one_genome(genome, volume, exome=False, bed_file=True):
     load_and_compare(matrices, solution_dir, exome=exome, bed_file=bed_file)
 
 
+def available_test_modes(genome):
+    """Return every WGS/WES/BED regression mode with committed inputs/solutions."""
+    candidates = (
+        ("WGS", False, False),
+        ("WES", True, False),
+        ("bed_file", False, True),
+    )
+    modes = []
+    for directory, exome, bed_file in candidates:
+        input_dir = os.path.join(TEST_INPUT_DIR, directory, genome)
+        solution_dir = os.path.join(
+            TEST_INPUT_DIR, directory, "solutions", genome
+        )
+        if os.path.isdir(input_dir) and os.path.isdir(solution_dir):
+            modes.append((exome, bed_file))
+    if not modes:
+        raise FileNotFoundError(f"No regression inputs and solutions found for {genome}")
+    return modes
+
+
+def run_all_modes_for_genome(genome, volume=None):
+    for exome, bed_file in available_test_modes(genome):
+        test_one_genome(
+            genome,
+            volume=volume,
+            exome=exome,
+            bed_file=bed_file,
+        )
+
+
 def install_genomes(genome_install_list):
     if genome_install_list is None:
         return
@@ -133,7 +167,7 @@ def test_genomes(test_genome, volume=None):
         print("No genomes specified for testing. Please specify a genome or all.")
     elif test_genome[0] == "all":
         for genome in TEST_GENOMES:
-            test_one_genome(genome, volume=volume)
+            run_all_modes_for_genome(genome, volume=volume)
     else:
         for genome in test_genome:
             if genome not in TEST_GENOMES:
@@ -144,7 +178,7 @@ def test_genomes(test_genome, volume=None):
                 )
                 continue
             try:
-                test_one_genome(genome, volume=volume)
+                run_all_modes_for_genome(genome, volume=volume)
                 print("Completed test for " + genome)
             except Exception as e:
                 assert False, "Test failed for " + genome + ":\n" + str(e)
@@ -153,7 +187,7 @@ def test_genomes(test_genome, volume=None):
 def test_all_genomes(volume=None):
     for genome in TEST_GENOMES:
         try:
-            test_one_genome(genome, volume)
+            run_all_modes_for_genome(genome, volume)
             print(f"Completed test for {genome}\n")
         except Exception as e:
             print(f"Test failed for {genome}:\n{str(e)}\n")

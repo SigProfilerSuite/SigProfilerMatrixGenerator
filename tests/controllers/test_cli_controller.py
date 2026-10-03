@@ -51,18 +51,29 @@ class TestController:
     genome_calls = [
         pytest.param(
             ["--test_genome", "GRCh37", "dog"],
-            [mock.call("GRCh37", volume=None), mock.call("dog", volume=None)],
+            [
+                mock.call(genome, volume=None, exome=exome, bed_file=bed_file)
+                for genome in ("GRCh37", "dog")
+                for exome, bed_file in test_helpers.available_test_modes(genome)
+            ],
             id="two genomes",
         ),
         pytest.param(
             ["--test_genome", "GRCh37"],
-            [mock.call("GRCh37", volume=None)],
+            [
+                mock.call("GRCh37", volume=None, exome=exome, bed_file=bed_file)
+                for exome, bed_file in test_helpers.available_test_modes("GRCh37")
+            ],
             id="one genome",
         ),
         pytest.param(["--test_genome", "unknown_genome"], [], id="no known genomes"),
         pytest.param(
             ["--test_genome", "all"],
-            [mock.call(genome, volume=None) for genome in test_helpers.TEST_GENOMES],
+            [
+                mock.call(genome, volume=None, exome=exome, bed_file=bed_file)
+                for genome in test_helpers.TEST_GENOMES
+                for exome, bed_file in test_helpers.available_test_modes(genome)
+            ],
             id="all genomes",
         ),
     ]
@@ -97,4 +108,9 @@ class TestController:
         controller = cli_controller.CliController()
         controller.dispatch_test(provided)
         mock_install.assert_has_calls([mock.call("GRCh37")])
-        mock_test.assert_has_calls([mock.call("GRCh37", volume=None)])
+        mock_test.assert_has_calls(
+            [
+                mock.call("GRCh37", volume=None, exome=exome, bed_file=bed_file)
+                for exome, bed_file in test_helpers.available_test_modes("GRCh37")
+            ]
+        )

@@ -29,7 +29,7 @@ The framework is written in PYTHON, however, it also requires the following soft
   * WGET                   version 1.9  or RSYNC if you have a firewall
 
 By default the installation process will save the FASTA files for all chromosomes for the default genome
-assemblies (GRCh37, GRCH38, mm10, mm9, rn6). As a result, ~3 Gb of storage must be available for the downloads for each genome.
+assemblies (CHM13-T2T, GRCh37, GRCh38, mm10, mm9, rn6). As a result, ~3 Gb of storage must be available for the downloads for each genome.
 
 **QUICK START GUIDE**
 
@@ -71,6 +71,30 @@ This section will guide you through the minimum steps required to create mutatio
     SigProfilerMatrixGenerator install GRCh37
     ```
 
+   To install the validated CHM13 archive locally without FTP access, keep the
+   exact filename `CHM13-T2T.tar.gz` and pass the directory that contains it:
+
+    ```bash
+    SigProfilerMatrixGenerator install CHM13-T2T \
+      --local_genome /absolute/path/to/archive-directory
+    ```
+
+   The equivalent Python API is:
+
+    ```python
+    from SigProfilerMatrixGenerator import install as genInstall
+
+    genInstall.install(
+        "CHM13-T2T",
+        offline_files_path="/absolute/path/to/archive-directory",
+    )
+    ```
+
+   Both paths extract the archive into the configured reference location and
+   verify all 24 chromosome files against the checksums registered by the
+   installed package. The directory can be changed with CLI `--volume` or the
+   Python `volume=` parameter.
+
 3. To generate SBS, DBS, or INDEL matrices:
     ```bash
     SigProfilerMatrixGenerator matrix_generator <project> <reference_genome> <path_to_input_files>
@@ -83,7 +107,7 @@ View the table below for the full list of parameters.
 | ------ | ----------- | ----------- | ----------- |
 | Required |  |  |  |
 |  | project | String | The name of the project. |
-|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, c_elegans_Legacy, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast} |
+|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, c_elegans_Legacy, CHM13-T2T, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast} |
 |  | path_to_input_files | String | The path to the input files. |
 | Optional |  |  |  |
 |  | exome | Boolean | Downsamples mutational matrices to the exome regions of the genome. Default value False. |
@@ -226,6 +250,9 @@ offline installation instructions.
 **SUPPORTED GENOMES**
 
 This tool currently supports the following genomes:
+
+T2T-CHM13v2.0 [CHM13-T2T] (Telomere-to-Telomere Consortium CHM13 assembly v2.0), INSDC
+Assembly GCA_009914755.4. Nuclear chromosomes only (1–22, X, Y; no mitochondrion). WGS and exome matrices supported. The exome interval list is annotation-derived (merged CDS features from NCBI RefSeq annotation release GCF_009914755.1-RS_2025_08) rather than a capture-kit definition, so its exome matrices are not directly comparable to the GRCh37/GRCh38 ones; see docs/Currently-Supported-Genomes.md.
 
 GRCh38.p12 [GRCh38] (Genome Reference Consortium Human Reference 38), INSDC
 Assembly GCA_000001405.27, Dec 2013. Released July 2014. Last updated January

@@ -138,8 +138,12 @@ Tests include direct boundary classifications, reverse-complement controls,
 nested intervals, decoded-base checks, and small generated references passed
 through the public WGS, WES, and BED matrix workflows. Full corrected GRCh38
 validation separately checks all encoded bases and TSB positions and compares
-legacy and corrected matrices for the public TCGA-BRCA cohort. CHM13 remains a
-separate reference-validation task.
+legacy and corrected matrices for the public TCGA-BRCA cohort. CHM13 validation
+uses a pinned FASTA and RefSeq annotation, checks every decoded nuclear base,
+independently samples transcript interval boundaries and interiors, verifies the
+24 registered chromosome checksums, and runs WGS, WES, and BED regressions after
+a clean offline install. The exact sources, hashes, build command, and archive
+fingerprint are recorded in `Currently-Supported-Genomes.md`.
 
 Before releasing regenerated references:
 
