@@ -57,20 +57,27 @@ archive is then built and validated against the registered chromosome MD5 values
 ```bash
 python tools/build_reference_archive.py \
   /path/to/CHM13-T2T /path/to/CHM13-T2T.tar.gz \
-  --genome CHM13-T2T
+  --genome CHM13-T2T --compression-level 6
 ```
 
-The validated archive produced for this change is 828,247,944 bytes with
-SHA-256 `a141d39aae2999f965fb30a33879e2c920afc2b79f18a40dc9549cd6f726259a`.
+The validated archive produced for this change is 849,740,149 bytes with
+SHA-256 `e8d0309879486beefb83d730c00b8cf8733aa7cd1716f694855817e69943f6a3`.
 It contains one root directory and exactly the 24 registered nuclear chromosome
 files. It must be published under the exact name `CHM13-T2T.tar.gz` before
 network installation is advertised as available.
 
 Validation decoded all 3,117,275,501 nuclear bases against the pinned FASTA and
-independently checked 426,917 transcript-interval boundary/interior positions
-with no mismatches. A clean offline installation passed the committed WGS, WES,
+independently checked every strand label using intervals from the raw GTF,
+with no mismatches. An independent raw-GFF comparison also confirmed all
+213,010 CDS intervals and their 36,402,445 covered bases. Nonzero SBS, DBS,
+and ID matrices passed WGS, WES, and BED smoke tests. A clean offline installation
+passed the committed WGS, WES,
 and BED regression modes. Those fixtures include a chrY locus whose strand label
 differs between the original PR archive and this corrected reference.
+
+This change supplies raw matrix generation, not CHM13-specific opportunity
+tables or downstream COSMIC signature catalogues. Downstream tools must be
+checked separately before using CHM13 for signature extraction or normalization.
 
 - [GRCh37.p13 [GRCh37]][7] <br>
 *GRCh37.p13 [GRCh37] (Genome Reference Consortium Human Reference 37), INSDC Assembly GCA_000001405.14, Feb 2009. Released April 2011. Last updated September 2013. <br>This genome was downloaded from ENSEMBL database version 93.37.*

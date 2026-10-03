@@ -1,0 +1,5 @@
+filename	sha256	url
+genome.fa	27c7aeddcebe237c93bf24b6c6cabae7bf863d13c69560fab83f114a1ec73d42	https://ngi-igenomes.s3.amazonaws.com/igenomes/Homo_sapiens/UCSC/CHM13/Sequence/WholeGenomeFasta/genome.fa
+GCF_009914755.1_T2T-CHM13v2.0_assembly_report.txt	734ed8bd2d4f268ed60e2a310caf9c78c3d9f1f4c28441c90f168ea304ed6910	https://ftp.ncbi.nlm.nih.gov/genomes/all/annotation_releases/9606/GCF_009914755.1-RS_2025_08/GCF_009914755.1_T2T-CHM13v2.0_assembly_report.txt
+GCF_009914755.1_T2T-CHM13v2.0_genomic.gff.gz	833170d5445e5514537cc15ddec50381dc9798eae8eac3de97762cc6eac1a1cf	https://ftp.ncbi.nlm.nih.gov/genomes/all/annotation_releases/9606/GCF_009914755.1-RS_2025_08/GCF_009914755.1_T2T-CHM13v2.0_genomic.gff.gz
+GCF_009914755.1_T2T-CHM13v2.0_genomic.gtf.gz	fd8a27c06da23b4defc140d1bb03f5f0eb8b5ba780eeee6730617fe709c6a16e	https://ftp.ncbi.nlm.nih.gov/genomes/all/annotation_releases/9606/GCF_009914755.1-RS_2025_08/GCF_009914755.1_T2T-CHM13v2.0_genomic.gtf.gz

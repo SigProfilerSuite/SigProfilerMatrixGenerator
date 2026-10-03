@@ -104,11 +104,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   of the untouched historical archive named `mm9_Legacy.tar.gz`. Older
   MatrixGenerator releases cannot verify the corrected archive under the
   original name and should upgrade before reinstalling.
-- `CHM13-T2T.tar.gz` must be rebuilt from the corrected 24-chromosome payload
-  and published before CHM13-T2T network installation can succeed. The archive
-  supplied with PR #250 predates the transcription-strand fixes and must not be
-  hosted or released. The validated replacement archive has SHA-256
-  `a141d39aae2999f965fb30a33879e2c920afc2b79f18a40dc9549cd6f726259a`;
+- `CHM13-T2T.tar.gz` must be published before CHM13-T2T network installation
+  can succeed. The original August archive linked in issue #251 predates the
+  transcription-strand fixes; the latest PR updates the chromosome checksums.
+  Our independently rebuilt replacement archive has SHA-256
+  `e8d0309879486beefb83d730c00b8cf8733aa7cd1716f694855817e69943f6a3`;
   source hashes and the reproducible build command are documented in
   `docs/Currently-Supported-Genomes.md`.
 

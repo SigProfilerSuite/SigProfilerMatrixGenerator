@@ -6,7 +6,8 @@ import pytest
 from tools.build_reference_archive import build_archive
 
 
-def test_reference_archive_is_deterministic_and_has_expected_layout(tmp_path):
+@pytest.mark.parametrize("compression_level", [1, 6, 9])
+def test_reference_archive_is_deterministic_and_has_expected_layout(tmp_path, compression_level):
     reference = tmp_path / "fixture"
     reference.mkdir()
     (reference / "2.txt").write_bytes(b"second")
@@ -14,8 +15,8 @@ def test_reference_archive_is_deterministic_and_has_expected_layout(tmp_path):
     first = tmp_path / "first.tar.gz"
     second = tmp_path / "second.tar.gz"
 
-    build_archive(reference, first)
-    build_archive(reference, second)
+    build_archive(reference, first, compression_level=compression_level)
+    build_archive(reference, second, compression_level=compression_level)
 
     assert hashlib.sha256(first.read_bytes()).digest() == hashlib.sha256(
         second.read_bytes()

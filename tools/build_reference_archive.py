@@ -57,7 +57,8 @@ def validate_reference_directory(
 
 
 def build_archive(
-    source_directory, output_path, expected_checksums=None, expected_genome=None
+    source_directory, output_path, expected_checksums=None, expected_genome=None,
+    compression_level=9,
 ):
     source_directory = Path(source_directory)
     output_path = Path(output_path)
@@ -80,7 +81,8 @@ def build_archive(
     temporary_path = output_path.with_suffix(output_path.suffix + ".tmp")
     try:
         with temporary_path.open("wb") as raw, gzip.GzipFile(
-            filename="", mode="wb", fileobj=raw, mtime=0
+            filename="", mode="wb", fileobj=raw, mtime=0,
+            compresslevel=compression_level,
         ) as compressed, tarfile.open(
             fileobj=compressed, mode="w", format=tarfile.USTAR_FORMAT
         ) as archive:
@@ -106,6 +108,10 @@ def main():
         "--genome",
         help="validate the payload against this registered reference before archiving",
     )
+    parser.add_argument(
+        "--compression-level", type=int, choices=range(1, 10), default=9,
+        help="gzip compression level (default: 9); record it with the archive checksum",
+    )
     args = parser.parse_args()
     expected_checksums = None
     if args.genome:
@@ -122,6 +128,7 @@ def main():
         args.output_path,
         expected_checksums,
         expected_genome=args.genome,
+        compression_level=args.compression_level,
     )
 
 
