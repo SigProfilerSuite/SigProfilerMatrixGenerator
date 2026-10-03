@@ -75,9 +75,29 @@ passed the committed WGS, WES,
 and BED regression modes. Those fixtures include a chrY locus whose strand label
 differs between the original PR archive and this corrected reference.
 
-This change supplies raw matrix generation, not CHM13-specific opportunity
-tables or downstream COSMIC signature catalogues. Downstream tools must be
-checked separately before using CHM13 for signature extraction or normalization.
+CHM13-specific whole-genome and exome opportunity tables are included for
+contexts 6, 24, 96, 384, 1536, 6144, DBS, and DBS186. Each context includes
+integer counts and male/female chromosome-selection probabilities. The female
+tables omit Y; neither variant includes mitochondrial chromosomes. The five-base
+eligibility rule is shared across SBS contexts, matching the existing generator.
+Exome windows must fit entirely inside the one-based inclusive CDS interval union.
+
+Build the 48 tables from the validated installed reference:
+
+```bash
+python -m tools.build_chm13_opportunities \
+  --reference /path/to/reference-volume/tsb/CHM13-T2T \
+  --exome SigProfilerMatrixGenerator/references/chromosomes/exome/CHM13-T2T/CHM13-T2T_exome.interval_list \
+  --output /path/to/output-tables
+```
+
+Run this developer command from a repository checkout with its dependencies
+installed. Counts describe reference contexts, not observed mutation counts;
+there are fewer context rows than mutation channels because multiple possible
+alternate alleles share the same reference context. Tables are package resources,
+not additional files inside `CHM13-T2T.tar.gz`; the reference archive is unchanged.
+See [downstream compatibility](CHM13-Downstream-Compatibility.md) before using
+these tables for signature extraction, simulation, or normalization.
 
 - [GRCh37.p13 [GRCh37]][7] <br>
 *GRCh37.p13 [GRCh37] (Genome Reference Consortium Human Reference 37), INSDC Assembly GCA_000001405.14, Feb 2009. Released April 2011. Last updated September 2013. <br>This genome was downloaded from ENSEMBL database version 93.37.*

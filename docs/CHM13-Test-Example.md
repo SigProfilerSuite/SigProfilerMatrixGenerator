@@ -84,5 +84,7 @@ Individual inputs: [SBS VCF](assets/examples/chm13/mixed_variant_inputs/sbs.vcf)
 [indel VCF](assets/examples/chm13/mixed_variant_inputs/indel.vcf).
 
 The reference covers nuclear chromosomes 1-22, X, and Y, not MT. CHM13-specific
-opportunity tables and downstream signature catalogues are outside this example.
+opportunity tables are included in this branch, but downstream signature
+catalogues require separate compatibility work. See
+[CHM13 opportunities and downstream compatibility](CHM13-Downstream-Compatibility.md).
 See [supported genomes and provenance](Currently-Supported-Genomes.md).

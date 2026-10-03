@@ -17,8 +17,10 @@ locally to test before FTP publication. Follow the
 [CHM13 test example](docs/CHM13-Test-Example.md) for installation instructions,
 downloadable synthetic VCF samples, runnable demo code, and expected results.
 See [reference provenance](docs/Currently-Supported-Genomes.md) for sources and
-checksums. This branch has not yet been released to PyPI; CHM13-specific
-opportunity tables and downstream signature catalogues are not included.
+checksums. This branch also supplies CHM13 whole-genome and exome opportunity
+counts and chromosome distributions. It has not yet been released to PyPI.
+These tables do not automatically enable downstream COSMIC signature matching;
+see [CHM13 downstream compatibility](docs/CHM13-Downstream-Compatibility.md).
 
 **INTRODUCTION**
 

@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Add 48 CHM13 whole-genome/exome opportunity resources: integer counts and
+  male/female chromosome distributions for eight contexts, with a reproducible
+  builder, independent source-level validation, and explicit downstream limits.
+- Correct the CHM13 exome opportunity coordinate conversion without changing
+  historical coordinate handling for other references.
 - Register `mm39_Legacy` with the original mm39 archive checksums and
   opportunity tables for reproducibility.
 - Added support for the T2T-CHM13v2.0 human reference genome (CHM13-T2T), nuclear chromosomes only (1–22, X, Y). Network installation becomes available when the corrected archive described under **Reference Data** is published to the AlexandrovLab FTP.

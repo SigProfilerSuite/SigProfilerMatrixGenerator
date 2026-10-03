@@ -378,12 +378,13 @@ def context_distribution_BED(
     else:
         file_to_open = bed_file
 
-    chromosomes_sort = chromosomes
+    # CHM13 is nuclear-only; do not leak unsupported MT/M columns into its tables.
+    chromosomes_sort = list(chromosomes) if genome == "CHM13-T2T" else chromosomes
     if "Y" not in chromosomes:
         chromosomes_sort.append("Y")
-    if "MT" not in chromosomes:
+    if "MT" not in chromosomes and genome != "CHM13-T2T":
         chromosomes_sort.append("MT")
-    if "M" not in chromosomes:
+    if "M" not in chromosomes and genome != "CHM13-T2T":
         chromosomes_sort.append("M")
 
     # Populate the dictionary if desired context is DINUC
@@ -414,6 +415,11 @@ def context_distribution_BED(
             try:
                 start = int(line[1])
                 end = int(line[2])
+                if exome and genome == "CHM13-T2T":
+                    # Pinned RefSeq CDS intervals are one-based inclusive.
+                    start -= 1
+                    if start < 0 or end <= start:
+                        raise ValueError("Invalid one-based CHM13 exome interval")
             except Exception as e:
                 print(
                     f"There was an issue processing the start and end position from the line: {line}"

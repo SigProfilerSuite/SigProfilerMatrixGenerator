@@ -22,5 +22,7 @@ with the input payload directory and output archive path to reproduce it.
 Compression metadata can change the archive hash without changing payload MD5s.
 
 Network installation requires publication to the configured AlexandrovLab FTP.
-CHM13-specific opportunity tables and downstream signature catalogues are not
-part of this change.
+CHM13-specific whole-genome and exome opportunity tables are package resources,
+not archive members. `opportunity_manifest.tsv` records their fingerprints.
+Downstream signature catalogue compatibility is separate; see
+`docs/CHM13-Downstream-Compatibility.md`.

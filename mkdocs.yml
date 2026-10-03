@@ -63,6 +63,7 @@ nav:
   - Getting Started:
     - Quick Start Example: Quick-Start-Example.md
     - CHM13 Test Example: CHM13-Test-Example.md
+    - CHM13 Compatibility: CHM13-Downstream-Compatibility.md
   - Installation:
     - Python: Installation-Python.md
     - R: Installation-R.md
