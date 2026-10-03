@@ -4,6 +4,22 @@
 # SigProfilerMatrixGenerator
 SigProfilerMatrixGenerator creates mutational matrices for all types of somatic mutations. It allows downsizing the generated mutations only to parts of the genome (e.g., exome or a custom BED file). The tool seamlessly integrates with other SigProfiler tools.
 
+## CHM13 Support Added
+
+This development branch adds **T2T-CHM13v2.0** support using the reference name
+`CHM13-T2T` for SBS, DBS, and indel matrix generation in whole-genome, exome,
+and custom BED analyses. It includes nuclear chromosomes 1-22, X, and Y;
+mitochondrial variants are not supported. The exome regions are annotation-derived
+CDS intervals, not a capture-kit definition.
+
+Install this development branch and the validated `CHM13-T2T.tar.gz` archive
+locally to test before FTP publication. Follow the
+[CHM13 test example](docs/CHM13-Test-Example.md) for installation instructions,
+downloadable synthetic VCF samples, runnable demo code, and expected results.
+See [reference provenance](docs/Currently-Supported-Genomes.md) for sources and
+checksums. This branch has not yet been released to PyPI; CHM13-specific
+opportunity tables and downstream signature catalogues are not included.
+
 **INTRODUCTION**
 
 The purpose of this document is to provide a guide for using the SigProfilerMatrixGenerator framework to generate mutational matrices for a set of samples with associated mutational catalogues. Full documentation is available in `docs/` (rendered via MkDocs): https://sigprofilersuite.github.io/SigProfilerMatrixGenerator/
