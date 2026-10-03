@@ -148,7 +148,9 @@ def SigProfilerMatrixGeneratorFunc(
         )
 
     # 3. Check the exome interval list up front, rather than failing with a bare
-    # FileNotFoundError in exome_check() after every chromosome has been parsed
+    # FileNotFoundError in exome_check() after every chromosome has been parsed.
+    # Resolve the assembly first, as exome_check() does, so that registered
+    # editions such as GRCh38_Legacy or *_havana find their shared interval list
     if exome:
         exome_reference = reference_genome_manager.get_reference_assembly(
             reference_genome
