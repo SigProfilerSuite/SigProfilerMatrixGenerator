@@ -7,6 +7,9 @@ from pathlib import Path
 import numpy as np
 
 from SigProfilerMatrixGenerator.scripts.reference_genome_manager import CHECKSUMS
+from SigProfilerMatrixGenerator.scripts.save_context_distribution import (
+    one_based_closed_to_half_open,
+)
 from tools.build_reference_archive import validate_reference_directory
 
 
@@ -50,7 +53,7 @@ def read_intervals(path):
                 continue
             row = line.split()
             chrom = row[0].removeprefix("chr")
-            start, end = int(row[1]) - 1, int(row[2])
+            start, end = one_based_closed_to_half_open(row[1], row[2])
             if chrom not in CHROMOSOMES or not 0 <= start < end:
                 raise ValueError(f"Invalid CHM13 interval: {line.strip()}")
             if intervals[chrom] and start < intervals[chrom][-1][1]:

@@ -114,7 +114,7 @@ def test_one_genome(genome, volume, exome=False, bed_file=True):
 
 
 def available_test_modes(genome):
-    """Return every WGS/WES/BED regression mode with committed inputs/solutions."""
+    """Return complete regression modes, or an empty list when fixtures are absent."""
     candidates = (
         ("WGS", False, False),
         ("WES", True, False),
@@ -128,13 +128,14 @@ def available_test_modes(genome):
         )
         if os.path.isdir(input_dir) and os.path.isdir(solution_dir):
             modes.append((exome, bed_file))
-    if not modes:
-        raise FileNotFoundError(f"No regression inputs and solutions found for {genome}")
     return modes
 
 
 def run_all_modes_for_genome(genome, volume=None):
-    for exome, bed_file in available_test_modes(genome):
+    modes = available_test_modes(genome)
+    if not modes:
+        raise FileNotFoundError(f"No regression inputs and solutions found for {genome}")
+    for exome, bed_file in modes:
         test_one_genome(
             genome,
             volume=volume,

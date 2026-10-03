@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Make regression-mode discovery safe for missing fixtures, while preserving
+  explicit errors when running a genome without complete regression inputs.
+- Share CHM13 interval coordinate conversion between both opportunity builders.
 - Add 48 CHM13 whole-genome/exome opportunity resources: integer counts and
   male/female chromosome distributions for eight contexts, with a reproducible
   builder, independent source-level validation, and explicit downstream limits.

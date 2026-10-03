@@ -15,6 +15,17 @@ TSB_REF = {value: ["NTUB"[value // 4], "ACGT"[value % 4]] for value in range(16)
 TSB_REF.update({16 + state: ["NTUB"[state], "N"] for state in range(4)})
 
 
+@pytest.mark.parametrize("start,end,expected", [(1, 1, (0, 1)), (1, 5, (0, 5)), (331, 1000, (330, 1000))])
+def test_shared_coordinate_conversion(start, end, expected):
+    assert reference.one_based_closed_to_half_open(start, end) == expected
+
+
+@pytest.mark.parametrize("start,end", [(0, 5), (-1, 5), (5, 4)])
+def test_shared_coordinate_conversion_rejects_invalid_intervals(start, end):
+    with pytest.raises(ValueError, match="one-based inclusive"):
+        reference.one_based_closed_to_half_open(start, end)
+
+
 @pytest.mark.parametrize("context", CONTEXTS)
 @pytest.mark.parametrize("exome", [False, True])
 def test_chunked_opportunities_match_existing_scalar_generator(tmp_path, context, exome):
