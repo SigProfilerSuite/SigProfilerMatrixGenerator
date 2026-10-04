@@ -930,7 +930,7 @@ def annotateBedpe(sv_bedpe):
     return result
 
 
-def generateSVMatrix(input_dir, project, output_dir, skip=False):
+def generateSVMatrix(input_dir, project, output_dir, plot=True, skip=False):
     # create output_dir if it does not yet exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -1017,18 +1017,26 @@ def generateSVMatrix(input_dir, project, output_dir, skip=False):
 
                 all_samples.append(result["sv_bedpe"])
 
+    if len(all_samples) < 1:
+        fout.write(
+            "Warning: unable to generate SV matrix, as all samples have 0 classified SVs"
+        )
+        return None
+
     matrix = tsv2matrix(all_samples, project, output_dir)
     out_file = os.path.join(output_dir, project + ".SV32.matrix.tsv")
     matrix.to_csv(out_file, sep="\t")
     print("Saved matrix to " + out_file)
-    sigPlt.plotSV(
-        matrix,
-        output_dir,
-        project,
-        savefig_format="pdf",
-        percentage=False,
-        aggregate=True,
-    )
+
+    if plot == True:
+        sigPlt.plotSV(
+            matrix,
+            output_dir,
+            project,
+            savefig_format="pdf",
+            percentage=False,
+            aggregate=True,
+        )
 
     return matrix
 
