@@ -65,6 +65,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   their default identities; retain their existing DNA sequences.
 
 ### Fixed
+- Preserve SV32 clustering assignments with pandas Copy-on-Write, including
+  hotspot metadata and merged regions; add clustered/nonclustered regressions.
+- Generate matrices from a fresh input snapshot on every run so reusing an
+  output directory does not silently reuse a previous cohort or removed files.
 - Allow rn7 and rn7_Legacy whole-exome and BED matrix generation through the
   chromosome-order lookups used by those workflows.
 - Rebuild SBS context-distribution tables from the shared five-base opportunity

@@ -79,7 +79,7 @@ def calcIntermutDist(subs_type, first_chrom_na=False):
             subs_type_chrom["position"].values - subs_type_chrom["prevPos"].values
         )
         subs_type_processed = subs_type_processed.append(subs_type_chrom)
-        subs_type_processed["distPrev"][subs_type_processed["distPrev"] == 0] = 1
+        subs_type_processed.loc[subs_type_processed["distPrev"] == 0, "distPrev"] = 1
     return subs_type_processed
 
 
@@ -302,7 +302,7 @@ def calcIntermutDist(subs_type, first_chrom_na=False):
             subs_type_chrom["position"].values - subs_type_chrom["prevPos"].values
         )
         subs_type_processed = subs_type_processed.append(subs_type_chrom)
-        subs_type_processed["distPrev"][subs_type_processed["distPrev"] == 0] = 1
+        subs_type_processed.loc[subs_type_processed["distPrev"] == 0, "distPrev"] = 1
     return subs_type_processed
 
 
@@ -529,40 +529,40 @@ def hotspotInfo(kat_regions_all, subs, segInterDist):
                 )
                 + 1
             ]
-            kat_regions_all["start_bp"][index] = min(subs_hotspot["pos"])
-            kat_regions_all["end_bp"][index] = max(subs_hotspot["pos"])
-            kat_regions_all["length_bp"][index] = (
+            kat_regions_all.at[index, "start_bp"] = min(subs_hotspot["pos"])
+            kat_regions_all.at[index, "end_bp"] = max(subs_hotspot["pos"])
+            kat_regions_all.at[index, "length_bp"] = (
                 kat_regions_all["end_bp"][index] - kat_regions_all["start_bp"][index]
             )
-            kat_regions_all["number_bps"][index] = len(subs_hotspot)
+            kat_regions_all.at[index, "number_bps"] = len(subs_hotspot)
             if "is_clustered" in subs_hotspot:
-                kat_regions_all["number_bps_clustered"][index] = sum(
+                kat_regions_all.at[index, "number_bps_clustered"] = sum(
                     subs_hotspot["is_clustered"]
                 )
             else:
-                kat_regions_all["number_bps_clustered"][index] = 0
+                kat_regions_all.at[index, "number_bps_clustered"] = 0
             if len(segInterDist) > 0 & np.isnan(kat_regions_all["avgDist_bp"][index]):
-                kat_regions_all["avgDist_bp"][index] = np.mean(
+                kat_regions_all.at[index, "avgDist_bp"] = np.mean(
                     segInterDist[
                         int(kat_regions_all["firstBp"][index]) : (
                             int(kat_regions_all["lastBp"][index]) + 1
                         )
                     ]
                 )
-            kat_regions_all["no_samples"][index] = len(
+            kat_regions_all.at[index, "no_samples"] = len(
                 unique_py(list(subs_hotspot["sample"]))
             )
             if "pf" in subs_hotspot:
-                kat_regions_all["no_del"][index] = len(
+                kat_regions_all.at[index, "no_del"] = len(
                     subs_hotspot[subs_hotspot["pf"] == 2]
                 )
-                kat_regions_all["no_dup"][index] = len(
+                kat_regions_all.at[index, "no_dup"] = len(
                     subs_hotspot[subs_hotspot["pf"] == 4]
                 )
-                kat_regions_all["no_inv"][index] = len(
+                kat_regions_all.at[index, "no_inv"] = len(
                     subs_hotspot[subs_hotspot["pf"] == 1 | subs_hotspot["pf"] == 8]
                 )
-                kat_regions_all["no_trn"][index] = len(
+                kat_regions_all.at[index, "no_trn"] = len(
                     subs_hotspot[subs_hotspot["pf"] == 32]
                 )
     return kat_regions_all
@@ -573,30 +573,29 @@ def hotspotInfo2(kat_regions_all, subs, segInterDist):
         pos_arr = subs["pos"].values
         kat_firstBp = kat_regions_all["firstBp"].values
         kat_lastBp = kat_regions_all["lastBp"].values
-        kat_start_bp = kat_regions_all["start_bp"].values
-        kat_end_bp = kat_regions_all["end_bp"].values
         kat_samples = list(subs["sample"])
         kat_regions_all = kat_regions_all.reset_index(drop=True)
         for index in range(len(kat_regions_all)):
             subs_hotspot = pos_arr[int(kat_firstBp[index]) : int(kat_lastBp[index]) + 1]
-            kat_regions_all["start_bp"][index] = np.min(subs_hotspot)
-            kat_regions_all["end_bp"][index] = np.max(subs_hotspot)
-            kat_regions_all["length_bp"][index] = (
-                kat_end_bp[index] - kat_start_bp[index]
+            kat_regions_all.at[index, "start_bp"] = np.min(subs_hotspot)
+            kat_regions_all.at[index, "end_bp"] = np.max(subs_hotspot)
+            kat_regions_all.at[index, "length_bp"] = (
+                kat_regions_all.at[index, "end_bp"]
+                - kat_regions_all.at[index, "start_bp"]
             )
-            kat_regions_all["number_bps"][index] = len(subs_hotspot)
+            kat_regions_all.at[index, "number_bps"] = len(subs_hotspot)
             if "is_clustered" in kat_regions_all:
                 subs_is_clust = kat_regions_all["is_clustered"].values[
                     int(kat_firstBp[index]) : int(kat_lastBp[index]) + 1
                 ]
-                kat_regions_all["number_bps_clustered"][index] = np.sum(subs_is_clust)
+                kat_regions_all.at[index, "number_bps_clustered"] = np.sum(subs_is_clust)
             else:
-                kat_regions_all["number_bps_clustered"][index] = 0
+                kat_regions_all.at[index, "number_bps_clustered"] = 0
             if len(segInterDist) > 0 & np.isnan(kat_regions_all["avgDist_bp"][index]):
-                kat_regions_all["avgDist_bp"][index] = np.mean(
+                kat_regions_all.at[index, "avgDist_bp"] = np.mean(
                     segInterDist[int(kat_firstBp[index]) : (int(kat_lastBp[index]) + 1)]
                 )
-            kat_regions_all["no_samples"][index] = len(
+            kat_regions_all.at[index, "no_samples"] = len(
                 unique_py(
                     [
                         kat_samples[val]
@@ -607,16 +606,16 @@ def hotspotInfo2(kat_regions_all, subs, segInterDist):
                 )
             )
             if "pf" in kat_regions_all:
-                kat_regions_all["no_del"][index] = len(
+                kat_regions_all.at[index, "no_del"] = len(
                     subs_hotspot[subs_hotspot["pf"] == 2]
                 )
-                kat_regions_all["no_dup"][index] = len(
+                kat_regions_all.at[index, "no_dup"] = len(
                     subs_hotspot[subs_hotspot["pf"] == 4]
                 )
-                kat_regions_all["no_inv"][index] = len(
+                kat_regions_all.at[index, "no_inv"] = len(
                     subs_hotspot[subs_hotspot["pf"] == 1 | subs_hotspot["pf"] == 8]
                 )
-                kat_regions_all["no_trn"][index] = len(
+                kat_regions_all.at[index, "no_trn"] = len(
                     subs_hotspot[subs_hotspot["pf"] == 32]
                 )
     return kat_regions_all
@@ -765,16 +764,13 @@ def extract_kat_regions(
                         == kat_regions_all["firstBp"][r] - 1
                     ):
                         # merge two segments
-                        kat_regions_all["firstBp"][r] = kat_regions_all["firstBp"][
-                            r - 1
+                        kat_regions_all.at[r, "firstBp"] = kat_regions_all.at[
+                            r - 1, "firstBp"
                         ]
-                        kat_regions_all["firstBp"][r - 1] = np.nan
-                        kat_regions_all["lastBp"][r - 1] = np.nan
-                        kat_regions_all["avgDist_bp"][
-                            r
-                        ] = (
-                            np.nan
-                        )  # this will need to be updated as segments are being merged
+                        kat_regions_all.at[r - 1, "firstBp"] = np.nan
+                        kat_regions_all.at[r - 1, "lastBp"] = np.nan
+                        # Recompute the distance after merging segments.
+                        kat_regions_all.at[r, "avgDist_bp"] = np.nan
             # remove some of the merged segments
             columns_backup = kat_regions_all.columns.to_list()
             kat_regions_all = kat_regions_all[
@@ -810,7 +806,7 @@ def annotateBedpe(sv_bedpe):
         columns=("chr", "position", "sample", "id"),
     )
     cncd["isLeft"] = True
-    cncd["isLeft"][len(left) : len(left) + len(right)] = False
+    cncd.loc[cncd.index >= len(left), "isLeft"] = False
     cncd = cncd[["chr", "position", "sample", "isLeft", "id"]]
 
     sample_bps = pd.DataFrame(columns=cncd.columns)
@@ -863,7 +859,7 @@ def annotateBedpe(sv_bedpe):
             data_points = sample_bps["intermut_dist"][sample_bps_flag]
             kmin = 10
             res = exactPcf(data_points.values, kmin, gamma, True)
-            sample_bps["mean_intermut_dist"][sample_bps_flag] = res["yhat"]
+            sample_bps.loc[sample_bps_flag, "mean_intermut_dist"] = res["yhat"]
             # prepare the points for pcf
             subs = pd.DataFrame(columns=["chr", "pos", "sample"])
             subs["chr"] = sample_bps["chr"][sample_bps_flag]
@@ -893,14 +889,13 @@ def annotateBedpe(sv_bedpe):
             if not kat_regions.empty & len(kat_regions) > 0:
                 for k in range(len(kat_regions)):
                     ind = np.where(sample_bps_flag)[0]
-                    temp = sample_bps["is_clustered_single"].values[ind]
-                    temp[
-                        int(kat_regions["firstBp"][k]) : int(kat_regions["lastBp"][k])
-                        + 1
+                    first = int(kat_regions["firstBp"][k])
+                    last = int(kat_regions["lastBp"][k])
+                    sample_bps.loc[
+                        sample_bps.index[ind[first : last + 1]], "is_clustered_single"
                     ] = True
-                    sample_bps["is_clustered_single"][ind[temp] + 1] = True
         else:
-            sample_bps["mean_intermut_dist"][sample_bps_flag] = np.mean(
+            sample_bps.loc[sample_bps_flag, "mean_intermut_dist"] = np.mean(
                 sample_bps["intermut_dist"][sample_bps_flag]
             )
 
@@ -919,8 +914,8 @@ def annotateBedpe(sv_bedpe):
     sv_bedpe["is_clustered"] = np.nan
 
     check_exist_list = sample_bps["id"][sample_bps["is_clustered"]]
-    sample_bps["is_clustered"][
-        np.isin(sample_bps["id"].values, check_exist_list.values)
+    sample_bps.loc[
+        np.isin(sample_bps["id"].values, check_exist_list.values), "is_clustered"
     ] = True
     sv_bedpe["is_clustered"] = np.isin(
         sv_bedpe["id"], sample_bps["id"][sample_bps["is_clustered"]]

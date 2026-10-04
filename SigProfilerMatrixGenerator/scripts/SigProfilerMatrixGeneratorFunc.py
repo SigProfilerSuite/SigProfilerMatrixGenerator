@@ -1228,20 +1228,28 @@ def SigProfilerMatrixGeneratorFunc(
     if not base_path.endswith("/"):
         base_path += "/"
 
-    # Ensure input path and create if needed
-    vcf_path = os.path.join(base_path, "input/")
+    # Keep an independent input snapshot for each run, never reuse staged cohorts.
+    unique_folder = project + "_" + str(uuid.uuid4())
+    input_source = path_to_input_files
+    input_files = [
+        filename for filename in sorted(os.listdir(input_source))
+        if os.path.isfile(os.path.join(input_source, filename))
+    ]
+    # Preserve the historical project-directory layout with files in input/.
+    legacy_input = os.path.join(input_source, "input")
+    if not input_files and os.path.isdir(legacy_input):
+        input_source = legacy_input
+        input_files = [
+            filename for filename in sorted(os.listdir(input_source))
+            if os.path.isfile(os.path.join(input_source, filename))
+        ]
+    if not input_files:
+        raise ValueError("No input files found in " + path_to_input_files)
+    vcf_path = os.path.join(base_path, "input", unique_folder) + "/"
+    os.makedirs(vcf_path)
+    for filename in input_files:
+        shutil.copy(os.path.join(input_source, filename), os.path.join(vcf_path, filename))
     vcf_path_original = vcf_path
-
-    # Copy all regular files from input source into vcf_path if vcf_path is missing or empty
-    if not os.path.exists(vcf_path) or len(os.listdir(vcf_path)) < 1:
-        os.makedirs(vcf_path, exist_ok=True)
-        if not path_to_input_files.endswith("/"):
-            path_to_input_files += "/"
-        for filename in os.listdir(path_to_input_files):
-            src = os.path.join(path_to_input_files, filename)
-            dst = os.path.join(vcf_path, filename)
-            if os.path.isfile(src):
-                shutil.copy(src, dst)
 
     # Define the output matrix path, allowing override via `output_directory`
     if output_directory:
@@ -1358,7 +1366,6 @@ def SigProfilerMatrixGeneratorFunc(
     # Creates a temporary folder for sorting and generating the matrices
     file_name = vcf_files[0].split(".")
     file_extension = file_name[-1]
-    unique_folder = project + "_" + str(uuid.uuid4())
     output_path = output_matrix + "temp/" + unique_folder + "/"
     if os.path.exists(output_path):
         shutil.rmtree(output_path)

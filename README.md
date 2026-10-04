@@ -145,7 +145,7 @@ This tool currently supports maf, vcf, and simple text file. The user must provi
 
 **OUTPUT FILE STRUCTURE**
 
-The output structure is divided into three folders: input, output, and logs. The input folder contains copies of the user-provided input files. The outputfolder contains
+The output structure is divided into three folders: input, output, and logs. The input folder retains copies of the user-provided input files in a separate subfolder for each run. Every run reads a fresh copy of the requested inputs, even when an output directory is reused. The outputfolder contains
 a DBS, SBS, ID, and TSB folder (there will also be a plots folder if this parameter is chosen). The matrices are saved into the appropriate folders. The logs folder contains the error and log files for the submitted job.
 
 ## STRUCTURAL VARIANT MATRIX GENERATION
