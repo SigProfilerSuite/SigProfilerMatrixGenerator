@@ -3320,12 +3320,12 @@ def matrix_generator(
                 pvals_384 = []
                 pvals_24 = []
                 enrichment = list(enr[sample])
-                enrichment_384 = list(enr[sample])
-                enrichment_24 = list(enr[sample])
+                enrichment_384 = list(enr_384[sample])
+                enrichment_24 = list(enr_24[sample])
 
                 for i in range(len(tsb_6144)):
-                    successes = tsb_6144[sample][i]
-                    total_trials = successes + tsb_6144_U[sample][i]
+                    successes = tsb_6144[sample].iloc[i]
+                    total_trials = successes + tsb_6144_U[sample].iloc[i]
                     if total_trials > 0:
                         pval = stats.binomtest(k=successes, n=total_trials).pvalue
                     else:
@@ -3333,8 +3333,8 @@ def matrix_generator(
                     pvals.append(pval)
 
                 for i in range(len(tsb_384)):
-                    successes = tsb_384[sample][i]
-                    total_trials = successes + tsb_384_U[sample][i]
+                    successes = tsb_384[sample].iloc[i]
+                    total_trials = successes + tsb_384_U[sample].iloc[i]
                     if total_trials > 0:
                         pval = stats.binomtest(k=successes, n=total_trials).pvalue
                     else:
@@ -3342,8 +3342,8 @@ def matrix_generator(
                     pvals_384.append(pval)
 
                 for i in range(len(tsb_24)):
-                    successes = tsb_24[sample][i]
-                    total_trials = successes + tsb_24_U[sample][i]
+                    successes = tsb_24[sample].iloc[i]
+                    total_trials = successes + tsb_24_U[sample].iloc[i]
                     if total_trials > 0:
                         pval = stats.binomtest(k=successes, n=total_trials).pvalue
                     else:

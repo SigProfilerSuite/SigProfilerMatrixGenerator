@@ -69,6 +69,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   their default identities; retain their existing DNA sequences.
 
 ### Fixed
+- Use explicit positional indexing in the optional TSB statistical test so
+  `tsb_stat=True` works with pandas 3.
+- Report SBS384 and SBS24 enrichment from their own context counts, including
+  significant-results output, rather than incorrectly reusing SBS6144 ratios.
 - Preserve SV32 clustering assignments with pandas Copy-on-Write, including
   hotspot metadata and merged regions; add clustered/nonclustered regressions.
 - Generate matrices from a fresh input snapshot on every run so reusing an
