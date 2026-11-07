@@ -47,6 +47,16 @@ class ReferenceDir:
         result = self.get_chromosomes_dir() / "tsb"
         return result
 
+    def get_exome_dir(self) -> pathlib.Path:
+        """Exome interval lists ship inside the package, so they are anchored on
+        ``path`` rather than on the (possibly relocated) chromosomes directory."""
+        result = self.path / self._default_chromosome_dir / "exome"
+        return result
+
+    def get_exome_interval_list(self, genome: str) -> pathlib.Path:
+        result = self.get_exome_dir() / genome / f"{genome}_exome.interval_list"
+        return result
+
     def get_chromosomes_dir(self) -> pathlib.Path:
         if self._secondary_chromosome_install_dir is None:
             root_dir = self.path / self._default_chromosome_dir

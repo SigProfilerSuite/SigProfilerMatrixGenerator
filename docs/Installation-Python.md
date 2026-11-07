@@ -174,6 +174,33 @@ $ python3
 
 The installation process saves the custom reference files for all chromosomes in the genome assembly so **~3 Gb** of storage must be available for the downloads for each genome. You can find all the downloaded reference files in the main SigProfilerMatrixGenerator folder. Because the custom files are so large, this step could take some time. <br>
 
+### Installing a local reference archive
+
+A locally stored archive can be installed without FTP access. The archive must
+retain its registered filename, such as `CHM13-T2T.tar.gz`; pass the directory
+containing that file, not the archive filename itself:
+
+```python
+from SigProfilerMatrixGenerator import install as genInstall
+
+genInstall.install(
+    "CHM13-T2T",
+    offline_files_path="/absolute/path/to/archive-directory",
+)
+```
+
+The equivalent command-line installation is:
+
+```bash
+SigProfilerMatrixGenerator install CHM13-T2T \
+  --local_genome /absolute/path/to/archive-directory
+```
+
+Both interfaces verify every installed chromosome against the checksums
+registered by the installed SigProfilerMatrixGenerator version. To install into
+an alternate reference location, also provide `volume="/path"` in Python or
+`--volume /path` on the command line.
+
 ![file structure](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cc79461bbbd370017a16766?mode=render =75%x)
 
 

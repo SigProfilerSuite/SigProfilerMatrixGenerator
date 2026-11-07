@@ -9,6 +9,20 @@
 
 This output folder returns files containing all the insertions and deletions found within the samples. If no files are returned, this means no insertions or deletions were found.
 
+### Optional ID89 and ID476 Counts
+
+The `feature/id89-id476` development branch can additionally generate
+`<project>.ID89.all` and `<project>.ID476.all` with
+`indel_contexts=("89", "476")` in Python or `--indel_contexts 89 476` on the
+CLI. Existing ID83 outputs are unchanged. The new raw-count matrices have 89
+and 476 rows respectively, with one column per sample, and a separate audit
+report records per-event classifications and exclusions. Exome and BED runs
+use `.exome` and `.region` suffixes.
+
+See the [ID89/ID476 guide](ID89-ID476.md) for branch installation, examples,
+filtering and complex-event conventions. New-context plotting and downstream
+signature catalogue support are not included.
+
 <h3> Indel Sample Plot </h3>
 
 ![enter image description here](https://files.osf.io/v1/resources/s93d5/providers/osfstorage/5cca319cbbbd37001aa27f97?mode=render =75%x)

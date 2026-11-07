@@ -1,4 +1,5 @@
 import argparse
+import sys
 from typing import List
 from SigProfilerMatrixGenerator import test_helpers
 from SigProfilerMatrixGenerator.scripts import (
@@ -53,15 +54,15 @@ def parse_arguments_install(args: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Install reference genome files.")
     parser.add_argument(
         "genome",
-        help="The reference genome to install. Supported genomes include {c_elegans, c_elegans_Legacy, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast}.",
+        help="The reference genome to install. Supported genomes include {c_elegans, c_elegans_Legacy, CHM13-T2T, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast}.",
     )
     parser.add_argument(
         "-l",
         "--local_genome",
         help="""
-            Install an offline reference genome downloaded from the Alexandrov Lab's FTP server.
-            Provide the absolute path to the directory containing the locally-stored
-            <genome>.tar.gz file.
+            Install a reference genome from a local archive without downloading it.
+            Provide the absolute path to the directory containing the locally stored
+            <genome>.tar.gz file (for example, CHM13-T2T.tar.gz).
             For downloads, visit AlexandrovLab's ftp server:
             ftp://alexandrovlab-ftp.ucsd.edu/pub/tools/SigProfilerMatrixGenerator/
             """,
@@ -86,7 +87,7 @@ def parse_arguments_matrix_generator(args: List[str]) -> argparse.Namespace:
     parser.add_argument("project", help="The name of the project.")
     parser.add_argument(
         "reference_genome",
-        help="The name of the reference genome. Supported values {c_elegans, c_elegans_Legacy, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast}.",
+        help="The name of the reference genome. Supported values {c_elegans, c_elegans_Legacy, CHM13-T2T, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast}.",
     )
     parser.add_argument("path_to_input_files", help="The path to the input files.")
 
@@ -150,6 +151,11 @@ def parse_arguments_matrix_generator(args: List[str]) -> argparse.Namespace:
         default=None,
     )
 
+    parser.add_argument(
+        "--indel_contexts", nargs="+", choices=("89", "476"), default=None,
+        help="Also generate Koh ID89 and/or ID476 count matrices. ID83 remains unchanged. New-context plots are not yet available.",
+    )
+
     result = parser.parse_args(args)
     return result
 
@@ -206,12 +212,16 @@ class CliController:
     def dispatch_install(self, user_args: List[str]) -> None:
         parsed_args = parse_arguments_install(user_args)
         rgm = reference_genome_manager.ReferenceGenomeManager(parsed_args.volume)
-        # ftp genome installation (default)
-        if parsed_args.local_genome is None:
-            rgm.download_genome(parsed_args.genome)
-        # local genome installation
-        else:
-            rgm.install_local_genome(parsed_args.genome, parsed_args.local_genome)
+        try:
+            # ftp genome installation (default)
+            if parsed_args.local_genome is None:
+                rgm.download_genome(parsed_args.genome)
+            # local genome installation
+            else:
+                rgm.install_local_genome(parsed_args.genome, parsed_args.local_genome)
+        except reference_genome_manager.GenomeDownloadError as e:
+            print(f"Install failed for {parsed_args.genome}:\n{str(e)}")
+            sys.exit(1)
 
     def dispatch_test(self, user_args: List[str]) -> None:
         parsed_args = parse_arguments_test(user_args)
@@ -238,6 +248,7 @@ class CliController:
             cushion=parsed_args.cushion,
             volume=parsed_args.volume,
             output_directory=parsed_args.output_directory,
+            indel_contexts=parsed_args.indel_contexts,
         )
 
     def dispatch_sv_matrix_generator(self, user_args: List[str]) -> None:

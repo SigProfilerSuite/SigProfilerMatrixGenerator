@@ -222,7 +222,7 @@ def BED_sorting(bed_file_path, genome):
         ],
         **{
             g: common_chrom_list
-            for g in ["GRCh37", "GRCh38", "dog", "ebv", "mm10", "mm9", "mm39", "rn6", "rn7"]
+            for g in ["GRCh37", "GRCh38", "CHM13-T2T", "dog", "ebv", "mm10", "mm9", "mm39", "rn6", "rn7"]
         },
     }
 
@@ -2187,16 +2187,8 @@ def exome_check(
     initial = True
     udpate_chrom = False
     reference_dir = ref_install.reference_dir()
-    ref_dir = str(reference_dir.path)
 
-    exome_file = (
-        ref_dir
-        + "/references/chromosomes/exome/"
-        + genome
-        + "/"
-        + genome
-        + "_exome.interval_list"
-    )
+    exome_file = str(reference_dir.get_exome_interval_list(genome))
 
     exome_output_path = output_matrix + "vcf_files/" + context + "/"
     if context == "ID":
@@ -3328,12 +3320,12 @@ def matrix_generator(
                 pvals_384 = []
                 pvals_24 = []
                 enrichment = list(enr[sample])
-                enrichment_384 = list(enr[sample])
-                enrichment_24 = list(enr[sample])
+                enrichment_384 = list(enr_384[sample])
+                enrichment_24 = list(enr_24[sample])
 
                 for i in range(len(tsb_6144)):
-                    successes = tsb_6144[sample][i]
-                    total_trials = successes + tsb_6144_U[sample][i]
+                    successes = tsb_6144[sample].iloc[i]
+                    total_trials = successes + tsb_6144_U[sample].iloc[i]
                     if total_trials > 0:
                         pval = stats.binomtest(k=successes, n=total_trials).pvalue
                     else:
@@ -3341,8 +3333,8 @@ def matrix_generator(
                     pvals.append(pval)
 
                 for i in range(len(tsb_384)):
-                    successes = tsb_384[sample][i]
-                    total_trials = successes + tsb_384_U[sample][i]
+                    successes = tsb_384[sample].iloc[i]
+                    total_trials = successes + tsb_384_U[sample].iloc[i]
                     if total_trials > 0:
                         pval = stats.binomtest(k=successes, n=total_trials).pvalue
                     else:
@@ -3350,8 +3342,8 @@ def matrix_generator(
                     pvals_384.append(pval)
 
                 for i in range(len(tsb_24)):
-                    successes = tsb_24[sample][i]
-                    total_trials = successes + tsb_24_U[sample][i]
+                    successes = tsb_24[sample].iloc[i]
+                    total_trials = successes + tsb_24_U[sample].iloc[i]
                     if total_trials > 0:
                         pval = stats.binomtest(k=successes, n=total_trials).pvalue
                     else:

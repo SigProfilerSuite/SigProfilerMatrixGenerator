@@ -152,6 +152,19 @@ def test_corrected_and_legacy_c_elegans_registrations_have_historical_chromosome
     assert not list(context_dir.glob("context_*_c_elegans_Legacy_*.csv"))
 
 
+def test_chm13_registration_is_nuclear_only_and_has_refseq_aliases():
+    expected = {*(str(chromosome) for chromosome in range(1, 23)), "X", "Y"}
+
+    assert set(refs.CHECKSUMS["CHM13-T2T"]) == expected
+    assert "MT" not in refs.CHECKSUMS["CHM13-T2T"]
+    assert {
+        api.NCBI_CHROMOSOME_ALIASES[f"NC_{60924 + chromosome:06d}.1"]
+        for chromosome in range(1, 23)
+    } == {str(chromosome) for chromosome in range(1, 23)}
+    assert api.NCBI_CHROMOSOME_ALIASES["NC_060947.1"] == "X"
+    assert api.NCBI_CHROMOSOME_ALIASES["NC_060948.1"] == "Y"
+
+
 def test_corrected_and_legacy_grch38_context_tables_are_packaged():
     context_dir = (
         Path(__file__).resolve().parents[2]

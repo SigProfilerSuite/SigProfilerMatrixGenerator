@@ -4,6 +4,24 @@
 # SigProfilerMatrixGenerator
 SigProfilerMatrixGenerator creates mutational matrices for all types of somatic mutations. It allows downsizing the generated mutations only to parts of the genome (e.g., exome or a custom BED file). The tool seamlessly integrates with other SigProfiler tools.
 
+## CHM13 Support Added
+
+This development branch adds **T2T-CHM13v2.0** support using the reference name
+`CHM13-T2T` for SBS, DBS, and indel matrix generation in whole-genome, exome,
+and custom BED analyses. It includes nuclear chromosomes 1-22, X, and Y;
+mitochondrial variants are not supported. The exome regions are annotation-derived
+CDS intervals, not a capture-kit definition.
+
+Install this development branch and the validated `CHM13-T2T.tar.gz` archive
+locally to test before FTP publication. Follow the
+[CHM13 test example](docs/CHM13-Test-Example.md) for installation instructions,
+downloadable synthetic VCF samples, runnable demo code, and expected results.
+See [reference provenance](docs/Currently-Supported-Genomes.md) for sources and
+checksums. This branch also supplies CHM13 whole-genome and exome opportunity
+counts and chromosome distributions. It has not yet been released to PyPI.
+These tables do not automatically enable downstream COSMIC signature matching;
+see [CHM13 downstream compatibility](docs/CHM13-Downstream-Compatibility.md).
+
 **INTRODUCTION**
 
 The purpose of this document is to provide a guide for using the SigProfilerMatrixGenerator framework to generate mutational matrices for a set of samples with associated mutational catalogues. Full documentation is available in `docs/` (rendered via MkDocs): https://sigprofilersuite.github.io/SigProfilerMatrixGenerator/
@@ -29,7 +47,7 @@ The framework is written in PYTHON, however, it also requires the following soft
   * WGET                   version 1.9  or RSYNC if you have a firewall
 
 By default the installation process will save the FASTA files for all chromosomes for the default genome
-assemblies (GRCh37, GRCH38, mm10, mm9, rn6). As a result, ~3 Gb of storage must be available for the downloads for each genome.
+assemblies (CHM13-T2T, GRCh37, GRCh38, mm10, mm9, rn6). As a result, ~3 Gb of storage must be available for the downloads for each genome.
 
 **QUICK START GUIDE**
 
@@ -71,6 +89,30 @@ This section will guide you through the minimum steps required to create mutatio
     SigProfilerMatrixGenerator install GRCh37
     ```
 
+   To install the validated CHM13 archive locally without FTP access, keep the
+   exact filename `CHM13-T2T.tar.gz` and pass the directory that contains it:
+
+    ```bash
+    SigProfilerMatrixGenerator install CHM13-T2T \
+      --local_genome /absolute/path/to/archive-directory
+    ```
+
+   The equivalent Python API is:
+
+    ```python
+    from SigProfilerMatrixGenerator import install as genInstall
+
+    genInstall.install(
+        "CHM13-T2T",
+        offline_files_path="/absolute/path/to/archive-directory",
+    )
+    ```
+
+   Both paths extract the archive into the configured reference location and
+   verify all 24 chromosome files against the checksums registered by the
+   installed package. The directory can be changed with CLI `--volume` or the
+   Python `volume=` parameter.
+
 3. To generate SBS, DBS, or INDEL matrices:
     ```bash
     SigProfilerMatrixGenerator matrix_generator <project> <reference_genome> <path_to_input_files>
@@ -83,7 +125,7 @@ View the table below for the full list of parameters.
 | ------ | ----------- | ----------- | ----------- |
 | Required |  |  |  |
 |  | project | String | The name of the project. |
-|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, c_elegans_Legacy, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast} |
+|  | reference_genome | String | The name of the reference genome. Full list of genomes under **Supported Genomes** section. Supported values include the following: {c_elegans, c_elegans_Legacy, CHM13-T2T, dog, dog_Legacy, ebv, GRCh37, GRCh37_Legacy, GRCh38, GRCh38_Legacy, mm9, mm9_Legacy, mm10, mm10_Legacy, mm39, mm39_Legacy, rn6, rn6_Legacy, rn7, rn7_Legacy, yeast} |
 |  | path_to_input_files | String | The path to the input files. |
 | Optional |  |  |  |
 |  | exome | Boolean | Downsamples mutational matrices to the exome regions of the genome. Default value False. |
@@ -93,8 +135,38 @@ View the table below for the full list of parameters.
 |  | tsb_stat | Boolean | Outputs the results of a transcriptional strand bias test for the respective matrices. Default value False. |
 |  | seqInfo | Boolean | Ouputs original mutations into a text file that contains the SigProfilerMatrixGenerator classificaiton for each mutation. Default value True. |
 |  | cushion | Integer | Adds an Xbp cushion to the exome/bed_file ranges for downsampling the mutations. Default value 100. |
+|  | indel_contexts | Sequence of strings | Optionally add Koh ID89 and/or ID476 counts, e.g. `("89", "476")`. Existing ID83 outputs remain unchanged. Default value None. |
 |  | volume | String | Path to SigProfilerMatrixGenerator's volume where reference genomes will be saved and loaded from (for Docker/Singularity conatiners). The environmental variable 'SIGPROFILERMATRIXGENERATOR_VOLUME' takes precedence. Default value is None. |
 
+
+### Optional ID89 and ID476 Counts
+
+The development branch adds the [Koh et al. (2025)](https://doi.org/10.1038/s41588-025-02152-y)
+indel classifications alongside the existing ID83 matrix. Install this branch
+in a separate environment to test the feature; these instructions do not refer
+to a new PyPI release:
+
+```bash
+python -m pip install --upgrade "git+https://github.com/SigProfilerSuite/SigProfilerMatrixGenerator.git@feature/id89-id476"
+```
+
+Request both additional count matrices with the CLI:
+
+```bash
+SigProfilerMatrixGenerator matrix_generator my_project CHM13-T2T /path/to/vcfs \
+  --volume /path/to/reference-folder --indel_contexts 89 476
+```
+
+The optional matrices use the original variants and the installed reference DNA,
+not a conversion of an existing ID83 matrix. No new reference archive is needed.
+Whole-genome, exome and BED workflows are supported, including chromosome outputs.
+The existing ID83 outputs are unchanged. Use literal, anchored VCF alleles and
+the reference matching the coordinates of your variants. These are raw counts;
+native plotting and downstream signature catalogues require separate support.
+Complex replacements use an explicit absolute net length-change rule that is
+not yet confirmed by the original authors. See the
+[ID89/ID476 guide](docs/ID89-ID476.md) for Python examples, output files,
+filtering rules, validation details and current input limitations.
 
 **INPUT FILE FORMAT**
 
@@ -103,7 +175,7 @@ This tool currently supports maf, vcf, and simple text file. The user must provi
 
 **OUTPUT FILE STRUCTURE**
 
-The output structure is divided into three folders: input, output, and logs. The input folder contains copies of the user-provided input files. The outputfolder contains
+The output structure is divided into three folders: input, output, and logs. The input folder retains copies of the user-provided input files in a separate subfolder for each run. Every run reads a fresh copy of the requested inputs, even when an output directory is reused. The outputfolder contains
 a DBS, SBS, ID, and TSB folder (there will also be a plots folder if this parameter is chosen). The matrices are saved into the appropriate folders. The logs folder contains the error and log files for the submitted job.
 
 ## STRUCTURAL VARIANT MATRIX GENERATION
@@ -226,6 +298,9 @@ offline installation instructions.
 **SUPPORTED GENOMES**
 
 This tool currently supports the following genomes:
+
+T2T-CHM13v2.0 [CHM13-T2T] (Telomere-to-Telomere Consortium CHM13 assembly v2.0), INSDC
+Assembly GCA_009914755.4. Nuclear chromosomes only (1–22, X, Y; no mitochondrion). WGS and exome matrices supported. The exome interval list is annotation-derived (merged CDS features from NCBI RefSeq annotation release GCF_009914755.1-RS_2025_08) rather than a capture-kit definition, so its exome matrices are not directly comparable to the GRCh37/GRCh38 ones; see docs/Currently-Supported-Genomes.md.
 
 GRCh38.p12 [GRCh38] (Genome Reference Consortium Human Reference 38), INSDC
 Assembly GCA_000001405.27, Dec 2013. Released July 2014. Last updated January

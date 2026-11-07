@@ -515,43 +515,8 @@ def install(
     # 5. Install a genome using locally provided files
     elif offline_files_path is not None:
         print("Beginning installation using locally provided files.")
-
-        # unpack user provided tar file into environment
-        shutil.unpack_archive(
-            os.path.join(offline_files_path, genome + ".tar.gz"),
-            str(reference_dir.get_tsb_dir()),
-        )
-
-        chromosome_TSB_pathlib = reference_dir.get_tsb_dir() / genome / ""
-        chromosome_TSB_path = f"{chromosome_TSB_pathlib}{os.sep}"
-        corrupt = False
-
-        for files in os.listdir(chromosome_TSB_path):
-            if "proportions" in files:
-                continue
-            if ".DS_Store" in files:
-                continue
-            chrom = files.split(".")
-            chrom = chrom[0]
-            check = md5(chromosome_TSB_path + files)
-            if reference_genome_manager.CHECKSUMS[genome][chrom] != check:
-                corrupt = True
-                os.remove(chromosome_TSB_path + files)
-                print(
-                    "[DEBUG] Chromosome "
-                    + chrom
-                    + " md5sum did not match => reference md5sum: "
-                    + str(reference_genome_manager.CHECKSUMS[genome][chrom])
-                    + "    new file md5sum: "
-                    + str(check)
-                )
-        if corrupt:
-            print(
-                "The transcriptional reference data appears to be corrupted. Please reinstall the "
-                + genome
-                + " genome."
-            )
-            sys.exit()
+        genome_manager = reference_genome_manager.ReferenceGenomeManager(volume)
+        genome_manager.install_local_genome(genome, offline_files_path)
         print("The transcriptional reference data for " + genome + " has been saved.")
 
     # 6. Install a genome using rsync or wget

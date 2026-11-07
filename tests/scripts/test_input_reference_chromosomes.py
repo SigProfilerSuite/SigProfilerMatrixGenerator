@@ -68,3 +68,81 @@ def test_input_conversion_uses_registered_chromosomes(
 def test_unregistered_genome_has_clear_error():
     with pytest.raises(ValueError, match="No chromosome manifest is registered"):
         convert._get_output_chromosomes("not_a_registered_genome")
+
+
+def write_snv_input(source, format_name, chromosome):
+    if format_name == "VCF":
+        contents = (
+            "##fileformat=VCFv4.2\n"
+            "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n"
+            f"{chromosome}\t3\t.\tC\tA\t.\tPASS\t.\n"
+        )
+    else:
+        row = ["."] * (10 if format_name == "Txt" else 16)
+        fields = (
+            {1: "S1", 5: chromosome, 6: "3", 7: "3", 8: "C", 9: "A"}
+            if format_name == "Txt"
+            else {
+                4: chromosome,
+                5: "3",
+                6: "3",
+                10: "C",
+                12: "A",
+                15: "S1",
+            }
+        )
+        for index, value in fields.items():
+            row[index] = value
+        contents = "header\n" + "\t".join(row) + "\n"
+    (source / "S1.input").write_text(contents)
+
+
+@pytest.mark.parametrize("format_name", ["VCF", "Txt", "MAF"])
+def test_input_conversion_preserves_refseq_accessions_before_alias_mapping(
+    monkeypatch, tmp_path, format_name
+):
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS, "fixture", {"1": "unused"}
+    )
+    source, output = tmp_path / "input", tmp_path / "output"
+    source.mkdir()
+    output.mkdir()
+    write_snv_input(source, format_name, "NC_060925.1")
+
+    result = getattr(convert, "convert" + format_name)(
+        "fixture",
+        str(source) + "/",
+        "fixture",
+        str(output) + "/",
+        {"NC_060925.1": "1"},
+        str(tmp_path / "convert.log"),
+    )
+
+    assert result == (True, False, 0, ["S1"])
+    assert (output / "SNV" / "1_fixture.genome").read_text() == "S1\t1\t3\tC\tA\n"
+
+
+@pytest.mark.parametrize("format_name", ["VCF", "Txt", "MAF"])
+def test_unsupported_mitochondrial_input_is_counted_and_not_classified(
+    monkeypatch, tmp_path, format_name
+):
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS, "nuclear_only", {"1": "unused"}
+    )
+    source, output = tmp_path / "input", tmp_path / "output"
+    source.mkdir()
+    output.mkdir()
+    write_snv_input(source, format_name, "chrM")
+
+    result = getattr(convert, "convert" + format_name)(
+        "fixture",
+        str(source) + "/",
+        "nuclear_only",
+        str(output) + "/",
+        {},
+        str(tmp_path / "convert.log"),
+    )
+
+    assert result == (False, False, 1, ["S1"])
+    assert "MT is not supported" in (tmp_path / "convert.log").read_text()
+    assert not (output / "SNV").exists()

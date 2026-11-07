@@ -20,6 +20,29 @@ def _get_output_chromosomes(genome):
         raise ValueError(f"No chromosome manifest is registered for {genome}.") from None
 
 
+def _normalize_chromosome(chromosome, genome, ncbi_chrom):
+    """Normalize accessions and UCSC names without truncating RefSeq IDs."""
+    chromosome = ncbi_chrom.get(chromosome, chromosome)
+    if chromosome.lower().startswith("chr") and genome.lower() != "ebv":
+        chromosome = chromosome[3:]
+    chromosome = ncbi_chrom.get(chromosome, chromosome)
+    if chromosome.upper() in {"M", "MT"}:
+        chromosome = "MT"
+    return chromosome
+
+
+def _skip_unsupported_chromosome(chromosome, output_chromosomes, log):
+    if chromosome in output_chromosomes:
+        return False
+    print(
+        chromosome
+        + " is not supported by the selected reference genome. Skipping this mutation.",
+        file=log,
+    )
+    log.flush()
+    return True
+
+
 def convertVCF(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
     """
     Converts input vcf files into a single simple text format.
@@ -71,13 +94,7 @@ def convertVCF(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
                         line = lines.strip().split()
                         if len(line) == 0:
                             continue
-                        chrom = line[0]
-                        if len(chrom) > 2 and genome.lower() != "ebv":
-                            chrom = chrom[3:]
-                        if chrom in ncbi_chrom:
-                            chrom = ncbi_chrom[chrom]
-                        if chrom.upper() == "M" or chrom == "mt":
-                            chrom = "MT"
+                        chrom = _normalize_chromosome(line[0], genome, ncbi_chrom)
                         start = line[1]
                         ref = line[3]
                         mut = line[4]
@@ -89,6 +106,11 @@ def convertVCF(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
                             file,
                         )
                         break
+
+                    if _skip_unsupported_chromosome(chrom, out_chroms, out):
+                        skipped_count += 1
+                        prev_line = line
+                        continue
 
                     # Saves SNV mutations into an SNV simple text file
                     if len(ref) == 1 and len(mut) == 1 and ref != "-" and mut != "-":
@@ -464,13 +486,7 @@ def convertTxt(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
                     sample = line[1]
                     if sample not in samples:
                         samples.append(sample)
-                    chrom = line[5]
-                    if len(chrom) > 2:
-                        chrom = chrom[3:]
-                    if chrom in ncbi_chrom:
-                        chrom = ncbi_chrom[chrom]
-                    if chrom.upper() == "M" or chrom == "mt":
-                        chrom = "MT"
+                    chrom = _normalize_chromosome(line[5], genome, ncbi_chrom)
                     start = line[6]
                     end = line[7]
                     ref = line[8]
@@ -484,6 +500,11 @@ def convertTxt(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
                         file,
                     )
                     break
+
+                if _skip_unsupported_chromosome(chrom, out_chroms, out):
+                    skipped_count += 1
+                    prev_line = line
+                    continue
 
                 # Saves SNV mutations into an SNV simple text file
                 if len(ref) == 1 and len(mut) == 1 and ref != "-" and mut != "-":
@@ -857,13 +878,7 @@ def convertMAF(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
                     line = lines.strip().split("\t")
                     if len(line) == 0:
                         continue
-                    chrom = line[4]
-                    if len(chrom) > 2:
-                        chrom = chrom[3:]
-                    if chrom in ncbi_chrom:
-                        chrom = ncbi_chrom[chrom]
-                    if chrom.upper() == "M" or chrom == "mt":
-                        chrom = "MT"
+                    chrom = _normalize_chromosome(line[4], genome, ncbi_chrom)
                     start = line[5]
                     end = line[6]
                     ref = line[10]
@@ -880,6 +895,11 @@ def convertMAF(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
                         file,
                     )
                     break
+
+                if _skip_unsupported_chromosome(chrom, out_chroms, out):
+                    skipped_count += 1
+                    prev_line = line
+                    continue
 
                 # Saves SNV mutations into an SNV simple text file
                 if len(ref) == 1 and len(mut) == 1 and ref != "-" and mut != "-":

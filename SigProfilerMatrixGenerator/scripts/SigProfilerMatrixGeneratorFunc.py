@@ -22,6 +22,40 @@ import numpy as np
 import pandas as pd
 import scipy
 import sigProfilerPlotting as sigPlt
+
+
+NCBI_CHROMOSOME_ALIASES = {
+    "NC_000067.6": "1",
+    "NC_000068.7": "2",
+    "NC_000069.6": "3",
+    "NC_000070.6": "4",
+    "NC_000071.6": "5",
+    "NC_000072.6": "6",
+    "NC_000073.6": "7",
+    "NC_000074.6": "8",
+    "NC_000075.6": "9",
+    "NC_000076.6": "10",
+    "NC_000077.6": "11",
+    "NC_000078.6": "12",
+    "NC_000079.6": "13",
+    "NC_000080.6": "14",
+    "NC_000081.6": "15",
+    "NC_000082.6": "16",
+    "NC_000083.6": "17",
+    "NC_000084.6": "18",
+    "NC_000085.6": "19",
+    "NC_000086.7": "X",
+    "NC_000087.7": "Y",
+    **{
+        f"NC_{accession:06d}.1": chromosome
+        for accession, chromosome in zip(
+            range(60925, 60947), (str(number) for number in range(1, 23))
+        )
+    },
+    "NC_060947.1": "X",
+    "NC_060948.1": "Y",
+    "82503188|ref|NC_007605.1|": "gi_82503188_ref_NC_007605",
+}
 import statsmodels
 
 import SigProfilerMatrixGenerator as sig
@@ -65,6 +99,7 @@ def SigProfilerMatrixGeneratorFunc(
     gs=False,
     volume=None,
     output_directory=None,
+    indel_contexts=None,
 ):
     """
     Allows for the import of the sigProfilerMatrixGenerator.py function. Returns a dictionary
@@ -81,6 +116,8 @@ def SigProfilerMatrixGeneratorFunc(
                              tsb_stat  -> performs a transcriptional strand bias test for the 24, 384, and 6144 contexts. The output is
                                                       saved into the output/TSB directory
                                        gs  -> flag that performs a gene strand bias test
+                  indel_contexts  -> optional sequence containing "89" and/or "476".
+                                     Adds Koh count matrices without changing ID83.
 
     Returns:
                              matrices  -> dictionary (nested) of the matrices for each context
@@ -95,6 +132,10 @@ def SigProfilerMatrixGeneratorFunc(
                                                       'PD1202a':{'T:A[A>C]A':23,
                                                                              'T:A[A>G]A':10,...},...},...}
     """
+
+    from SigProfilerMatrixGenerator.scripts import koh_indels
+
+    indel_contexts = koh_indels.validate_contexts(indel_contexts)
 
     # verify chromosome file installation for supported genomes
     # 1. get list of all files that were downloaded
@@ -112,6 +153,30 @@ def SigProfilerMatrixGeneratorFunc(
         raise reference_genome_manager.ReferenceInstallationError(
             genome_manager.installation_error_message(reference_name)
         )
+
+    # 3. Check the exome interval list up front, rather than failing with a bare
+    # FileNotFoundError in exome_check() after every chromosome has been parsed.
+    # Resolve the assembly first, as exome_check() does, so that registered
+    # editions such as GRCh38_Legacy or *_havana find their shared interval list
+    if exome:
+        exome_reference = reference_genome_manager.get_reference_assembly(
+            reference_genome
+        )
+        exome_interval_list = reference_dir.get_exome_interval_list(exome_reference)
+        if not exome_interval_list.exists():
+            supported = sorted(
+                subdir.name
+                for subdir in reference_dir.get_exome_dir().iterdir()
+                if (subdir / (subdir.name + "_exome.interval_list")).exists()
+            )
+            raise FileNotFoundError(
+                "exome=True is not supported for the genome "
+                + reference_genome
+                + ": no exome interval list was found at\n\t"
+                + str(exome_interval_list)
+                + "\nGenomes with exome support: "
+                + ", ".join(supported)
+            )
 
     # Instantiates all of the required variables and references
     if not os.path.exists(path_to_input_files):
@@ -145,30 +210,7 @@ def SigProfilerMatrixGeneratorFunc(
     }
 
     # Provides a chromosome conversion from NCBI notation
-    ncbi_chrom = {
-        "NC_000067.6": "1",
-        "NC_000068.7": "2",
-        "NC_000069.6": "3",
-        "NC_000070.6": "4",
-        "NC_000071.6": "5",
-        "NC_000072.6": "6",
-        "NC_000073.6": "7",
-        "NC_000074.6": "8",
-        "NC_000075.6": "9",
-        "NC_000076.6": "10",
-        "NC_000077.6": "11",
-        "NC_000078.6": "12",
-        "NC_000079.6": "13",
-        "NC_000080.6": "14",
-        "NC_000081.6": "15",
-        "NC_000082.6": "16",
-        "NC_000083.6": "17",
-        "NC_000084.6": "18",
-        "NC_000085.6": "19",
-        "NC_000086.7": "X",
-        "NC_000087.7": "Y",
-        "82503188|ref|NC_007605.1|": "gi_82503188_ref_NC_007605",
-    }
+    ncbi_chrom = NCBI_CHROMOSOME_ALIASES
 
     # Provides the reference file conversion from binary to base information
     tsb_ref = {
@@ -1176,6 +1218,17 @@ def SigProfilerMatrixGeneratorFunc(
 
     chrom_path = str(reference_dir.get_tsb_dir() / reference_genome) + "/"
     reference_genome = reference_genome_manager.get_reference_assembly(reference_name)
+    koh_selection = None
+    if indel_contexts and (exome or bed_file is not None):
+        region_file = (
+            reference_dir.get_exome_interval_list(reference_genome)
+            if exome else bed_file
+        )
+        koh_selection = koh_indels.IntervalSelection(
+            region_file,
+            cushion,
+            lambda name: convertIn._normalize_chromosome(name, reference_name, ncbi_chrom),
+        )
     transcript_path = (
         ref_dir + "/references/chromosomes/transcripts/" + reference_genome + "/"
     )
@@ -1193,20 +1246,28 @@ def SigProfilerMatrixGeneratorFunc(
     if not base_path.endswith("/"):
         base_path += "/"
 
-    # Ensure input path and create if needed
-    vcf_path = os.path.join(base_path, "input/")
+    # Keep an independent input snapshot for each run, never reuse staged cohorts.
+    unique_folder = project + "_" + str(uuid.uuid4())
+    input_source = path_to_input_files
+    input_files = [
+        filename for filename in sorted(os.listdir(input_source))
+        if os.path.isfile(os.path.join(input_source, filename))
+    ]
+    # Preserve the historical project-directory layout with files in input/.
+    legacy_input = os.path.join(input_source, "input")
+    if not input_files and os.path.isdir(legacy_input):
+        input_source = legacy_input
+        input_files = [
+            filename for filename in sorted(os.listdir(input_source))
+            if os.path.isfile(os.path.join(input_source, filename))
+        ]
+    if not input_files:
+        raise ValueError("No input files found in " + path_to_input_files)
+    vcf_path = os.path.join(base_path, "input", unique_folder) + "/"
+    os.makedirs(vcf_path)
+    for filename in input_files:
+        shutil.copy(os.path.join(input_source, filename), os.path.join(vcf_path, filename))
     vcf_path_original = vcf_path
-
-    # Copy all regular files from input source into vcf_path if vcf_path is missing or empty
-    if not os.path.exists(vcf_path) or len(os.listdir(vcf_path)) < 1:
-        os.makedirs(vcf_path, exist_ok=True)
-        if not path_to_input_files.endswith("/"):
-            path_to_input_files += "/"
-        for filename in os.listdir(path_to_input_files):
-            src = os.path.join(path_to_input_files, filename)
-            dst = os.path.join(vcf_path, filename)
-            if os.path.isfile(src):
-                shutil.copy(src, dst)
 
     # Define the output matrix path, allowing override via `output_directory`
     if output_directory:
@@ -1323,7 +1384,6 @@ def SigProfilerMatrixGeneratorFunc(
     # Creates a temporary folder for sorting and generating the matrices
     file_name = vcf_files[0].split(".")
     file_extension = file_name[-1]
-    unique_folder = project + "_" + str(uuid.uuid4())
     output_path = output_matrix + "temp/" + unique_folder + "/"
     if os.path.exists(output_path):
         shutil.rmtree(output_path)
@@ -1358,6 +1418,19 @@ def SigProfilerMatrixGeneratorFunc(
 
     samples = sorted(samples)
     skipped_muts += skipped
+
+    koh_catalog = None
+    if indel_contexts:
+        koh_catalog = koh_indels.KohIndelCatalog(
+            indel_contexts,
+            samples,
+            output_matrix,
+            project,
+            chrom_path,
+            suffix="exome" if exome else "region" if bed_file is not None else "all",
+            selection=koh_selection,
+            chrom_based=chrom_based,
+        )
 
     # Instantiates variables for final output statistics
     analyzed_muts = [0, 0, 0]
@@ -1599,6 +1672,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -1732,6 +1806,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -1884,6 +1959,7 @@ def SigProfilerMatrixGeneratorFunc(
                             for genome in [
                                 "GRCh37",
                                 "GRCh38",
+                                "CHM13-T2T",
                                 "dog",
                                 "ebv",
                                 "mm10",
@@ -2018,6 +2094,7 @@ def SigProfilerMatrixGeneratorFunc(
                             for genome in [
                                 "GRCh37",
                                 "GRCh38",
+                                "CHM13-T2T",
                                 "dog",
                                 "ebv",
                                 "mm10",
@@ -2099,6 +2176,8 @@ def SigProfilerMatrixGeneratorFunc(
                 with open(vcf_path + file) as f:
                     lines = [line.strip().split() for line in f]
                 lines = sorted(lines, key=lambda x: (x[0], int(x[2])))
+                if koh_catalog is not None:
+                    koh_catalog.count_chromosome(chrom, lines)
                 (
                     mutation_ID,
                     skipped_mut,
@@ -2246,6 +2325,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2377,6 +2457,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2510,6 +2591,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2646,6 +2728,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2778,6 +2861,7 @@ def SigProfilerMatrixGeneratorFunc(
                         for genome in [
                             "GRCh37",
                             "GRCh38",
+                            "CHM13-T2T",
                             "dog",
                             "ebv",
                             "mm10",
@@ -2870,6 +2954,9 @@ def SigProfilerMatrixGeneratorFunc(
             shutil.rmtree(output_matrix + "temp/")
         end = time.time() - start
         print("Completed! Elapsed time: " + str(round(end, 2)) + " seconds.")
+
+    if koh_catalog is not None:
+        matrices.update(koh_catalog.save(log_file))
 
     sys.stderr.close()
     sys.stderr = tempErr

@@ -15,6 +15,10 @@ recursive-include SigProfilerMatrixGenerator/references/chromosomes/tsb_BED *
 include SigProfilerMatrixGenerator/scripts/*
 include SigProfilerMatrixGenerator/controllers/*
 
+# Synthetic independent-reference fixtures for the optional Koh indel tests
+recursive-include tests/data koh_*.txt koh_*.tsv README.koh_indels.md
+recursive-include tests/oracles *.py *.R *.md
+
 # Other
 recursive-include SigProfilerMatrixGenerator/references/chromosomes/context_distributions *
 include SigProfilerMatrixGenerator/scripts/Benchmark/*
