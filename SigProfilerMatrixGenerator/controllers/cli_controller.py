@@ -1,4 +1,5 @@
 import argparse
+import sys
 from typing import List
 from SigProfilerMatrixGenerator import test_helpers
 from SigProfilerMatrixGenerator.scripts import (
@@ -211,12 +212,16 @@ class CliController:
     def dispatch_install(self, user_args: List[str]) -> None:
         parsed_args = parse_arguments_install(user_args)
         rgm = reference_genome_manager.ReferenceGenomeManager(parsed_args.volume)
-        # ftp genome installation (default)
-        if parsed_args.local_genome is None:
-            rgm.download_genome(parsed_args.genome)
-        # local genome installation
-        else:
-            rgm.install_local_genome(parsed_args.genome, parsed_args.local_genome)
+        try:
+            # ftp genome installation (default)
+            if parsed_args.local_genome is None:
+                rgm.download_genome(parsed_args.genome)
+            # local genome installation
+            else:
+                rgm.install_local_genome(parsed_args.genome, parsed_args.local_genome)
+        except reference_genome_manager.GenomeDownloadError as e:
+            print(f"Install failed for {parsed_args.genome}:\n{str(e)}")
+            sys.exit(1)
 
     def dispatch_test(self, user_args: List[str]) -> None:
         parsed_args = parse_arguments_test(user_args)

@@ -6,6 +6,7 @@ from SigProfilerMatrixGenerator import install as genInstall
 from SigProfilerMatrixGenerator.scripts import (
     SigProfilerMatrixGeneratorFunc as matGen,
     ref_install,
+    reference_genome_manager,
 )
 
 # This module provides the package's manual reference-regression commands. Its
@@ -151,7 +152,10 @@ def install_genomes(genome_install_list):
     for tmp_genome in genome_install_list:
         if tmp_genome == "all":
             for genome in TEST_GENOMES:
-                genInstall.install(genome)
+                try:
+                    genInstall.install(genome)
+                except reference_genome_manager.GenomeDownloadError as e:
+                    print(f"Install failed for {genome}:\n{str(e)}\n")
         elif tmp_genome not in TEST_GENOMES:
             print(
                 "Warning: Download for",
