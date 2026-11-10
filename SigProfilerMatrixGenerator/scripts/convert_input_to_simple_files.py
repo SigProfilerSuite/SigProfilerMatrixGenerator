@@ -1178,7 +1178,14 @@ def convertMAF(project, vcf_path, genome, output_path, ncbi_chrom, log_file):
 
                 # Saves INDEL mutations into an INDEL simple text file
                 else:
-                    start = str(int(line[5]) - 1)
+                    # Start_Position is the first deleted base for deletions,
+                    # but already the anchor base before the insertion for
+                    # insertions (Reference_Allele == "-"), so only
+                    # deletions need the -1 shift to match the VCF/CTX anchor.
+                    if ref == "-":
+                        start = line[5]
+                    else:
+                        start = str(int(line[5]) - 1)
                     indel = True
                     if first_indel:
                         if not os.path.exists(output_path + "INDEL/"):

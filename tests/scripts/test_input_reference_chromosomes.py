@@ -58,11 +58,73 @@ def test_input_conversion_uses_registered_chromosomes(
     )
     assert result == (True, True, 0, ["S1"])
     assert (output / "SNV" / "1_fixture.genome").read_text() == "S1\t1\t3\tC\tA\n"
-    # Keep the existing MAF insertion anchor conversion separate from routing.
+    # MAF insertions anchor at Start_Position (no shift); deletions still
+    # shift by -1 to match the VCF/Txt anchor convention.
     expected_indel = (
-        "S1\t2\t9\t-\tA\n" if format_name == "MAF" else "S1\t2\t10\tC\tCA\n"
+        "S1\t2\t10\t-\tA\n" if format_name == "MAF" else "S1\t2\t10\tC\tCA\n"
     )
     assert (output / "INDEL" / "2_fixture.genome").read_text() == expected_indel
+
+
+def test_maf_insertion_anchors_at_start_position(monkeypatch, tmp_path):
+    # Regression test for issue #264: GDC/vcf2maf MAF insertions report
+    # Start_Position as the base immediately before the inserted sequence,
+    # so the -1 deletion shift must not be applied to them.
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS, "fixture", {"3": "unused"}
+    )
+    source, output = tmp_path / "input", tmp_path / "output"
+    source.mkdir()
+    output.mkdir()
+    row = ["."] * 16
+    fields = {4: "3", 5: "52053983", 6: "52053984", 10: "-", 12: "CTC", 15: "S1"}
+    for index, value in fields.items():
+        row[index] = value
+    (source / "S1.input").write_text("header\n" + "\t".join(row) + "\n")
+
+    result = convert.convertMAF(
+        "fixture",
+        str(source) + "/",
+        "fixture",
+        str(output) + "/",
+        {},
+        str(tmp_path / "convert.log"),
+    )
+
+    assert result == (False, True, 0, ["S1"])
+    assert (
+        output / "INDEL" / "3_fixture.genome"
+    ).read_text() == "S1\t3\t52053983\t-\tCTC\n"
+
+
+def test_maf_deletion_still_shifts_by_one(monkeypatch, tmp_path):
+    # Deletions are unaffected by the issue #264 fix: Start_Position is the
+    # first deleted base, so the anchor remains Start_Position - 1.
+    monkeypatch.setitem(
+        reference_genome_manager.CHECKSUMS, "fixture", {"3": "unused"}
+    )
+    source, output = tmp_path / "input", tmp_path / "output"
+    source.mkdir()
+    output.mkdir()
+    row = ["."] * 16
+    fields = {4: "3", 5: "52404546", 6: "52404547", 10: "CT", 12: "-", 15: "S1"}
+    for index, value in fields.items():
+        row[index] = value
+    (source / "S1.input").write_text("header\n" + "\t".join(row) + "\n")
+
+    result = convert.convertMAF(
+        "fixture",
+        str(source) + "/",
+        "fixture",
+        str(output) + "/",
+        {},
+        str(tmp_path / "convert.log"),
+    )
+
+    assert result == (False, True, 0, ["S1"])
+    assert (
+        output / "INDEL" / "3_fixture.genome"
+    ).read_text() == "S1\t3\t52404545\tCT\t-\n"
 
 
 def test_unregistered_genome_has_clear_error():
