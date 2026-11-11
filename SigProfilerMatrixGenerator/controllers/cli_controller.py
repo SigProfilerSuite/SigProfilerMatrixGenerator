@@ -267,3 +267,8 @@ class CliController:
             project=parsed_args.project,
             output_path=parsed_args.output_path,
         )
+
+    def dispatch_web(self, user_args: List[str]) -> None:
+        from SigProfilerMatrixGenerator.web import launcher
+
+        sys.exit(launcher.main(user_args))

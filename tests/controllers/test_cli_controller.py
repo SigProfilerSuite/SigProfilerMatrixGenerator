@@ -103,6 +103,16 @@ class TestController:
         controller.dispatch_test(provided)
         mock_install.assert_has_calls(expected)
 
+    def test_dispatch_web_delegates_to_launcher_main_and_exits_with_its_code(self):
+        from SigProfilerMatrixGenerator.web import launcher
+
+        with mock.patch.object(launcher, "main", return_value=0) as mock_main:
+            controller = cli_controller.CliController()
+            with pytest.raises(SystemExit) as exc_info:
+                controller.dispatch_web(["--no-launch"])
+            mock_main.assert_called_once_with(["--no-launch"])
+            assert exc_info.value.code == 0
+
     def test_dispatch_test_download_and_genome(self, mock_install, mock_test):
         provided = ["--download", "GRCh37", "--test_genome", "GRCh37"]
         controller = cli_controller.CliController()

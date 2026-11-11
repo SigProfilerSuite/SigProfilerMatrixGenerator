@@ -1,0 +1,85 @@
+name: Web Dashboard Launchers
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  launcher-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: First launch installs dependencies
+        run: |
+          chmod +x launch_web.sh
+          ./launch_web.sh --no-launch > first-run.log 2>&1 &
+          LAUNCH_PID=$!
+          for i in $(seq 1 60); do
+            grep -q "dashboard running at" first-run.log && break
+            sleep 2
+          done
+          grep -q "dashboard running at" first-run.log || (cat first-run.log; exit 1)
+          cat first-run.log
+          ./launch_web.sh --stop
+          wait $LAUNCH_PID || true
+
+      - name: Second launch installs nothing
+        run: |
+          ./launch_web.sh --no-launch > second-run.log 2>&1 &
+          LAUNCH_PID=$!
+          for i in $(seq 1 60); do
+            grep -q "dashboard running at" second-run.log && break
+            sleep 2
+          done
+          grep -q "dashboard running at" second-run.log || (cat second-run.log; exit 1)
+          cat second-run.log
+          grep -q "Dependencies already installed; skipping install." second-run.log
+          ./launch_web.sh --stop
+          wait $LAUNCH_PID || true
+
+  launcher-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: First launch installs dependencies
+        shell: cmd
+        run: |
+          start /B cmd /C "launch_web.bat --no-launch > first-run.log 2>&1"
+          for /L %%i in (1,1,60) do (
+            findstr /C:"dashboard running at" first-run.log >nul 2>nul && goto :first_up
+            ping -n 3 127.0.0.1 >nul
+          )
+          :first_up
+          type first-run.log
+          findstr /C:"dashboard running at" first-run.log >nul || exit /b 1
+          launch_web.bat --stop
+
+      - name: Second launch installs nothing
+        shell: cmd
+        run: |
+          start /B cmd /C "launch_web.bat --no-launch > second-run.log 2>&1"
+          for /L %%i in (1,1,60) do (
+            findstr /C:"dashboard running at" second-run.log >nul 2>nul && goto :second_up
+            ping -n 3 127.0.0.1 >nul
+          )
+          :second_up
+          type second-run.log
+          findstr /C:"dashboard running at" second-run.log >nul || exit /b 1
+          findstr /C:"Dependencies already installed; skipping install." second-run.log >nul || exit /b 1
+          launch_web.bat --stop

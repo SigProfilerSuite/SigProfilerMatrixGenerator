@@ -76,6 +76,7 @@ nav:
     - CNV Input: Using-the-Tool-CNV-Input.md
     - SV Input: Using-the-Tool-SV-Input.md
     - Output Overview: Using-the-Tool-Output.md
+    - Dashboard: Dashboard.md
   - Output Reference:
     - CNV Output: Output-CNV.md
     - SBS Output: Output-SBS.md

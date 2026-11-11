@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SigProfilerMatrixGenerator Workbench</title>
+<link rel="stylesheet" href="/static/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230A58AC'/><path d='M7 24V15h3v9H7zm5 0V9h3v15h-3zm5 0V13h3v11h-3zm5 0V7h3v17h-3z' fill='white'/></svg>">
+</head>
+<body>
+<div class="app" id="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">MG</span>
+      <div class="titles">
+        <h1>SigProfilerMatrixGenerator Workbench</h1>
+        <span class="sub" id="envVersion"></span>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <span id="envPill" class="pill flat">checking</span>
+    <div class="pick auto">
+      <select id="themeSel" title="Theme" aria-label="Theme">
+        <option value="sandiego">UC San Diego</option>
+        <option value="ualbany">UAlbany</option>
+        <option value="sigprofilersuite">SigProfilerSuite</option>
+        <option value="night">Night</option>
+      </select>
+    </div>
+    <button class="btn sm" id="quitBtn" title="Stop the app, and any run it started">Quit</button>
+  </header>
+
+  <div class="body">
+    <nav class="sidebar" aria-label="Runs and results">
+      <section>
+        <h3>Runs
+          <button class="btn sm ghost" id="newRunBtn" title="Set up a new run">New</button>
+        </h3>
+        <div class="list" id="jobList"><p class="empty">No runs yet.</p></div>
+      </section>
+
+      <section>
+        <h3>Open results</h3>
+        <button class="btn choose" id="openResultsBtn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M1.5 4.5v8a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H8L6.5 3h-4a1 1 0 0 0-1 1z"/></svg>
+          Choose an output folder
+        </button>
+        <input type="text" class="mono" id="openPath" style="margin-top:8px"
+               placeholder="or paste a path, then Enter" autocomplete="off"
+               aria-label="Output folder path">
+        <p class="hint" style="margin:6px 2px 0">Any folder SigProfilerMatrixGenerator
+          wrote, including runs made from the command line.</p>
+      </section>
+
+      <section>
+        <h3>Reference genomes
+          <span class="muted" id="genomeCount" style="text-transform:none;letter-spacing:0"></span>
+        </h3>
+        <div class="list" id="genomeList"><p class="empty">checking</p></div>
+      </section>
+
+      <footer class="cite">
+        <h3>Citing this tool</h3>
+        <p class="ref">Bergstrom EN, Huang MN, Mahto U, Barnes M, Stratton MR,
+          Rozen SG, Alexandrov LB. SigProfilerMatrixGenerator: a tool for
+          visualizing and exploring patterns of small mutational events.
+          <i>BMC Genomics</i> 20, 685 (2019).</p>
+        <a href="https://doi.org/10.1186/s12864-019-6041-2"
+           target="_blank" rel="noopener noreferrer">doi.org/10.1186/s12864-019-6041-2</a>
+      </footer>
+    </nav>
+
+    <main class="main">
+      <header>
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tab-run" data-tab="run" aria-selected="true">New run</button>
+          <button role="tab" id="tab-monitor" data-tab="monitor" aria-selected="false">Monitor
+            <span class="count hidden" id="liveCount"></span></button>
+          <button role="tab" id="tab-results" data-tab="results" aria-selected="false">Results</button>
+          <button role="tab" id="tab-help" data-tab="help" aria-selected="false">Help</button>
+        </div>
+        <div class="spacer"></div>
+        <span class="mono" id="contextLabel"></span>
+      </header>
+
+      <!-- ------------------------------------------------------- new run -->
+      <section id="view-run" class="stack">
+
+        <div class="card welcome" id="welcomeCard">
+          <div class="bd">
+            <div class="art" aria-hidden="true" id="welcomeArt"></div>
+            <div>
+              <h2>Turn variant calls into mutational matrices</h2>
+              <p class="lead">Choose a folder of VCF, MAF or simple text files and the
+                reference genome they were called against. The run writes SBS, DBS and
+                ID matrices you can plot here, or take on to SigProfilerExtractor and
+                SigProfilerAssignment.</p>
+              <div class="actions inline">
+                <button class="btn" id="exampleBtn" hidden>Try the example</button>
+                <span class="hint" id="exampleHint" style="margin:0"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="inputCard">
+          <div class="hd"><span class="step-no">1</span><h2>Input</h2>
+            <span class="note">a folder of VCF, MAF or Txt files, recognised automatically</span></div>
+          <div class="bd contained">
+            <button class="btn choose" id="inputChoose">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M1.5 4.5v8a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H8L6.5 3h-4a1 1 0 0 0-1 1z"/></svg>
+              Choose the input folder
+            </button>
+            <div class="chosen" id="inputChosen"></div>
+            <div class="row pathrow">
+              <input type="text" class="mono" id="inputPath" autocomplete="off"
+                     placeholder="or paste a folder path, then Enter" aria-label="Input folder path">
+            </div>
+            <div id="inputInfo"></div>
+          </div>
+        </div>
+
+        <div class="card" id="projectCard">
+          <div class="hd"><span class="step-no">2</span><h2>Project</h2>
+            <span class="note">names the matrix files</span></div>
+          <div class="bd">
+            <div class="grid-2">
+              <label class="field"><span>Project name</span>
+                <p class="hint">Every file is named after it, as in <span class="mono">BRCA.SBS96.all</span>.</p>
+                <input type="text" id="projectName" autocomplete="off" placeholder="BRCA_cohort">
+              </label>
+              <label class="field"><span>Output folder</span>
+                <p class="hint">Leave blank to write into an <span class="mono">output</span> folder beside the input.</p>
+                <div class="row">
+                  <input type="text" class="mono" id="outputPath" autocomplete="off" placeholder="default">
+                  <button class="btn sm" id="outputBrowse" type="button">Browse</button>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="bd"><div class="note-box" id="outPreview">The output folder appears here once an input is chosen.</div></div>
+        </div>
+
+        <div class="card" id="genomeCard">
+          <div class="hd"><span class="step-no">3</span><h2>Reference genome</h2>
+            <span class="note">the assembly your variants were called against</span></div>
+          <div class="bd">
+            <div class="grid-2">
+              <label class="field"><span>Genome</span>
+                <div class="pick"><select class="mono" id="genomeSel"></select></div>
+              </label>
+              <div class="field"><span class="lbl">Status</span>
+                <div id="genomeStatus" class="inline"></div>
+              </div>
+            </div>
+            <label class="inline after-grid" style="font-size:12.5px;color:var(--ink-2)">
+              <input type="checkbox" id="autoInstall" checked>
+              If it is not installed yet, install it when the run starts
+            </label>
+          </div>
+        </div>
+
+        <div class="card" id="optionsCard">
+          <div class="hd"><span class="step-no">4</span><h2>Matrices</h2>
+            <span class="note">SBS, DBS and ID matrices are always written</span>
+            <button type="button" class="about-btn" aria-expanded="false" aria-controls="about-options"
+                    aria-label="About these options" title="What these options do">?</button></div>
+          <div class="about" id="about-options" hidden><dl>
+            <dt>Always written</dt>
+            <dd>SBS6 to SBS6144, DBS78 to DBS2400, and ID28, ID83 and ID415, each as a
+              <span class="mono">.all</span> file with one column per sample.</dd>
+            <dt>Exome only</dt>
+            <dd>Keeps only mutations inside the exome, within a 100 bp cushion. Files end
+              in <span class="mono">.exome</span> instead of <span class="mono">.all</span>.</dd>
+            <dt>Strand bias test</dt>
+            <dd>Compares transcribed with untranscribed mutations for the 24, 384 and 6144
+              contexts and writes enrichment, p values and FDR q values to
+              <span class="mono">TSB/</span>.</dd>
+            <dt>ID89 and ID476</dt>
+            <dd>Extra indel count matrices in the Koh et al. (2025) classification. ID83 is
+              unchanged. These are categories, not signatures.</dd>
+          </dl></div>
+          <div class="bd">
+            <div class="opts">
+              <label class="opt"><input type="checkbox" id="optExome">
+                <span><b>Exome only<span class="tag">.exome</span></b>
+                <small>Keep mutations inside the exome.</small></span></label>
+              <label class="opt"><input type="checkbox" id="optTsb">
+                <span><b>Strand bias test<span class="tag">TSB/</span></b>
+                <small>Transcriptional strand bias for SBS24, SBS384 and SBS6144.</small></span></label>
+              <label class="opt"><input type="checkbox" id="optId89">
+                <span><b>ID89<span class="tag">Koh et al.</span></b>
+                <small>89 indel categories, alongside ID83.</small></span></label>
+              <label class="opt"><input type="checkbox" id="optId476">
+                <span><b>ID476<span class="tag">Koh et al.</span></b>
+                <small>476 detailed indel categories, alongside ID83.</small></span></label>
+            </div>
+            <details class="adv">
+              <summary>Advanced</summary>
+              <div class="grid-2">
+                <label class="field"><span>Region BED file</span>
+                  <p class="hint">Keep only these regions. Needs a header line. Files end in <span class="mono">.region</span>.</p>
+                  <div class="row">
+                    <input type="text" class="mono" id="bedPath" autocomplete="off" placeholder="none">
+                    <button class="btn sm" id="bedBrowse" type="button">Browse</button>
+                  </div>
+                </label>
+                <label class="field"><span>Genome install folder</span>
+                  <p class="hint">Where reference genomes live, if not the default. The CLI's <span class="mono">--volume</span>.</p>
+                  <div class="row">
+                    <input type="text" class="mono" id="volumePath" autocomplete="off" placeholder="default">
+                    <button class="btn sm" id="volumeBrowse" type="button">Browse</button>
+                  </div>
+                </label>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="launch">
+          <button class="btn primary lg" id="startBtn">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 2.8v10.4a.6.6 0 0 0 .9.5l8.3-5.2a.6.6 0 0 0 0-1L5.4 2.3a.6.6 0 0 0-.9.5z"/></svg>
+            Start run
+          </button>
+          <span class="summary" id="launchSummary"></span>
+        </div>
+        <div id="startError"></div>
+      </section>
+
+      <!-- ------------------------------------------------------- monitor -->
+      <section id="view-monitor" class="stack hidden">
+        <div id="monitorEmpty" class="note-box">No run selected. Start one, or pick a run on the left.</div>
+        <div id="monitorBody" class="stack hidden">
+          <div class="card">
+            <div class="hd"><h2 id="jobTitle">run</h2><span id="jobPill" class="pill flat"></span>
+              <span class="note" id="jobNote"></span>
+              <button class="btn sm danger" id="stopBtn">Stop</button></div>
+            <div class="bd">
+              <div class="progress-head"><span id="jobPhase"></span><span class="mono" id="jobClock"></span></div>
+              <div class="bar"><i id="jobBar"></i></div>
+              <div class="steps" id="jobSteps"></div>
+              <dl class="facts" id="jobFacts"></dl>
+            </div>
+            <div class="bd" id="jobResult"></div>
+          </div>
+          <div class="card">
+            <div class="hd"><h3>Log</h3><span class="note">the run's own output</span>
+              <label class="inline muted" style="font-size:12px"><input type="checkbox" id="followLog" checked> follow</label></div>
+            <div class="bd"><pre class="log" id="jobLog"></pre></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------- results -->
+      <section id="view-results" class="stack hidden">
+        <div id="resultsEmpty" class="note-box">No results open. Choose an output folder on
+          the left, or open a finished run from Monitor.</div>
+        <div id="resultsBody" class="hidden">
+          <div class="tiles" id="resTiles"></div>
+          <div id="resAlert" class="note-box warn hidden" role="status"></div>
+
+          <div class="card">
+            <div class="hd"><h2>Matrices</h2><span class="note" id="ctxNote">choose a context to plot</span></div>
+            <div class="bd"><div class="ctx-groups" id="ctxGroups"></div></div>
+          </div>
+
+          <figure class="card" id="chartCard" style="margin:0">
+            <div class="hd wrap">
+              <h3 id="chartTitle">Profile</h3>
+              <button type="button" class="about-btn" id="chartAboutBtn" aria-expanded="false"
+                      aria-controls="about-chart" aria-label="About this chart" title="What this chart shows">?</button>
+              <div class="spacer"></div>
+              <div class="pick hidden" id="fileWrap"><select class="mono" id="fileSel" aria-label="Matrix file"></select></div>
+              <div class="pick"><select class="mono" id="sampleSel" aria-label="Sample"></select></div>
+              <div class="seg" role="radiogroup" aria-label="Units">
+                <label><input type="radio" name="unit" value="counts" checked>Counts</label>
+                <label><input type="radio" name="unit" value="percent">Percent</label>
+                <label><input type="radio" name="unit" value="proportion">Proportion</label>
+              </div>
+              <a class="btn sm" id="downloadBtn" href="#" download>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3 3-3M2.5 11v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"/></svg>
+                Download</a>
+            </div>
+            <div class="about" id="about-chart" hidden></div>
+            <div class="bd"><div class="plate"><div class="chart" id="chart"></div></div></div>
+          </figure>
+
+          <div class="card">
+            <div class="hd"><h3>Matrix files</h3><span class="note" id="filesNote"></span></div>
+            <div class="files" id="fileList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------------------- help -->
+      <section id="view-help" class="stack hidden">
+        <div class="help-intro">
+          <h2>Getting started</h2>
+          <p>A run reads a folder of variant calls, assigns every mutation to its
+            context against the reference genome, and writes one matrix per context
+            with a column for each sample. Everything happens on this computer.</p>
+        </div>
+
+        <details class="card help-sec" open>
+          <summary class="hd"><h3>1. Choose the input</h3></summary>
+          <div class="bd">
+            <p>Point at <b>one folder</b>. Every file in it is read, so keep one cohort,
+              in one format, per folder.</p>
+            <dl class="defs">
+              <dt>.vcf</dt><dd>One file per sample. The sample is named after the file.</dd>
+              <dt>.maf</dt><dd>One or more MAF files. Samples come from Tumor_Sample_Barcode.</dd>
+              <dt>.txt</dt><dd>SigProfiler simple text: project, sample, ID, genome, type,
+                chromosome, start, end, ref, alt.</dd>
+            </dl>
+            <p>The page reads the folder as soon as you choose it and reports the format,
+              the number of samples and the number of calls before anything runs.</p>
+          </div>
+        </details>
+
+        <details class="card help-sec">
+          <summary class="hd"><h3>2. Install the reference genome</h3></summary>
+          <div class="bd">
+            <p>Matrices need the reference the calls were made against. The genome card
+              says whether it is installed. A missing genome can be installed from there,
+              or as the first step of the run. Installs are large and download once.</p>
+            <p>The same install, from a terminal:</p>
+            <pre class="cmd">SigProfilerMatrixGenerator install GRCh38</pre>
+          </div>
+        </details>
+
+        <details class="card help-sec">
+          <summary class="hd"><h3>3. Read the results</h3></summary>
+          <div class="bd">
+            <p>A finished run opens in <b>Results</b>. Choose a context to plot it for any
+              sample, in counts, percent or proportion. The camera button above a chart
+              saves it as SVG.</p>
+            <dl class="defs">
+              <dt>SBS/</dt><dd>Single base substitutions, SBS6 to SBS6144.</dd>
+              <dt>DBS/</dt><dd>Doublet base substitutions, DBS78 to DBS2400.</dd>
+              <dt>ID/</dt><dd>Small insertions and deletions: ID28, ID83 and ID415.</dd>
+              <dt>TSB/</dt><dd>Strand bias statistics, when the test was run.</dd>
+              <dt>vcf_files/</dt><dd>Every mutation with the context it was assigned.</dd>
+            </dl>
+          </div>
+        </details>
+
+        <details class="card help-sec">
+          <summary class="hd"><h3>4. Stop the app</h3></summary>
+          <div class="bd">
+            <p>Use <b>Quit</b> in the top bar, or run <span class="mono">./launch_web.sh --stop</span>.
+              Quitting stops any run still in progress. Matrices already written stay where they are.</p>
+          </div>
+        </details>
+      </section>
+    </main>
+  </div>
+</div>
+
+<dialog id="quitDialog">
+  <div class="hd"><h3>Quit the workbench?</h3></div>
+  <div class="msg" id="quitText">This stops the app. Your results stay where they are.</div>
+  <div class="ft">
+    <button class="btn" id="quitCancel">Cancel</button>
+    <button class="btn primary" id="quitGo">Quit</button>
+  </div>
+</dialog>
+
+<div class="toast hidden" id="toast" role="status"><span id="toastText"></span></div>
+
+<script src="/vendor/plotly.min.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

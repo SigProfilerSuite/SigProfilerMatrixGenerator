@@ -10,6 +10,7 @@ def main_function():
         "matrix_generator": "Create mutational matrices for SBSs, DBSs, and INDELs.",
         "sv_matrix_generator": "Create mutational matrices for SVs.",
         "cnv_matrix_generator": "Create mutational matrices for CNVs.",
+        "web": "Launch the local SigProfilerMatrixGenerator dashboard.",
     }
 
     if len(sys.argv) < 2 or sys.argv[1].lower() not in commands:
@@ -34,6 +35,8 @@ def main_function():
         controller.dispatch_sv_matrix_generator(args)
     elif command == "cnv_matrix_generator":
         controller.dispatch_cnv_matrix_generator(args)
+    elif command == "web":
+        controller.dispatch_web(args)
 
 
 def print_usage(commands):

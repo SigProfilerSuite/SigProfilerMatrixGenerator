@@ -16,6 +16,9 @@
 
 # MkDocs build output
 /site/
+
+# Dashboard dev venv (playwright install chromium, etc.)
+/.venv-dashboard/
 SigProfilerMatrixGenerator/_version.py
 SigProfilerMatrixGenerator/references/chromosomes/tsb/
 SigProfilerMatrixGenerator/references/vcf_files/*_bench/input/
