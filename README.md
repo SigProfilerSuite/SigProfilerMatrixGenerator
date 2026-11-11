@@ -118,7 +118,17 @@ This section will guide you through the minimum steps required to create mutatio
     SigProfilerMatrixGenerator matrix_generator <project> <reference_genome> <path_to_input_files>
     ```
 
-View the table below for the full list of parameters.
+#### Using the Web App:
+SigProfilerMatrixGenerator also comes with a local web app for those who prefer not to write code. Choose a folder of VCF, MAF or simple text files and a reference genome, follow the run as it goes, and plot the resulting matrices sample by sample in your browser. It runs on your own computer and writes the same files as the Python and command line interfaces.
+
+```bash
+SigProfilerMatrixGenerator web        # after pip install
+./launch_web.sh                       # from a copy of this repository (launch_web.bat on Windows)
+```
+
+Plotting the matrices in the app needs SigProfilerPlotting 1.5.0 or later. See the [Web App guide](https://sigprofilersuite.github.io/SigProfilerMatrixGenerator/Web-App.html) for a walkthrough of every option.
+
+View the table below for the full list of Python and command line parameters.
 
 **PARAMETERS**
 | Category | Parameter | Variable Type | Parameter Description |
