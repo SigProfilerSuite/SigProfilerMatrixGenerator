@@ -8,6 +8,7 @@ with "__" or ".DS", and picks a converter by file extension.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 RECOGNIZED_EXTENSIONS = {".vcf": "VCF", ".maf": "MAF", ".txt": "Txt", ".genome": "Txt"}
@@ -44,7 +45,33 @@ def _input_files(folder: Path) -> tuple[Path, list[Path]]:
     return folder, files
 
 
-def _scan_vcf(path: Path, samples: set, preview: list) -> int:
+# How inputs commonly name an assembly, mapped to this package's genome names.
+_ASSEMBLY_ALIASES = {
+    "grch37": "GRCh37", "37": "GRCh37", "hg19": "GRCh37", "b37": "GRCh37", "hs37d5": "GRCh37",
+    "grch38": "GRCh38", "38": "GRCh38", "hg38": "GRCh38",
+    "chm13": "CHM13-T2T", "chm13-t2t": "CHM13-T2T", "t2t-chm13": "CHM13-T2T",
+    "chm13v2": "CHM13-T2T", "t2t": "CHM13-T2T", "hs1": "CHM13-T2T",
+    "mm9": "mm9", "mm10": "mm10", "grcm38": "mm10", "mm39": "mm39", "grcm39": "mm39",
+    "rn6": "rn6", "rn7": "rn7",
+}
+
+
+def assembly_of(raw: str) -> str | None:
+    """The assembly a declared name refers to, or None if it is not clear."""
+    token = raw.strip().lower()
+    if token in _ASSEMBLY_ALIASES:
+        return _ASSEMBLY_ALIASES[token]
+    # A VCF ##reference value is usually a path or URL: look for a known name
+    # inside it as a whole word. Bare numbers ("37") are too easy to hit by
+    # accident there, so only longer names count.
+    hits = {
+        assembly for alias, assembly in _ASSEMBLY_ALIASES.items()
+        if len(alias) > 2 and re.search(rf"(?<![a-z0-9]){re.escape(alias)}(?![a-z0-9])", token)
+    }
+    return hits.pop() if len(hits) == 1 else None
+
+
+def _scan_vcf(path: Path, samples: set, preview: list, declared: set) -> int:
     name = path.name.split(".")[0]
     if name not in samples and len(preview) < PREVIEW_SAMPLES:
         preview.append(name)
@@ -52,13 +79,15 @@ def _scan_vcf(path: Path, samples: set, preview: list) -> int:
     records = 0
     with open(path, "r", errors="replace") as handle:
         for line in handle:
-            if line.strip() and not line.startswith("#"):
+            if line.startswith("##reference=") or line.startswith("##assembly="):
+                declared.add(line.split("=", 1)[1].strip())
+            elif line.strip() and not line.startswith("#"):
                 records += 1
     return records
 
 
 def _scan_columns(path: Path, column: int, sep: str | None, skip_header: bool,
-                  samples: set, preview: list) -> int:
+                  samples: set, preview: list, declared: set, assembly_column: int) -> int:
     records = 0
     header_pending = skip_header
     with open(path, "r", errors="replace") as handle:
@@ -77,6 +106,8 @@ def _scan_columns(path: Path, column: int, sep: str | None, skip_header: bool,
                 samples.add(sample)
                 if len(preview) < PREVIEW_SAMPLES:
                     preview.append(sample)
+            if len(fields) > assembly_column and len(declared) < 10:
+                declared.add(fields[assembly_column])
     return records
 
 
@@ -116,19 +147,29 @@ def inspect(path: str) -> dict:
     (file_format, matched), = by_format.items()
     samples: set = set()
     preview: list = []
+    declared: set = set()
     records = 0
     for file in matched:
         if file_format == "VCF":
             # One sample per VCF, named after the file, as convertVCF() does.
-            records += _scan_vcf(file, samples, preview)
+            # The assembly, if any, is in a ##reference or ##assembly header.
+            records += _scan_vcf(file, samples, preview, declared)
         elif file_format == "MAF":
-            # Tumor_Sample_Barcode, column 16, after a header row (convertMAF).
-            records += _scan_columns(file, 15, "\t", True, samples, preview)
+            # Tumor_Sample_Barcode, column 16, after a header row (convertMAF);
+            # the assembly is NCBI_Build, column 4.
+            records += _scan_columns(file, 15, "\t", True, samples, preview, declared, 3)
         else:
-            # Simple text: the sample is the second whitespace field (convertTxt).
-            records += _scan_columns(file, 1, None, False, samples, preview)
+            # Simple text: the sample is the second whitespace field (convertTxt);
+            # the assembly is the fourth.
+            records += _scan_columns(file, 1, None, False, samples, preview, declared, 3)
+
+    # The assembly the calls say they were made against, when they all agree.
+    assemblies = {assembly_of(value) for value in declared}
+    assembly = assemblies.pop() if len(assemblies) == 1 else None
 
     return {
+        "assembly": assembly,
+        "declared_assembly": sorted(declared)[:3],
         "path": str(target),
         "source": str(source),
         "format": file_format,

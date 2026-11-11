@@ -64,12 +64,22 @@ SigProfilerMatrixGenerator web --volume /data/genomes
 The **New run** tab is four numbered cards. Each number turns green once its
 card is complete.
 
-!!! tip "Try the example first"
-    **Try the example** fills in the BRCA example that ships with
-    SigProfilerMatrixGenerator: simple text calls for four breast cancer
-    genomes, against GRCh37. Its output goes to
-    `~/SigProfilerMatrixGenerator_example`. GRCh37 must be installed, or the
-    run installs it first (see [Reference genome](#3-reference-genome)).
+!!! tip "Try an example first"
+    Two examples that ship with SigProfilerMatrixGenerator can be filled in
+    with one click. Each writes to its own folder under
+    `~/SigProfilerMatrixGenerator_example/`.
+
+    | Example | Input | Genome |
+    |---|---|---|
+    | **GRCh38 test set** | 9,631 simulated substitutions in one genome (VCF) | GRCh38 |
+    | **BRCA example** | Simple text calls for four breast cancer genomes | GRCh37 |
+
+    The GRCh38 test set doubles as a check of your installation: its SBS96
+    matrix should match, channel for channel, the expected matrix that ships
+    with the package (`scripts/Benchmark/GRCh38_bench_orig_96.txt`). Tick
+    **PDF plots** to see SigProfilerPlotting's figures for it too. An example
+    whose genome is not installed yet installs it first (see
+    [Reference genome](#3-reference-genome)).
 
 ### 1. Input
 
@@ -110,8 +120,9 @@ The **output folder** is where the matrices go:
 - Left blank, they go to an `output` folder inside the input folder.
 - Set, they go straight into that folder.
 
-Either way, the matrices are written to `SBS/`, `DBS/` and `ID/` subfolders,
-with run logs in `logs/`. SigProfilerMatrixGenerator also keeps a copy of the
+Either way, each type of mutation found gets its own subfolder (`SBS/`,
+`DBS/`, `ID/`), with run logs in `logs/` and, when **PDF plots** is ticked,
+SigProfilerPlotting's figures in `plots/`. SigProfilerMatrixGenerator also keeps a copy of the
 input files it read, in an `input/` folder: inside the input folder by
 default, or inside the output folder when one is set.
 
@@ -125,7 +136,20 @@ it is installed:
 - With **If it is not installed yet, install it when the run starts** ticked
   (the default), a run installs a missing genome as its first step.
 
+Getting the genome right matters. Every mutation is checked against the
+genome's reference base, so calls made on GRCh37 and run against
+GRCh38 or CHM13-T2T mostly fail that check, and the run stops once more than
+30% of mutations are skipped. When the calls name their assembly (a VCF's
+`##reference` or `##assembly` header, the genome column of simple text, or a
+MAF's `NCBI_Build`), the card warns if a different genome is chosen and
+offers to switch. The BRCA example, for instance, names GRCh37. Calls that
+do not name an assembly are not checked.
+
 Installed genomes are also listed in the sidebar; clicking one selects it.
+The status describes the genome install folder the run will use: the one set
+under **Advanced** in the Matrices card if there is one, otherwise the folder
+the app was started with. Changing that field (press Enter, or use Browse)
+updates the status straight away.
 
 !!! note
     The genome card only checks that each of the genome's files is present.
@@ -135,10 +159,15 @@ Installed genomes are also listed in the sidebar; clicking one selects it.
 
 ### 4. Matrices
 
-SBS, DBS and ID matrices are always written. The options add to them:
+SigProfilerMatrixGenerator writes the standard matrices for each type of
+mutation present in your calls: SBS for single base substitutions, DBS for
+doublet base substitutions and ID for small insertions and deletions. A cohort
+with no doublet substitutions, for example, gets no DBS matrices. The options
+add to the standard set:
 
 | Option | What it does | Python / CLI equivalent |
 |---|---|---|
+| PDF plots | SigProfilerPlotting draws every SBS, DBS and ID matrix the run writes, one page per sample, into `plots/`. Adds time for large cohorts | `plot=True` / `--plot` |
 | Exome only | Keeps mutations inside the exome (with a 100 bp cushion). Files end in `.exome` | `exome=True` / `--exome` |
 | Strand bias test | Tests transcriptional strand bias for SBS24, SBS384 and SBS6144; results go to `TSB/` | `tsb_stat=True` / `--tsb_stat` |
 | ID89, ID476 | Adds the Koh et al. (2025) indel matrices; ID83 is unchanged | `indel_contexts=["89", "476"]` / `--indel_contexts 89 476` |
@@ -166,6 +195,12 @@ Starting a run opens the **Monitor** tab:
 When the run finishes, **Open results** shows its matrices. If it fails, the
 reason is shown above the log, and the full traceback is in the log.
 
+SigProfilerMatrixGenerator skips mutations it cannot place (a reference base
+that does not match the genome, a position past the end of a chromosome, and
+so on) and lists each one in its own log, in the output folder's `logs/`, not
+in the log shown here. When a run skipped any, the Monitor tab counts them by
+reason and names that log file.
+
 Each run is a separate process, so a long run never slows the page, and runs
 started here keep their records after the app is restarted. Every run, past
 and present, is listed in the sidebar under **Runs**; the Monitor tab shows a
@@ -173,9 +208,17 @@ count of the ones still in progress.
 
 ## Exploring results
 
-Open a finished run from the Monitor tab, or choose any output folder in the
-sidebar under **Open results**. That includes folders written earlier by the
-Python function or the command line.
+Open a finished run from the Monitor tab, or click **Open a results folder**
+in the sidebar and choose the folder a run wrote its matrices into (the one
+holding the `SBS`, `DBS` and `ID` subfolders). That includes folders written
+earlier by the Python function or the command line. It only reads the folder.
+
+This is not the **Output folder** field of a new run, which sets where a run
+will write.
+
+On a narrow screen, such as a phone, the sidebar moves below the main area,
+so its runs list and genome list are further down the page. The Results tab
+then shows its own **Open a results folder** button.
 
 The **Results** tab shows:
 
@@ -192,6 +235,9 @@ The **Results** tab shows:
     - **Download** saves the matrix file;
     - the camera button above the chart saves the figure as SVG, named after
       the project, context and sample.
+- **PDF plots:** the figures SigProfilerPlotting drew, when the run had
+  **PDF plots** ticked. **Open** shows a PDF in a new browser tab;
+  **Download** saves it.
 - **Matrix files:** every matrix in the folder, with its size and a download
   link.
 
@@ -234,17 +280,37 @@ Matrices already written stay where they are.
 ## Security
 
 The app is meant for one person on their own computer. It listens only on
-this machine (`127.0.0.1`) and has no login. It rejects requests addressed to
-any other host name, and requests sent by pages from other websites, so a web
-page cannot drive it from your browser. It can read any folder you can, and
-starts processes on your behalf, so do not expose it on a network.
+this machine (`127.0.0.1`) and has no login, so it protects itself in other
+ways:
+
+- It answers only requests addressed to this machine by name (`127.0.0.1` or
+  `localhost`), which stops a website from reaching it through DNS tricks.
+- Anything that acts (starting or stopping a run, installing a genome,
+  opening a file picker, quitting) must come from the app's own page: from
+  exactly its address and port, and carrying a secret written into that page
+  when the app starts. A website, or a page served by another program on this
+  computer, can send requests to the app but cannot read its page, so it
+  cannot supply the secret.
+- Every other request only reads (the page itself, run progress, matrix
+  files), and your browser does not let other websites see the replies.
+
+The app can read any folder you can, and starts processes on your behalf, so
+do not expose it on a network.
 
 ## Troubleshooting
 
 **The genome shows as not installed.**
 Install it from the genome card, or from a terminal:
 `SigProfilerMatrixGenerator install GRCh38`. If your genomes live elsewhere,
-set the genome install folder (Advanced), or start the app with `--volume`.
+set the genome install folder under Advanced and press Enter, or start the
+app with `--volume`. If the `SIGPROFILERMATRIXGENERATOR_VOLUME` environment
+variable is set, it takes precedence over both.
+
+**The run failed: "More than 30% of mutations were skipped".**
+Look at the reasons the Monitor tab lists. If most are "The reference base
+does not match the reference genome", the calls were made against a different
+genome from the one chosen: choose the genome they were called against and run
+again.
 
 **The folder picker does not open (Linux).**
 The picker needs `zenity`, `kdialog` or a Python with Tkinter. Without them,

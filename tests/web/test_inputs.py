@@ -147,3 +147,42 @@ def test_bundled_brca_example_is_recognised():
     assert result["format"] == "Txt"
     assert result["sample_count"] == 4
     assert result["records"] == 32455
+
+
+def test_bundled_examples_declare_their_assemblies():
+    # The BRCA example names GRCh37 in its genome column; the GRCh38 test set
+    # VCF has no ##reference header, so its assembly is unknown, not guessed.
+    assert inputs.inspect(str(BRCA_EXAMPLE))["assembly"] == "GRCh37"
+    assert inputs.inspect(str(BRCA_EXAMPLE.parents[1] / "GRCh38_bench"))["assembly"] is None
+
+
+@pytest.mark.parametrize("header, assembly", [
+    ("##reference=GRCh38", "GRCh38"),
+    ("##reference=file:///refs/hs37d5.fa", "GRCh37"),
+    ("##reference=/data/Homo_sapiens_assembly38.fasta", None),
+    ("##reference=/refs/chm13v2.0.fa", "CHM13-T2T"),
+    ("##assembly=hg19", "GRCh37"),
+    ("##source=caller", None),
+])
+def test_vcf_assembly_comes_from_its_header(tmp_path, header, assembly):
+    (tmp_path / "S1.vcf").write_text(f"##fileformat=VCFv4.2\n{header}\n#CHROM\n1\t10\t.\tA\tG\n")
+    assert inputs.inspect(str(tmp_path))["assembly"] == assembly
+
+
+def test_maf_assembly_comes_from_ncbi_build(tmp_path):
+    rows = _maf(["S1", "S2"]).splitlines()
+    body = []
+    for line in rows[1:]:
+        fields = line.split("\t")
+        fields[3] = "37"
+        body.append("\t".join(fields))
+    (tmp_path / "cohort.maf").write_text("\n".join([rows[0], *body]) + "\n")
+    assert inputs.inspect(str(tmp_path))["assembly"] == "GRCh37"
+
+
+def test_disagreeing_files_declare_no_assembly(tmp_path):
+    (tmp_path / "a.txt").write_text("P\tS1\tCGP\tGRCh37\tSNP\t1\t100\t100\tA\tG\n")
+    (tmp_path / "b.txt").write_text("P\tS2\tCGP\tGRCh38\tSNP\t1\t100\t100\tA\tG\n")
+    result = inputs.inspect(str(tmp_path))
+    assert result["assembly"] is None
+    assert result["declared_assembly"] == ["GRCh37", "GRCh38"]

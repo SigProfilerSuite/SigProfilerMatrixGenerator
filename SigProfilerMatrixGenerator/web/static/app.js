@@ -14,7 +14,7 @@ const el = (tag, cls, text) => {
 
 const state = {
   env: null, jobs: [], jobId: null, logOffset: 0, logTail: '', step: 0, steps: 3,
-  input: null, inputPath: '', projectAuto: true, view: 'run',
+  input: null, inputPath: '', projectAuto: true, view: 'run', genomes: null, examples: [],
   results: null, resultsPath: null, ctx: null, file: null,
 };
 
@@ -28,8 +28,10 @@ async function api(path, opts) {
   return body;
 }
 const get = (path) => api(path);
+// Every action must carry this launch's token, which only this page has.
+const TOKEN = document.querySelector('meta[name="workbench-token"]').content;
 const post = (path, payload) => api(path, {
-  method: 'POST', headers: { 'Content-Type': 'application/json' },
+  method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Dashboard-Token': TOKEN },
   body: JSON.stringify(payload || {}),
 });
 const q = (params) => new URLSearchParams(params).toString();
@@ -85,8 +87,9 @@ function toast(text) {
   toastTimer = setTimeout(() => $('toast').classList.add('hidden'), 3500);
 }
 
-async function pickPath(kind, title) {
-  const r = await get(`/api/dialog?${q({ kind, title })}`);
+// The server owns each picker's kind and title; the page only names which one.
+async function pickPath(purpose) {
+  const r = await post('/api/dialog', { purpose });
   return r.path;
 }
 
@@ -177,27 +180,80 @@ async function loadEnv() {
   const v = String(env.version || '').split('+')[0];
   $('envVersion').textContent = v ? `v${v}` : '';
 
-  const { available, installed } = env.genomes;
+  state.examples = env.examples || [];
+  if ($('volumePath').value.trim()) await refreshGenomes();
+  else applyGenomes(env.genomes);
+  return env;
+}
+
+function renderExamples() {
+  const box = $('examples');
+  clear(box);
+  // Examples that can run now (genome installed) first.
+  const ready = (ex) => (genomeInstalled(ex.reference_genome) ? 0 : 1);
+  [...(state.examples || [])].sort((a, b) => ready(a) - ready(b)).forEach((ex) => {
+    const row = el('div', 'inline');
+    const btn = el('button', 'btn', `Try the ${ex.label}`);
+    btn.type = 'button';
+    btn.dataset.example = ex.id;
+    btn.addEventListener('click', () => useExample(ex));
+    row.appendChild(btn);
+    const ready = genomeInstalled(ex.reference_genome);
+    row.appendChild(el('span', 'hint',
+      `${ex.description}, ${ex.reference_genome}${ready ? '' : ' (installs the genome first)'}`));
+    box.appendChild(row);
+  });
+}
+
+async function useExample(ex) {
+  $('outputPath').value = ex.output_directory;
+  setGenome(ex.reference_genome);
+  $('projectName').value = ex.project;
+  state.projectAuto = false;
+  await setInput(ex.path);
+  $('inputCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* Genome status always describes the install folder the run would use: the
+   Advanced field when it is set, otherwise the folder the app started with. */
+function applyGenomes(g) {
+  state.genomes = { available: g.available, installed: g.installed, assemblies: g.assemblies || {} };
+  const { available, installed } = state.genomes;
   const pillNode = $('envPill');
   pillNode.className = `pill ${installed.length ? 'good' : 'warn'}`;
   pillNode.textContent = installed.length
     ? `ready · ${installed.length} genome${installed.length === 1 ? '' : 's'}`
     : 'no genome installed';
-
   renderGenomeList(installed);
   fillGenomeSelect(available, installed);
-
-  if (env.example) {
-    $('exampleBtn').hidden = false;
-    $('exampleHint').textContent = `4 breast cancer genomes, ${env.example.reference_genome}`;
-  }
-  return env;
+  renderExamples();
 }
+
+let genomeSeq = 0;
+async function refreshGenomes() {
+  const seq = ++genomeSeq;
+  const volume = $('volumePath').value.trim();
+  try {
+    const g = await get(`/api/genomes?${q({ volume })}`);
+    if (seq === genomeSeq) applyGenomes(g);
+  } catch (e) {
+    if (seq === genomeSeq) toast(e.message);
+  }
+}
+$('volumePath').addEventListener('change', refreshGenomes);
+$('volumePath').addEventListener('keydown', (e) => { if (e.key === 'Enter') refreshGenomes(); });
 
 function renderGenomeList(installed) {
   const list = $('genomeList');
   clear(list);
   $('genomeCount').textContent = installed.length ? String(installed.length) : '';
+  const volume = $('volumePath').value.trim();
+  if (volume) {
+    const where = el('p', 'hint', `in ${shortPath(volume, 34)}`);
+    where.title = volume;
+    where.style.margin = '0 9px 4px';
+    list.appendChild(where);
+  }
   if (!installed.length) {
     list.appendChild(el('p', 'empty', 'None installed yet. Pick one in New run.'));
     return;
@@ -244,7 +300,7 @@ function setGenome(name) {
 }
 
 function genomeInstalled(name) {
-  return !!state.env && state.env.genomes.installed.includes(name);
+  return !!state.genomes && state.genomes.installed.includes(name);
 }
 
 function updateGenomeStatus() {
@@ -261,9 +317,35 @@ function updateGenomeStatus() {
     btn.addEventListener('click', () => installGenome(name, btn));
     box.appendChild(btn);
   }
+  updateGenomeMatch();
   markDone();
 }
 $('genomeSel').addEventListener('change', updateGenomeStatus);
+
+// The calls name the assembly they were made against (VCF ##reference, the
+// genome column of simple text, NCBI_Build in a MAF). A different genome
+// fails most reference-base checks, and the run stops, so say so up front.
+function updateGenomeMatch() {
+  const box = $('genomeMatch');
+  clear(box);
+  const declared = state.input && state.input.assembly;
+  const chosen = $('genomeSel').value;
+  if (!declared || !chosen || !state.genomes) return;
+  const assemblyOf = (name) => state.genomes.assemblies[name] || name;
+  if (assemblyOf(chosen) === declared) return;
+  const note = el('div', 'note-box warn row after-grid');
+  note.appendChild(rich(el('span'), [
+    'These calls say they were made against ', { b: declared }, ', but ', { b: chosen },
+    ' is chosen. Each mutation is checked against the genome\'s reference base, so most would ',
+    'not match, and the run stops when more than 30% are skipped.']));
+  if (state.genomes.available.includes(declared)) {
+    const use = el('button', 'btn sm', `Use ${declared}`);
+    use.type = 'button';
+    use.addEventListener('click', () => setGenome(declared));
+    note.appendChild(use);
+  }
+  box.appendChild(note);
+}
 $('autoInstall').addEventListener('change', markDone);
 
 async function installGenome(name, btn) {
@@ -309,7 +391,7 @@ async function setInput(path) {
   const info = $('inputInfo');
   clear(chosen); clear(info);
   state.input = null;
-  markDone(); updateOutPreview(); updateSummary();
+  updateGenomeMatch(); markDone(); updateOutPreview(); updateSummary();
   if (!path) return;
 
   chosen.appendChild(folderIcon());
@@ -362,14 +444,14 @@ async function setInput(path) {
     box.style.marginTop = '10px';
     info.appendChild(box);
   }
-  markDone(); updateOutPreview(); updateSummary();
+  updateGenomeMatch(); markDone(); updateOutPreview(); updateSummary();
 }
 
 $('inputChoose').addEventListener('click', async () => {
   const btn = $('inputChoose');
   btn.disabled = true;
   try {
-    const path = await pickPath('folder', 'Choose the folder of mutation files');
+    const path = await pickPath('input');
     if (path) await setInput(path);
   } catch (e) { toast(e.message); } finally { btn.disabled = false; }
 });
@@ -388,17 +470,17 @@ $('projectName').addEventListener('input', () => {
 });
 $('outputPath').addEventListener('input', updateOutPreview);
 
-function wireBrowse(buttonId, inputId, kind, title, after) {
+function wireBrowse(buttonId, inputId, purpose, after) {
   $(buttonId).addEventListener('click', async () => {
     try {
-      const path = await pickPath(kind, title);
+      const path = await pickPath(purpose);
       if (path) { $(inputId).value = path; if (after) after(); }
     } catch (e) { toast(e.message); }
   });
 }
-wireBrowse('outputBrowse', 'outputPath', 'folder', 'Choose where the matrices go', updateOutPreview);
-wireBrowse('bedBrowse', 'bedPath', 'file', 'Choose a BED file');
-wireBrowse('volumeBrowse', 'volumePath', 'folder', 'Choose the genome install folder');
+wireBrowse('outputBrowse', 'outputPath', 'output', updateOutPreview);
+wireBrowse('bedBrowse', 'bedPath', 'bed');
+wireBrowse('volumeBrowse', 'volumePath', 'volume', refreshGenomes);
 
 function outputDir() {
   const custom = $('outputPath').value.trim();
@@ -411,7 +493,8 @@ function updateOutPreview() {
   clear(box);
   const out = outputDir();
   if (!out) { box.textContent = 'The output folder appears here once an input is chosen.'; return; }
-  rich(box, ['Matrices will be written to ', { mono: out }, ', in SBS, DBS and ID subfolders.']);
+  rich(box, ['Matrices will be written to ', { mono: out },
+    ', with a subfolder (SBS, DBS, ID) for each type of mutation found.']);
 }
 
 function markDone() {
@@ -438,6 +521,7 @@ function runConfig() {
     exome: $('optExome').checked,
     bed_file: $('bedPath').value.trim() || null,
     tsb_stat: $('optTsb').checked,
+    plot: $('optPlot').checked,
     output_directory: $('outputPath').value.trim() || null,
     volume: $('volumePath').value.trim() || null,
     install_genome_if_missing: $('autoInstall').checked,
@@ -486,16 +570,6 @@ $('startBtn').addEventListener('click', async () => {
   }
 });
 
-$('exampleBtn').addEventListener('click', async () => {
-  const ex = state.env && state.env.example;
-  if (!ex) return;
-  $('outputPath').value = ex.output_directory;
-  setGenome(ex.reference_genome);
-  $('projectName').value = ex.project;
-  state.projectAuto = false;
-  await setInput(ex.path);
-  $('inputCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
 $('newRunBtn').addEventListener('click', () => show('run'));
 
 /* --------------------------------------------------------------- jobs */
@@ -528,7 +602,7 @@ async function refreshJobs() {
   $('liveCount').textContent = String(live);
   $('liveCount').classList.toggle('hidden', !live);
   const finishedInstall = state.jobs.some((j) => j.kind === 'install' && before.get(j.id) === 'running' && j.status !== 'running');
-  if (finishedInstall) loadEnv();
+  if (finishedInstall) refreshGenomes();
 }
 
 function renderJobList() {
@@ -670,13 +744,41 @@ function renderJob(job) {
     open.addEventListener('click', () => openResults(job.output_dir));
     box.appendChild(open);
     result.appendChild(box);
+    if (job.skipped_total) result.appendChild(skippedNote(job, ''));
   } else if (job.status === 'done') {
     result.appendChild(noteBox('good', [{ b: `${job.reference_genome} is installed. ` }, 'It is ready for runs.']));
   } else if (job.status === 'failed') {
-    result.appendChild(noteBox('crit', [{ b: 'The run failed. ' }, job.error || '', ' The log below has the details.']));
+    result.appendChild(noteBox('crit', [{ b: 'The run failed. ' }, job.error || '',
+      job.skipped_total ? '' : ' The log below has the details.']));
+    if (job.skipped_total) result.appendChild(skippedNote(job, 'warn'));
   } else if (job.status === 'stopped') {
     result.appendChild(noteBox('', ['Stopped before it finished. Files already written stay where they are.']));
   }
+}
+
+// Why mutations were skipped. SigProfilerMatrixGenerator writes one line per
+// skipped mutation to its own log, not to the run's output shown below, so
+// the runner counts them by reason.
+function skippedNote(job, kind) {
+  const reasons = Object.entries(job.skipped || {}).sort((a, b) => b[1] - a[1]);
+  const total = job.skipped_total;
+  const box = noteBox(kind, [{ b: `${num(total)} mutation${total === 1 ? ' was' : 's were'} skipped.` }]);
+  box.classList.add('skips');
+  const list = el('ul');
+  reasons.slice(0, 4).forEach(([reason, n]) => {
+    list.appendChild(rich(el('li'), [`${reason}: `, { b: num(n) }]));
+  });
+  box.appendChild(list);
+  const [top] = reasons[0] || [];
+  if (top && /reference base does not match/i.test(top) && reasons[0][1] > total / 2) {
+    box.appendChild(rich(el('p'), [
+      'Most of the calls do not match ', { b: job.reference_genome },
+      '. This usually means they were made against a different genome: choose the one they were called against and run again.']));
+  }
+  if (job.generator_log) {
+    box.appendChild(rich(el('p'), ['Each one is listed in ', { mono: job.generator_log }, '.']));
+  }
+  return box;
 }
 
 $('stopBtn').addEventListener('click', async () => {
@@ -772,6 +874,7 @@ async function openResults(path) {
 
   renderContextChips(ctxs);
   renderFileList(ctxs);
+  renderPlotList(r.plots || []);
   $('chartCard').classList.toggle('hidden', !files.length || !r.plotting_available);
   if (!files.length) {
     $('ctxNote').textContent = 'no matrix files in SBS, DBS, ID, SV or CNV here';
@@ -827,6 +930,52 @@ function renderFileList(ctxs) {
     list.appendChild(row);
   }));
   $('filesNote').textContent = count ? `${count} file${count === 1 ? '' : 's'} in ${baseName(state.resultsPath)}` : '';
+}
+
+// SigProfilerPlotting names its PDFs like SBS_96_plots_<project>.pdf.
+const plotContext = (name) => {
+  const m = String(name).match(/^([A-Z]+)_(\d+)_plots_/);
+  return m ? `${m[1]}${m[2]}` : 'PDF';
+};
+
+function renderPlotList(plots) {
+  const list = $('plotList');
+  clear(list);
+  $('plotsNote').textContent = plots.length
+    ? `${plots.length} figure${plots.length === 1 ? '' : 's'} drawn by SigProfilerPlotting`
+    : '';
+  if (!plots.length) {
+    const empty = el('p', 'empty', 'No PDF plots in this folder. Tick PDF plots when you start a run, and SigProfilerPlotting draws every matrix here.');
+    empty.style.padding = '12px 16px';
+    list.appendChild(empty);
+    return;
+  }
+  const order = (p) => {
+    const ctx = plotContext(p.name);
+    const fam = FAMILY_ORDER.indexOf(family(ctx));
+    return [fam < 0 ? FAMILY_ORDER.length : fam, channels(ctx)];
+  };
+  [...plots].sort((a, b) => {
+    const [fa, ca] = order(a), [fb, cb] = order(b);
+    return fa !== fb ? fa - fb : ca - cb;
+  }).forEach((p) => {
+    const row = el('div', 'f');
+    row.appendChild(el('span', 'badge', plotContext(p.name)));
+    const nm = el('span', 'nm', p.name);
+    nm.title = p.path;
+    row.appendChild(nm);
+    row.appendChild(el('span', 's', bytes(p.size)));
+    const open = el('a', 'btn sm primary', 'Open');
+    open.href = `/api/results/view?${q({ path: p.path })}`;
+    open.target = '_blank';
+    open.rel = 'noopener';
+    row.appendChild(open);
+    const dl = el('a', 'btn sm', 'Download');
+    dl.href = `/api/results/download?${q({ path: p.path })}`;
+    dl.setAttribute('download', p.name);
+    row.appendChild(dl);
+    list.appendChild(row);
+  });
 }
 
 async function selectContext(ctx) {
@@ -915,13 +1064,16 @@ $('fileSel').addEventListener('change', (e) => selectFile(e.target.value));
 $('sampleSel').addEventListener('change', renderChart);
 document.querySelectorAll('input[name="unit"]').forEach((r) => r.addEventListener('change', renderChart));
 
-$('openResultsBtn').addEventListener('click', async () => {
+async function chooseResults() {
   try {
-    const path = await pickPath('folder', 'Choose a SigProfilerMatrixGenerator output folder');
+    const path = await pickPath('results');
     if (path) openResults(path);
   } catch (e) { toast(e.message); }
-});
-$('openPath').addEventListener('keydown', (e) => { if (e.key === 'Enter') openResults(e.target.value); });
+}
+$('openResultsBtn').addEventListener('click', chooseResults);
+$('resultsChoose').addEventListener('click', chooseResults);
+['openPath', 'resultsPath'].forEach((id) =>
+  $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') openResults(e.target.value); }));
 
 /* ----------------------------------------------------------------- quit */
 

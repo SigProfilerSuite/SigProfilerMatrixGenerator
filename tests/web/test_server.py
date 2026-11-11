@@ -1,7 +1,9 @@
+import http.client
 import json
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -45,9 +47,12 @@ def _get(srv, path, headers=None):
         return exc.code, json.loads(exc.read())
 
 
-def _post(srv, path, payload=None, headers=None):
+def _post(srv, path, payload=None, headers=None, token=True):
+    """POST as the app's own page does: exact Origin plus the launch token."""
     data = json.dumps(payload or {}).encode("utf-8")
-    hdrs = {"Content-Type": "application/json", "Origin": _url(srv, "")[:-1]}
+    hdrs = {"Content-Type": "application/json", "Origin": _url(srv, "")}
+    if token:
+        hdrs["X-Dashboard-Token"] = srv.instance_token
     hdrs.update(headers or {})
     request = urllib.request.Request(_url(srv, path), data=data, method="POST", headers=hdrs)
     try:
@@ -55,6 +60,14 @@ def _post(srv, path, payload=None, headers=None):
             return response.status, json.loads(response.read())
     except urllib.error.HTTPError as exc:
         return exc.code, json.loads(exc.read())
+
+
+def _raw(srv, request_bytes):
+    import socket
+
+    with socket.create_connection(("127.0.0.1", srv.server_address[1]), timeout=5) as sock:
+        sock.sendall(request_bytes)
+        return sock.recv(65536)
 
 
 # ------------------------------------------------------------- security
@@ -102,6 +115,99 @@ def test_post_without_origin_header_is_refused(running_server):
     assert body["ok"] is False
 
 
+def test_post_without_the_token_is_refused(running_server):
+    status, _ = _post(running_server, "/api/quit", token=False)
+    assert status == 403
+    time.sleep(0.2)
+    assert _get(running_server, "/api/identity")[0] == 200  # did not quit
+
+
+def test_post_with_a_wrong_token_is_refused(running_server):
+    status, _ = _post(running_server, "/api/quit", headers={"X-Dashboard-Token": "guess"})
+    assert status == 403
+
+
+@pytest.mark.parametrize("origin", [
+    "http://127.0.0.1:1",                  # another local server (wrong port)
+    "http://localhost",                     # no port at all
+    "https://127.0.0.1:{port}",             # wrong scheme
+    "http://evil.example.com:{port}",       # another site
+    "null",                                 # sandboxed or file:// page
+])
+def test_post_from_any_other_origin_is_refused_even_with_the_token(running_server, origin):
+    origin = origin.format(port=running_server.server_address[1])
+    status, _ = _post(running_server, "/api/quit", headers={"Origin": origin})
+    assert status == 403
+
+
+def test_get_with_a_foreign_origin_is_refused(running_server):
+    status, _ = _get(running_server, "/api/env", headers={"Origin": "http://127.0.0.1:1"})
+    assert status == 403
+
+
+def test_the_page_carries_this_launch_token(running_server):
+    with urllib.request.urlopen(_url(running_server, "/"), timeout=5) as response:
+        page = response.read().decode("utf-8")
+    assert running_server.instance_token in page
+    assert server.TOKEN_PLACEHOLDER not in page
+
+
+@pytest.fixture
+def no_dialogs(monkeypatch):
+    opened = []
+    monkeypatch.setattr(server.native_dialog, "choose",
+                        lambda kind, title: opened.append((kind, title)) or "/picked")
+    return opened
+
+
+@pytest.mark.parametrize("method", [b"GET", b"HEAD"])
+def test_a_link_or_image_cannot_open_a_native_picker(running_server, no_dialogs, method):
+    # What a cross-site link, image or navigation sends: GET/HEAD, no Origin.
+    response = _raw(
+        running_server,
+        method + b" /api/dialog?purpose=input&title=x HTTP/1.1\r\nHost: 127.0.0.1\r\n"
+        b"Connection: close\r\n\r\n",
+    )
+    assert b" 200 " not in response.split(b"\r\n", 1)[0]
+    assert no_dialogs == []
+
+
+def test_picker_title_comes_from_the_server_not_the_request(running_server, no_dialogs):
+    status, body = _post(running_server, "/api/dialog",
+                         {"purpose": "input", "title": 'x") & (do shell script "id")'})
+    assert status == 200
+    assert body["path"] == "/picked"
+    assert no_dialogs == [server.PICKERS["input"]]
+
+
+def test_unknown_picker_purpose_is_a_client_error(running_server, no_dialogs):
+    status, body = _post(running_server, "/api/dialog", {"purpose": "anything"})
+    assert status == 400
+    assert no_dialogs == []
+
+
+def test_picker_without_the_token_does_not_open(running_server, no_dialogs):
+    status, _ = _post(running_server, "/api/dialog", {"purpose": "input"}, token=False)
+    assert status == 403
+    assert no_dialogs == []
+
+
+def test_genome_status_follows_the_requested_install_folder(running_server, tmp_path, monkeypatch):
+    from SigProfilerMatrixGenerator.scripts import reference_genome_manager
+
+    monkeypatch.delenv("SIGPROFILERMATRIXGENERATOR_VOLUME", raising=False)
+    monkeypatch.setitem(reference_genome_manager.CHECKSUMS, "fixtureG", {"1": "x"})
+    volume = tmp_path / "genomes"
+    (volume / "tsb" / "fixtureG").mkdir(parents=True)
+    (volume / "tsb" / "fixtureG" / "1.txt").write_text("data")
+
+    _, elsewhere = _get(running_server, "/api/genomes")
+    _, here = _get(running_server, f"/api/genomes?volume={volume}")
+
+    assert "fixtureG" not in elsewhere["installed"]
+    assert "fixtureG" in here["installed"]
+
+
 def test_every_response_has_a_csp_header(running_server):
     request = urllib.request.Request(_url(running_server, "/api/env"))
     with urllib.request.urlopen(request, timeout=5) as response:
@@ -141,13 +247,37 @@ def test_env_reports_genomes_and_plotting_availability(running_server):
     assert body["version"]
 
 
-def test_env_example_points_its_output_outside_the_package(running_server):
-    status, body = _get(running_server, "/api/env")
-    example = body["example"]
-    assert example["reference_genome"] == "GRCh37"
-    assert example["path"].endswith("BRCA_example/SNV")
+def test_env_offers_both_examples_writing_outside_the_package(running_server):
+    _, body = _get(running_server, "/api/env")
+    examples = {ex["id"]: ex for ex in body["examples"]}
+    assert examples["brca"]["reference_genome"] == "GRCh37"
+    assert examples["brca"]["path"].endswith("BRCA_example/SNV")
+    assert examples["grch38_test"]["reference_genome"] == "GRCh38"
+    assert examples["grch38_test"]["path"].endswith("GRCh38_bench")
     package_dir = str(Path(server.__file__).resolve().parents[1])
-    assert not example["output_directory"].startswith(package_dir)
+    outputs = [ex["output_directory"] for ex in examples.values()]
+    assert not any(out.startswith(package_dir) for out in outputs)
+    assert len(set(outputs)) == len(outputs)  # examples never share a folder
+
+
+def test_pdf_plots_open_inline(running_server, tmp_path):
+    pdf = tmp_path / "SBS_96_plots_P.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")
+    url = _url(running_server, "/api/results/view?" + urllib.parse.urlencode({"path": str(pdf)}))
+    with urllib.request.urlopen(url, timeout=5) as response:
+        assert response.headers["Content-Type"] == "application/pdf"
+        assert "attachment" not in (response.headers.get("Content-Disposition") or "")
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.read().startswith(b"%PDF")
+
+
+def test_only_pdfs_can_be_viewed_inline(running_server, tmp_path):
+    # Anything else served inline from this origin (HTML, say) would run as
+    # part of the app; it can still be downloaded as an attachment.
+    page = tmp_path / "evil.html"
+    page.write_text("<script>alert(1)</script>")
+    status, _ = _get(running_server, "/api/results/view?" + urllib.parse.urlencode({"path": str(page)}))
+    assert status == 400
 
 
 def test_run_without_required_fields_is_a_client_error(running_server):
@@ -292,3 +422,22 @@ def test_quit_stops_the_server(tmp_path, monkeypatch):
         assert not thread.is_alive()
     finally:
         srv.server_close()
+
+
+def test_genome_status_names_the_assembly_behind_each_genome(running_server):
+    status, body = _get(running_server, "/api/genomes")
+    assert status == 200
+    assert body["assemblies"]["GRCh37_havana"] == "GRCh37"
+    assert body["assemblies"]["GRCh38"] == "GRCh38"
+
+
+def test_a_browser_that_disconnects_mid_request_is_not_a_server_error(running_server, monkeypatch, capsys):
+    # A page closed or reloaded while a request is in flight resets the
+    # connection; that is the browser leaving, not a failure to report.
+    def reset(path):
+        raise ConnectionResetError(54, "Connection reset by peer")
+
+    monkeypatch.setattr(server.inputs, "browse", reset)
+    with pytest.raises((urllib.error.URLError, http.client.HTTPException, ConnectionError)):
+        _get(running_server, "/api/browse?path=/tmp")
+    assert "[500]" not in capsys.readouterr().err

@@ -3,6 +3,9 @@ real SigProfilerMatrixGenerator.web.runjob: read a config JSON path from
 argv[1], print progress, write result.json next to it.
 
 config keys: "outcome" ("done" | "failed" | "hang"), "sleep_seconds".
+The FAKE_RUNJOB_RESULT environment variable, a JSON object, replaces the
+result outright (for runs started from the page, whose config the test does
+not write).
 """
 
 from __future__ import annotations
@@ -28,6 +31,11 @@ def main(argv: list[str]) -> int:
         return 0
 
     tmp = result_path.with_name(result_path.name + f".tmp{os.getpid()}")
+    forced = os.environ.get("FAKE_RUNJOB_RESULT")
+    if forced:
+        tmp.write_text(forced)
+        os.replace(tmp, result_path)
+        return 0 if json.loads(forced)["status"] == "done" else 1
     if outcome == "failed":
         tmp.write_text(json.dumps({"status": "failed", "error": "simulated failure"}))
         os.replace(tmp, result_path)

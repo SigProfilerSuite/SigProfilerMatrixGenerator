@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="workbench-token" content="__WORKBENCH_TOKEN__">
 <title>SigProfilerMatrixGenerator Workbench</title>
 <link rel="stylesheet" href="/static/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230A58AC'/><path d='M7 24V15h3v9H7zm5 0V9h3v15h-3zm5 0V13h3v11h-3zm5 0V7h3v17h-3z' fill='white'/></svg>">
@@ -44,7 +45,7 @@
         <h3>Open results</h3>
         <button class="btn choose" id="openResultsBtn">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M1.5 4.5v8a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H8L6.5 3h-4a1 1 0 0 0-1 1z"/></svg>
-          Choose an output folder
+          Open a results folder
         </button>
         <input type="text" class="mono" id="openPath" style="margin-top:8px"
                placeholder="or paste a path, then Enter" autocomplete="off"
@@ -96,10 +97,7 @@
                 reference genome they were called against. The run writes SBS, DBS and
                 ID matrices you can plot here, or take on to SigProfilerExtractor and
                 SigProfilerAssignment.</p>
-              <div class="actions inline">
-                <button class="btn" id="exampleBtn" hidden>Try the example</button>
-                <span class="hint" id="exampleHint" style="margin:0"></span>
-              </div>
+              <div class="actions examples" id="examples"></div>
             </div>
           </div>
         </div>
@@ -154,6 +152,7 @@
                 <div id="genomeStatus" class="inline"></div>
               </div>
             </div>
+            <div id="genomeMatch"></div>
             <label class="inline after-grid" style="font-size:12.5px;color:var(--ink-2)">
               <input type="checkbox" id="autoInstall" checked>
               If it is not installed yet, install it when the run starts
@@ -163,13 +162,15 @@
 
         <div class="card" id="optionsCard">
           <div class="hd"><span class="step-no">4</span><h2>Matrices</h2>
-            <span class="note">SBS, DBS and ID matrices are always written</span>
+            <span class="note">one set for each type of mutation in your calls</span>
             <button type="button" class="about-btn" aria-expanded="false" aria-controls="about-options"
                     aria-label="About these options" title="What these options do">?</button></div>
           <div class="about" id="about-options" hidden><dl>
-            <dt>Always written</dt>
-            <dd>SBS6 to SBS6144, DBS78 to DBS2400, and ID28, ID83 and ID415, each as a
-              <span class="mono">.all</span> file with one column per sample.</dd>
+            <dt>Standard matrices</dt>
+            <dd>Written for each type of mutation present: SBS matrices for single base
+              substitutions, DBS for doublet substitutions, ID for small insertions and
+              deletions. A cohort with no doublets, for example, gets no DBS matrices.
+              Each is a <span class="mono">.all</span> file with one column per sample.</dd>
             <dt>Exome only</dt>
             <dd>Keeps only mutations inside the exome, within a 100 bp cushion. Files end
               in <span class="mono">.exome</span> instead of <span class="mono">.all</span>.</dd>
@@ -177,12 +178,20 @@
             <dd>Compares transcribed with untranscribed mutations for the 24, 384 and 6144
               contexts and writes enrichment, p values and FDR q values to
               <span class="mono">TSB/</span>.</dd>
+            <dt>PDF plots</dt>
+            <dd>SigProfilerPlotting draws every SBS, DBS and ID matrix the run writes, one
+              page per sample, into <span class="mono">plots/</span>. The same as
+              <span class="mono">plot=True</span> in Python or <span class="mono">--plot</span>
+              on the command line. Adds time for large cohorts.</dd>
             <dt>ID89 and ID476</dt>
             <dd>Extra indel count matrices in the Koh et al. (2025) classification. ID83 is
               unchanged. These are categories, not signatures.</dd>
           </dl></div>
           <div class="bd">
             <div class="opts">
+              <label class="opt"><input type="checkbox" id="optPlot">
+                <span><b>PDF plots<span class="tag">plots/</span></b>
+                <small>SigProfilerPlotting figures for every matrix and sample.</small></span></label>
               <label class="opt"><input type="checkbox" id="optExome">
                 <span><b>Exome only<span class="tag">.exome</span></b>
                 <small>Keep mutations inside the exome.</small></span></label>
@@ -230,7 +239,7 @@
 
       <!-- ------------------------------------------------------- monitor -->
       <section id="view-monitor" class="stack hidden">
-        <div id="monitorEmpty" class="note-box">No run selected. Start one, or pick a run on the left.</div>
+        <div id="monitorEmpty" class="note-box">No run selected. Start one, or pick one from the Runs list.</div>
         <div id="monitorBody" class="stack hidden">
           <div class="card">
             <div class="hd"><h2 id="jobTitle">run</h2><span id="jobPill" class="pill flat"></span>
@@ -254,8 +263,27 @@
 
       <!-- ------------------------------------------------------- results -->
       <section id="view-results" class="stack hidden">
-        <div id="resultsEmpty" class="note-box">No results open. Choose an output folder on
-          the left, or open a finished run from Monitor.</div>
+        <div id="resultsEmpty">
+          <!-- Wide screens: the sidebar's button is beside this, so point at it. -->
+          <div class="note-box wide-only">No results open. Use <b>Open a results folder</b>
+            in the sidebar, or open a finished run from Monitor.</div>
+          <!-- Narrow screens: the sidebar is at the bottom of the page, so the
+               picker is offered here instead. -->
+          <div class="card narrow-only">
+            <div class="hd"><h2>Open results</h2>
+              <span class="note">any folder SigProfilerMatrixGenerator wrote, or a finished run from Monitor</span></div>
+            <div class="bd">
+              <button class="btn choose" id="resultsChoose" type="button">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M1.5 4.5v8a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H8L6.5 3h-4a1 1 0 0 0-1 1z"/></svg>
+                Open a results folder
+              </button>
+              <div class="row pathrow">
+                <input type="text" class="mono" id="resultsPath" autocomplete="off"
+                       placeholder="or paste a path, then Enter" aria-label="Results folder path">
+              </div>
+            </div>
+          </div>
+        </div>
         <div id="resultsBody" class="hidden">
           <div class="tiles" id="resTiles"></div>
           <div id="resAlert" class="note-box warn hidden" role="status"></div>
@@ -285,6 +313,11 @@
             <div class="about" id="about-chart" hidden></div>
             <div class="bd"><div class="plate"><div class="chart" id="chart"></div></div></div>
           </figure>
+
+          <div class="card" id="plotsCard">
+            <div class="hd"><h3>PDF plots</h3><span class="note" id="plotsNote"></span></div>
+            <div class="files" id="plotList"></div>
+          </div>
 
           <div class="card">
             <div class="hd"><h3>Matrix files</h3><span class="note" id="filesNote"></span></div>
@@ -340,6 +373,7 @@
               <dt>DBS/</dt><dd>Doublet base substitutions, DBS78 to DBS2400.</dd>
               <dt>ID/</dt><dd>Small insertions and deletions: ID28, ID83 and ID415.</dd>
               <dt>TSB/</dt><dd>Strand bias statistics, when the test was run.</dd>
+              <dt>plots/</dt><dd>PDF figures from SigProfilerPlotting, when PDF plots was ticked.</dd>
               <dt>vcf_files/</dt><dd>Every mutation with the context it was assigned.</dd>
             </dl>
           </div>

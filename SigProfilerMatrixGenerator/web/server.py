@@ -1,11 +1,18 @@
 """Local HTTP server for the SigProfilerMatrixGenerator dashboard.
 
-A single-user, local-only tool: this server binds to the loopback
-interface and never asks for credentials, so two checks guard every
-request instead -- the Host header must name this machine (stops DNS
-rebinding, where a public page resolves its own name to 127.0.0.1 and then
-drives this server) and a cross-site Origin is refused (stops an ordinary
-cross-site POST). Do not bind this to a public interface.
+A single-user, local-only tool bound to the loopback interface, with no
+login. Instead:
+
+* Every request's Host header must name this machine, which stops DNS
+  rebinding (a public page resolving its own name to 127.0.0.1).
+* GET and HEAD only ever read. Anything that acts (starting or stopping a
+  run, installing a genome, opening a native picker, quitting) is a POST,
+  and a POST must carry an Origin that is exactly this server (scheme, host
+  and port) plus this launch's token, which is written into the page this
+  server serves. Another site, or another local server on a different port,
+  can send the request but cannot read the page, so cannot supply the token.
+
+Do not bind this to a public interface.
 """
 
 from __future__ import annotations
@@ -21,7 +28,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import genomes, inputs, jobs, native_dialog, results
+from . import genomes, inputs, jobs, native_dialog, results, runjob
 
 STATIC = Path(__file__).resolve().parent / "static"
 ALLOWED_HOSTS = {"localhost", "127.0.0.1", "::1"}
@@ -32,6 +39,17 @@ CONTENT_SECURITY_POLICY = (
 )
 
 CDN_PLOTLY = "https://cdn.plot.ly/plotly-2.35.2.min.js"
+TOKEN_PLACEHOLDER = "__WORKBENCH_TOKEN__"
+
+# The only native pickers a request can open. Requests name a purpose; the
+# dialog kind and title are fixed here, so no request text reaches a dialog.
+PICKERS = {
+    "input": ("folder", "Choose the folder of mutation files"),
+    "output": ("folder", "Choose where the matrices go"),
+    "results": ("folder", "Open a SigProfilerMatrixGenerator results folder"),
+    "bed": ("file", "Choose a BED file"),
+    "volume": ("folder", "Choose the genome install folder"),
+}
 
 _CLIENT_ERRORS = (
     inputs.InputError,
@@ -51,26 +69,34 @@ class Handler(BaseHTTPRequestHandler):
         if self.server.verbose:
             sys.stderr.write("  %s\n" % (fmt % args))
 
+    def _origin_is_this_server(self, origin: str) -> bool:
+        parsed = urlparse(origin)
+        try:
+            port = parsed.port
+        except ValueError:
+            return False
+        return (
+            parsed.scheme == "http"
+            and (parsed.hostname or "").lower() in ALLOWED_HOSTS
+            and port == self.server.server_address[1]
+        )
+
     def _local_only(self) -> bool:
         host = (self.headers.get("Host") or "").rsplit(":", 1)[0].strip("[]")
         if host.lower() not in ALLOWED_HOSTS:
             return False
         origin = self.headers.get("Origin")
-        if origin:
-            if (urlparse(origin).hostname or "").lower() not in ALLOWED_HOSTS:
-                return False
-        return True
+        return not origin or self._origin_is_this_server(origin)
 
-    def _origin_required(self) -> bool:
-        # State-changing requests (POSTs) must carry a matching Origin, full
-        # stop -- unlike GET (a top-level page load legitimately has no
-        # Origin at all), a same-origin fetch() POST from this page always
-        # sets one, so a POST with none is not something this dashboard's
-        # own frontend would ever send.
+    def _may_act(self) -> bool:
+        # A GET legitimately arrives without an Origin (a page load), so GETs
+        # only read. A POST from this server's own page always carries its
+        # exact Origin and the token from the page; anything else is refused.
         origin = self.headers.get("Origin")
-        if not origin:
+        if not origin or not self._origin_is_this_server(origin):
             return False
-        return (urlparse(origin).hostname or "").lower() in ALLOWED_HOSTS
+        token = self.headers.get("X-Dashboard-Token") or ""
+        return secrets.compare_digest(token, self.server.instance_token)
 
     def _send(self, status, body=b"", ctype="application/json", extra=None):
         if isinstance(body, str):
@@ -101,14 +127,16 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:
             return {}
 
-    def _file(self, path: Path, download: bool = False, filename: str | None = None):
+    def _file(self, path: Path, download: bool = False, filename: str | None = None,
+              csp: bool = True):
         if not path.is_file():
             return self._fail(f"not found: {path.name}", 404)
         ctype = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         self.send_response(200)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(path.stat().st_size))
-        self.send_header("Content-Security-Policy", CONTENT_SECURITY_POLICY)
+        if csp:
+            self.send_header("Content-Security-Policy", CONTENT_SECURITY_POLICY)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Cache-Control", "no-store, must-revalidate")
         if download:
@@ -134,7 +162,9 @@ class Handler(BaseHTTPRequestHandler):
         path, query = unquote(url.path), parse_qs(url.query)
         try:
             return self._get(path, query)
-        except BrokenPipeError:
+        except ConnectionError:
+            # The browser went away (page closed or reloaded): nothing to answer.
+            self.close_connection = True
             return
         except _CLIENT_ERRORS as exc:
             sys.stderr.write(f"  [400] GET {path}: {type(exc).__name__}: {exc}\n")
@@ -147,7 +177,10 @@ class Handler(BaseHTTPRequestHandler):
     def _get(self, path: str, query: dict):
         srv = self.server
         if path in ("/", "/index.html"):
-            return self._file(STATIC / "index.html")
+            page = (STATIC / "index.html").read_text(encoding="utf-8")
+            page = page.replace(TOKEN_PLACEHOLDER, srv.instance_token)
+            return self._send(200, page, "text/html; charset=utf-8",
+                              {"Cache-Control": "no-store, must-revalidate"})
         if path.startswith("/static/"):
             target = (STATIC / path[len("/static/") :]).resolve()
             static_root = STATIC.resolve()
@@ -166,17 +199,18 @@ class Handler(BaseHTTPRequestHandler):
                     "version": _package_version(),
                     "genomes": genomes.status(srv.volume),
                     "plotting_available": results.plotting_available(),
-                    "example": _example_input(),
+                    "examples": _examples(),
                 }
             )
+        if path == "/api/genomes":
+            # Status for the genome install folder the page currently names,
+            # falling back to the one the app was started with.
+            volume = _one(query, "volume") or srv.volume
+            return self._json({"ok": True, **genomes.status(volume)})
         if path == "/api/browse":
             return self._json({"ok": True, **inputs.browse(_one(query, "path"))})
         if path == "/api/inspect":
             return self._json({"ok": True, **inputs.inspect(_one(query, "path"))})
-        if path == "/api/dialog":
-            kind = _one(query, "kind", "folder")
-            title = _one(query, "title", "Choose a location")
-            return self._json({"ok": True, "path": native_dialog.choose(kind, title)})
 
         if path == "/api/jobs":
             return self._json({"ok": True, "jobs": srv.manager.listing()})
@@ -210,6 +244,16 @@ class Handler(BaseHTTPRequestHandler):
             )
         if path == "/api/results/download":
             return self._file(Path(_one(query, "path")), download=True)
+        if path == "/api/results/view":
+            # Shown in the browser rather than downloaded, so PDFs only: any
+            # other file served inline from this origin (an HTML file, say)
+            # would run as part of this app.
+            target = Path(_one(query, "path"))
+            if target.suffix.lower() != ".pdf":
+                return self._fail("only PDF plots can be viewed here", 400)
+            # No CSP: browsers' built-in PDF viewers can fail under a page
+            # CSP, and a nosniff application/pdf response never runs as a page.
+            return self._file(target, csp=False)
 
         return self._fail("not found", 404)
 
@@ -229,12 +273,14 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self._local_only():
             return self._fail("requests must come from this machine", 403)
-        if not self._origin_required():
-            return self._fail("a matching Origin header is required", 403)
+        if not self._may_act():
+            return self._fail("actions must come from this app's own page", 403)
         path = unquote(urlparse(self.path).path)
         try:
             return self._post(path)
-        except BrokenPipeError:
+        except ConnectionError:
+            # The browser went away (page closed or reloaded): nothing to answer.
+            self.close_connection = True
             return
         except _CLIENT_ERRORS as exc:
             sys.stderr.write(f"  [400] POST {path}: {type(exc).__name__}: {exc}\n")
@@ -267,7 +313,7 @@ class Handler(BaseHTTPRequestHandler):
                 "project": config["project"],
                 "reference_genome": config["reference_genome"],
                 "input": config["path_to_input_files"],
-                "output_dir": _output_dir(config),
+                "output_dir": str(runjob.output_dir_for(config)),
             }
             name = body.get("name") or config["project"]
             return self._json({"ok": True, "job": srv.manager.start(config, name, extra=extra)})
@@ -287,9 +333,13 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/api/jobs/") and path.endswith("/stop"):
             job_id = path.split("/")[3]
             return self._json({"ok": srv.manager.stop(job_id)})
+        if path == "/api/dialog":
+            picker = PICKERS.get(body.get("purpose"))
+            if picker is None:
+                return self._fail(f"purpose must be one of {sorted(PICKERS)}", 400)
+            kind, title = picker
+            return self._json({"ok": True, "path": native_dialog.choose(kind, title)})
         if path == "/api/shutdown":
-            if self.headers.get("X-Dashboard-Token") != srv.instance_token:
-                return self._fail("forbidden", 403)
             self._json({"ok": True})
             threading.Thread(target=srv.shutdown, daemon=True).start()
             return
@@ -307,39 +357,60 @@ def _one(query: dict, key: str, default: str = "") -> str:
     return values[0] if values else default
 
 
-def _output_dir(config: dict) -> str:
-    # Mirrors SigProfilerMatrixGeneratorFunc: matrices go straight into
-    # output_directory when one is given, otherwise into <input>/output/.
-    if config.get("output_directory"):
-        return str(Path(config["output_directory"]))
-    return str(Path(config["path_to_input_files"]) / "output")
-
-
 def _package_version() -> str:
     from SigProfilerMatrixGenerator.version import __version__
 
     return __version__
 
 
-def _example_input() -> dict | None:
-    # The BRCA example that ships inside the package: simple-text calls for
-    # four breast cancer genomes, against GRCh37. Its output is pointed outside
-    # the package, since the default (<input>/output/) would write into the
-    # installed package itself.
-    import SigProfilerMatrixGenerator
-
-    folder = (
-        Path(SigProfilerMatrixGenerator.__file__).resolve().parent
-        / "references" / "vcf_files" / "BRCA_example" / "SNV"
-    )
-    if not (folder / "BRCA_example_subs_simple.txt").is_file():
-        return None
-    return {
-        "path": str(folder),
+# Example inputs that ship inside the package. Each one's output is pointed
+# outside the package, since the default (<input>/output/) would write into
+# the installed package itself.
+_EXAMPLES = (
+    {
+        "id": "brca",
+        "label": "BRCA example",
+        "description": "4 breast cancer genomes, simple text calls",
+        "folder": ("references", "vcf_files", "BRCA_example", "SNV"),
+        "marker": "BRCA_example_subs_simple.txt",
         "project": "BRCA_example",
         "reference_genome": "GRCh37",
-        "output_directory": str(Path.home() / "SigProfilerMatrixGenerator_example"),
-    }
+    },
+    {
+        # Simulated substitutions whose expected SBS96 ships alongside, in
+        # scripts/Benchmark/GRCh38_bench_orig_96.txt, so a run can be checked.
+        "id": "grch38_test",
+        "label": "GRCh38 test set",
+        "description": "1 simulated genome, 9,631 substitutions",
+        "folder": ("references", "vcf_files", "GRCh38_bench"),
+        "marker": "GRCh38_bench.vcf",
+        "project": "GRCh38_test",
+        "reference_genome": "GRCh38",
+    },
+)
+
+
+def _examples() -> list[dict]:
+    import SigProfilerMatrixGenerator
+
+    package = Path(SigProfilerMatrixGenerator.__file__).resolve().parent
+    found = []
+    for example in _EXAMPLES:
+        folder = package.joinpath(*example["folder"])
+        if not (folder / example["marker"]).is_file():
+            continue
+        found.append({
+            "id": example["id"],
+            "label": example["label"],
+            "description": example["description"],
+            "path": str(folder),
+            "project": example["project"],
+            "reference_genome": example["reference_genome"],
+            "output_directory": str(
+                Path.home() / "SigProfilerMatrixGenerator_example" / example["project"]
+            ),
+        })
+    return found
 
 
 class Server(ThreadingHTTPServer):

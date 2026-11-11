@@ -28,7 +28,14 @@ def installed_genomes(volume: str | None = None) -> list[str]:
 
 
 def status(volume: str | None = None) -> dict:
-    return {"available": available_genomes(), "installed": installed_genomes(volume)}
+    available = available_genomes()
+    return {
+        "available": available,
+        "installed": installed_genomes(volume),
+        # The assembly behind each name (GRCh37_havana is GRCh37), to compare
+        # with the assembly an input declares.
+        "assemblies": {name: reference_genome_manager.get_reference_assembly(name) for name in available},
+    }
 
 
 def install(genome_name: str, volume: str | None = None, local_genome_dir: str | None = None) -> None:

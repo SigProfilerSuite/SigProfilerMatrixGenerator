@@ -91,3 +91,18 @@ def test_load_with_malformed_matrix_raises_results_error(tmp_path, plotting_web)
 
     with pytest.raises(results.ResultsError):
         results.load(str(matrix_path))
+
+
+def test_scan_lists_pdf_plots(tmp_path):
+    (tmp_path / "SBS").mkdir()
+    (tmp_path / "plots").mkdir()
+    (tmp_path / "plots" / "SBS_96_plots_P.pdf").write_bytes(b"%PDF-1.4\n")
+    (tmp_path / "plots" / "notes.txt").write_text("not a plot")
+
+    result = results.scan(str(tmp_path))
+
+    assert [p["name"] for p in result["plots"]] == ["SBS_96_plots_P.pdf"]
+
+
+def test_scan_without_plots_folder_lists_none(tmp_path):
+    assert results.scan(str(tmp_path))["plots"] == []

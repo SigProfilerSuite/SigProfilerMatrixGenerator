@@ -60,9 +60,17 @@ def scan(output_dir: str) -> dict:
                     "modified": stat.st_mtime,
                 }
             )
+    # PDF figures SigProfilerPlotting wrote when the run asked for plots.
+    plots_dir = root / "plots"
+    plots = [
+        {"path": str(file), "name": file.name, "size": file.stat().st_size}
+        for file in (sorted(plots_dir.iterdir()) if plots_dir.is_dir() else [])
+        if file.is_file() and file.suffix.lower() == ".pdf"
+    ]
     return {
         "output_dir": str(root),
         "contexts": contexts,
+        "plots": plots,
         "plotting_available": plotting_available(),
     }
 

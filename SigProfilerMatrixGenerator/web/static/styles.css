@@ -173,7 +173,6 @@ code,.mono { font-family:var(--mono); font-size:12.5px; }
 @media (max-width:760px){ .brand .sub { display:none; } }
 
 .body { display:grid; grid-template-columns:280px 1fr; min-height:0; }
-@media (max-width:900px){ .body { grid-template-columns:1fr; } .sidebar { display:none; } }
 
 .sidebar {
   --surface:var(--panel); --surface-2:var(--panel-2); --surface-3:var(--panel-3);
@@ -342,6 +341,11 @@ input[type=checkbox] { accent-color:var(--accent); width:15px; height:15px; marg
 .note-box b { font-weight:650; }
 .note-box .mono { font-size:12px; }
 .note-box.row { justify-content:space-between; flex-wrap:wrap; }
+#genomeMatch .note-box.row .btn { flex:none; }
+.note-box.skips { margin-top:10px; }
+.note-box.skips ul { margin:6px 0 0; padding-left:18px; }
+.note-box.skips li { margin:2px 0; }
+.note-box.skips p { margin:8px 0 0; }
 
 .seg { display:inline-flex; border:1px solid var(--line-strong);
   border-radius:var(--radius-sm); overflow:hidden; flex:0 0 auto; background:var(--surface); }
@@ -585,4 +589,35 @@ dialog .ft { display:flex; gap:9px; justify-content:flex-end; padding:12px 18px;
 @media (prefers-reduced-motion:reduce){
   .spin, .pill.live::before, .dot.live, .bar > i.indeterminate { animation:none; }
   .bar > i { transition:none; }
+}
+
+/* --------------------------------------------------------------- narrow */
+
+/* Last in the file so these win over the base rules above. On a narrow
+   screen the page scrolls as one document: the work area first, then the
+   sidebar's runs, results picker and genomes below it. */
+.narrow-only { display:none; }
+@media (max-width:900px) {
+  .narrow-only { display:block; }
+  .wide-only { display:none; }
+  .app { display:block; height:auto; }
+  .body { display:flex; flex-direction:column; }
+  .main { overflow:visible; padding:16px 14px 28px; }
+  .sidebar { order:2; overflow:visible; border-right:0;
+    border-top:1px solid var(--panel-edge); box-shadow:inset 0 1px 0 var(--panel-hi); }
+  .cite { margin-top:0; }
+}
+@media (max-width:640px) {
+  .topbar { flex-wrap:wrap; height:auto; padding:8px 12px; row-gap:8px; }
+  .brand { flex:1 1 100%; }
+  .brand .titles, .brand h1 { min-width:0; }
+  .brand h1 { overflow:hidden; text-overflow:ellipsis; }
+  .main > header { flex-wrap:wrap; }
+  .tabs { max-width:100%; overflow-x:auto; }
+  .main .btn.choose { min-width:0; width:100%; }
+  .card > .hd { flex-wrap:wrap; row-gap:6px; }
+  .card > .hd .note { flex-basis:100%; order:9; white-space:normal; }
+  .steps { grid-auto-flow:row; }
+  .welcome .bd { padding:16px; }
+  .launch .btn.lg { width:100%; }
 }
