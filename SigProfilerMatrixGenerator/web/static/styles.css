@@ -621,3 +621,39 @@ dialog .ft { display:flex; gap:9px; justify-content:flex-end; padding:12px 18px;
   .welcome .bd { padding:16px; }
   .launch .btn.lg { width:100%; }
 }
+
+/* ----------------------------------------- run list actions, flags, delete */
+
+.list .runrow { position:relative; }
+.list .runrow.has-actions .item { padding-right:58px; }
+.runrow .rm { position:absolute; top:50%; transform:translateY(-50%);
+  width:22px; height:22px; display:grid; place-items:center; padding:0;
+  border:0; border-radius:5px; background:transparent; color:var(--muted);
+  font:inherit; font-size:16px; line-height:1; cursor:pointer; opacity:0; }
+.runrow .rm.hide { right:6px; }
+.runrow .rm.del { right:31px; }
+.runrow:hover .rm, .runrow:focus-within .rm, .runrow .item.on ~ .rm { opacity:1; }
+.runrow .rm:hover, .runrow .rm:focus-visible { background:var(--crit-soft); color:var(--crit); opacity:1; }
+@media (hover:none) { .runrow .rm { opacity:1; } }
+
+.btn.danger-solid { background:var(--crit); border-color:var(--crit); color:#fff; }
+.btn.danger-solid:hover { filter:brightness(1.08); }
+.btn.danger-solid:disabled { opacity:.55; }
+dialog .msg p { margin:0 0 10px; }
+dialog .msg p:last-child { margin-bottom:0; }
+dialog .msg .path { font-family:var(--mono); font-size:12px; overflow-wrap:anywhere;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-sm); padding:6px 9px; }
+.toast .btn { flex:none; }
+
+.stack-sm { display:flex; flex-direction:column; gap:8px; }
+.stack-sm:empty { display:none; }
+#outCheck .note-box p { margin:0; }
+#outCheck .note-box .actions { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 2px; }
+#outCheck .note-box p + p { margin-top:8px; }
+
+.files .f .flag { flex:none; font-size:10.5px; font-weight:600; padding:1px 8px; border-radius:999px;
+  border:1px solid var(--warn); color:var(--warn); background:var(--warn-soft); white-space:nowrap; }
+.files .f .flag.flat { border-color:var(--line-strong); color:var(--muted); background:var(--surface-2); }
+.chip.earlier { border-style:dashed; border-color:var(--warn); }
+.chip.empty { color:var(--muted); }
+.chip.empty[aria-pressed="true"] { color:#fff; }

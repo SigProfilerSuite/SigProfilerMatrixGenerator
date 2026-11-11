@@ -202,17 +202,43 @@ def test_results_list_contexts_and_draw_a_real_chart(page, output_folder):
     assert page.locator("#fileList .f").count() == 2
 
 
+def _plotted_total(page):
+    """Sum of the bar heights Plotly is showing (numeric y values only)."""
+    return page.evaluate("""() => (document.getElementById('chart').data || [])
+        .flatMap((t) => Array.from(t.y || []))
+        .filter((v) => typeof v === 'number')
+        .reduce((a, b) => a + b, 0)""")
+
+
+def matrix_total(path, sample):
+    import pandas as pd
+
+    return float(pd.read_csv(path, sep="\t", index_col=0)[sample].sum())
+
+
 def test_results_switch_context_and_units(page, output_folder):
     page.fill("#openPath", str(output_folder))
     page.press("#openPath", "Enter")
     page.wait_for_selector("#chart svg .trace")
 
+    # Percent is the default, for every type of matrix: each sample's bars sum
+    # to 100. (Not every renderer labels its y-axis, so the values are checked.)
+    assert page.is_checked('input[name="unit"][value="percent"]')
+    assert _plotted_total(page) == pytest.approx(100, abs=0.5)
+
     page.click('.chip[data-ctx="ID83"]')
     _wait_text(page.locator("#chartTitle"), "ID83")
     page.wait_for_selector("#chart svg .trace")
-    page.click('.seg label:has-text("Percent")')
+    assert _plotted_total(page) == pytest.approx(100, abs=0.5)
+
+    page.click('.seg label:has-text("Counts")')
     page.wait_for_selector("#chart svg .trace")
-    assert page.is_checked('input[name="unit"][value="percent"]')
+    assert page.is_checked('input[name="unit"][value="counts"]')
+    counts = matrix_total(output_folder / "ID" / "MyProject.ID83.all", "S1")
+    deadline = time.monotonic() + 10
+    while _plotted_total(page) != pytest.approx(counts) and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert _plotted_total(page) == pytest.approx(counts)
 
 
 # ------------------------------------------------- review fixes, 2026-11-11
@@ -409,3 +435,155 @@ def test_a_failed_run_says_how_many_mutations_were_skipped_and_why(page, tmp_pat
     assert "Most of the calls do not match GRCh38" in text
     assert str(log) in text
     assert "The log below has the details" not in page.locator("#jobResult").text_content()
+
+
+# ------------------------------------------- output folder already holding results
+
+def _set_output(page, path):
+    page.fill("#outputPath", str(path))
+    page.dispatch_event("#outputPath", "input")
+
+
+def _spmg_results(folder, project="cohort"):
+    (folder / "SBS").mkdir(parents=True)
+    (folder / "SBS" / f"{project}.SBS96.all").write_text("MutationType\tPD1\na\t1\n")
+    (folder / "plots").mkdir()
+    (folder / "plots" / f"SBS_96_plots_{project}.pdf").write_bytes(b"%PDF-1.4\n")
+
+
+def test_an_output_folder_with_earlier_results_needs_new_folder_or_replace(page, tmp_path):
+    import json
+
+    out = tmp_path / "results"
+    _spmg_results(out)
+    _paste_input(page, _vcf_folder(tmp_path))
+    page.wait_for_selector("#inputInfo .tile")
+    _set_output(page, out)
+    _wait_text(page.locator("#outCheck"), "already holds results from an earlier run (SBS and plots)")
+
+    # Neither chosen: the run does not start.
+    page.click("#startBtn")
+    _wait_text(page.locator("#startError"), "already holds results")
+    assert not list((tmp_path / "jobs").glob("*/config.json"))
+
+    # A new folder: the next free one, and the warning goes.
+    page.click("#outCheck button[data-choice='new']")
+    assert page.input_value("#outputPath") == str(tmp_path / "results_2")
+    deadline = time.monotonic() + 5
+    while page.locator("#outCheck .note-box").count() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert page.locator("#outCheck .note-box").count() == 0
+
+    # Replace: says what goes, and the run is told to clear it.
+    _set_output(page, out)
+    page.locator("#outCheck button[data-choice='replace']").click()
+    _wait_text(page.locator("#outCheck"), "deleted when the run starts")
+    _wait_text(page.locator("#launchSummary"), "replaces earlier results")
+    page.click("#startBtn")
+    _wait_text(page.locator("#jobPill"), "done")
+    configs = [json.loads(c.read_text()) for c in (tmp_path / "jobs").glob("*/config.json")]
+    assert [c["replace_existing"] for c in configs] == [True]
+
+
+def test_id89_on_calls_without_indels_warns_before_the_run(page):
+    button = page.locator('#examples button[data-example="brca"]')
+    if not button.count():
+        pytest.skip("this install does not ship the BRCA example")
+    button.click()
+    page.wait_for_selector("#inputInfo .tile")
+    assert page.locator("#inputInfo .tile .d").nth(2).text_content() == "0 indels"
+    assert page.locator("#idNote .note-box").count() == 0
+
+    page.check("#optId89")
+    _wait_text(page.locator("#idNote"), "no insertions or deletions")
+    page.uncheck("#optId89")
+    assert page.locator("#idNote .note-box").count() == 0
+
+
+# ------------------------------------------- results: empty and earlier files
+
+def test_results_say_which_matrices_are_empty_and_which_plots_are_stale(page, output_folder):
+    import os
+
+    matrix = pytest.importorskip("sigProfilerPlotting.web.matrix")
+    rows = ["MutationType\tS1\tS2"] + [f"{label}\t0\t0" for label in matrix.REFERENCE_CONTEXTS["ID89"]]
+    (output_folder / "ID" / "MyProject.ID89.all").write_text("\n".join(rows) + "\n")
+    (output_folder / "plots").mkdir()
+    stale = output_folder / "plots" / "SBS_96_plots_MyProject.pdf"
+    stale.write_bytes(b"%PDF-1.4\n")
+    hour_ago = time.time() - 3600
+    os.utime(stale, (hour_ago, hour_ago))
+
+    page.fill("#openPath", str(output_folder))
+    page.press("#openPath", "Enter")
+    page.wait_for_selector("#chart svg .trace")
+
+    notes = page.locator("#resNotes").text_content()
+    assert "ID89 is empty" in notes
+    assert "1 PDF plot is older than its matrix" in notes
+    assert "empty" in (page.get_attribute('.chip[data-ctx="ID89"]', "class") or "")
+    assert page.locator("#plotList .flag").text_content() == "older than its matrix"
+
+    page.click('.chip[data-ctx="ID89"]')
+    _wait_text(page.locator("#chart"), "Every count in this matrix is zero")
+
+
+# ------------------------------------------- runs list: remove (with undo) and delete
+
+def _finished_run_in_list(page, tmp_path):
+    _paste_input(page, _vcf_folder(tmp_path))
+    page.wait_for_selector("#inputInfo .tile")
+    page.click("#startBtn")
+    _wait_text(page.locator("#jobPill"), "done")
+    return page.locator("#jobList .runrow").first
+
+
+def test_a_run_can_be_removed_from_the_list_and_brought_back(page, tmp_path):
+    row = _finished_run_in_list(page, tmp_path)
+    row.hover()
+    row.locator("button.rm.hide").click()
+
+    deadline = time.monotonic() + 5
+    while page.locator("#jobList .runrow").count() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert page.locator("#jobList .runrow").count() == 0
+    assert page.is_visible("#monitorEmpty")
+    _wait_text(page.locator("#toast"), "Its results stay on disk")
+
+    page.click("#toastAction")
+    page.locator("#jobList .runrow").first.wait_for()
+    assert "cohort" in page.text_content("#jobList")
+
+
+def test_a_run_can_be_deleted_for_good_after_confirming(page, tmp_path):
+    row = _finished_run_in_list(page, tmp_path)
+    job_ids = [p.name for p in (tmp_path / "jobs").iterdir()]
+
+    page.click("#deleteBtn")
+    page.wait_for_selector("#deleteDialog[open]")
+    text = page.text_content("#deleteText")
+    assert "cannot be undone" in text
+    page.click("#deleteCancel")
+    assert page.locator("#jobList .runrow").count() == 1
+
+    row.hover()
+    row.locator("button.rm.del").click()
+    page.wait_for_selector("#deleteDialog[open]")
+    page.click("#deleteGo")
+    _wait_text(page.locator("#toast"), "Deleted cohort")
+    assert page.locator("#jobList .runrow").count() == 0
+    assert not any((tmp_path / "jobs" / j).exists() for j in job_ids)
+
+
+def test_no_loading_message_is_left_beside_a_drawn_chart(page, output_folder):
+    page.fill("#openPath", str(output_folder))
+    page.press("#openPath", "Enter")
+    page.wait_for_selector("#chart svg .trace")
+    for ctx in ("ID83", "SBS96", "ID83"):
+        page.click(f'.chip[data-ctx="{ctx}"]')
+        _wait_text(page.locator("#chartTitle"), ctx)
+        page.wait_for_selector("#chart svg .trace")
+        deadline = time.monotonic() + 5
+        while page.locator("#chart .chart-msg").count() and time.monotonic() < deadline:
+            time.sleep(0.05)
+        assert page.locator("#chart .chart-msg").count() == 0, f"loading message left beside {ctx}"

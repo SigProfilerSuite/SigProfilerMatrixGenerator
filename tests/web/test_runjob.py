@@ -221,6 +221,11 @@ def test_grch38_test_set_matches_its_expected_sbs96_and_draws_plots(tmp_path):
     pd.testing.assert_series_equal(got.iloc[:, 0].reindex(want.index), want.iloc[:, 0],
                                    check_names=False, check_dtype=False)
     assert (output / "plots" / "SBS_96_plots_GRCh38_test.pdf").is_file()
+    # A run's own plots are drawn after its matrices: none may look stale.
+    from SigProfilerMatrixGenerator.web import results
+
+    plots = results.scan(str(output))["plots"]
+    assert plots and not [p["name"] for p in plots if p.get("older_than_matrix")]
 
 
 @pytest.mark.skipif(
@@ -313,3 +318,33 @@ def test_failed_result_carries_the_skip_summary(tmp_path, monkeypatch):
     result = json.loads((tmp_path / "result.json").read_text())
     assert result["status"] == "failed"
     assert result["skipped"] == {"Bad": 1}
+
+
+def test_replacing_clears_earlier_results_before_generating(tmp_path, stub_generator):
+    out = tmp_path / "out"
+    (out / "plots").mkdir(parents=True)
+    (out / "plots" / "SBS_6_plots_P.pdf").write_bytes(b"%PDF-1.4\n")
+    (out / "plots" / "mine.pdf").write_bytes(b"%PDF-1.4\n")
+    calls = tmp_path / "calls"
+    calls.mkdir()
+    config = {"project": "P", "reference_genome": "AlreadyInstalled",
+              "path_to_input_files": str(calls), "output_directory": str(out),
+              "replace_existing": True}
+
+    runjob.run(config, tmp_path / "result.json")
+
+    assert not (out / "plots" / "SBS_6_plots_P.pdf").exists()
+    assert (out / "plots" / "mine.pdf").exists()
+    assert stub_generator["generated"], "generation still ran"
+
+
+def test_without_replacing_earlier_results_are_left_alone(tmp_path, stub_generator):
+    out = tmp_path / "out"
+    (out / "plots").mkdir(parents=True)
+    (out / "plots" / "SBS_6_plots_P.pdf").write_bytes(b"%PDF-1.4\n")
+    config = {"project": "P", "reference_genome": "AlreadyInstalled",
+              "path_to_input_files": str(tmp_path), "output_directory": str(out)}
+
+    runjob.run(config, tmp_path / "result.json")
+
+    assert (out / "plots" / "SBS_6_plots_P.pdf").exists()

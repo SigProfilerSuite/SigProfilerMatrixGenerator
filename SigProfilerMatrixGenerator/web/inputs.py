@@ -71,25 +71,44 @@ def assembly_of(raw: str) -> str | None:
     return hits.pop() if len(hits) == 1 else None
 
 
-def _scan_vcf(path: Path, samples: set, preview: list, declared: set) -> int:
+def _is_indel(ref: str, alt: str) -> bool:
+    # VCF indels carry an anchor base (A>AT); MAF and simple text use "-".
+    alt = alt.split(",")[0]
+    return ref in ("-", "") or alt in ("-", "") or len(ref) != len(alt)
+
+
+def _scan_vcf(path: Path, samples: set, preview: list, declared: set, counts: dict) -> None:
     name = path.name.split(".")[0]
     if name not in samples and len(preview) < PREVIEW_SAMPLES:
         preview.append(name)
     samples.add(name)
-    records = 0
     with open(path, "r", errors="replace") as handle:
         for line in handle:
             if line.startswith("##reference=") or line.startswith("##assembly="):
                 declared.add(line.split("=", 1)[1].strip())
             elif line.strip() and not line.startswith("#"):
-                records += 1
-    return records
+                counts["records"] += 1
+                fields = line.split("\t")
+                if len(fields) > 4 and _is_indel(fields[3].strip(), fields[4].strip()):
+                    counts["indels"] += 1
 
 
-def _scan_columns(path: Path, column: int, sep: str | None, skip_header: bool,
-                  samples: set, preview: list, declared: set, assembly_column: int) -> int:
-    records = 0
-    header_pending = skip_header
+# Where convertMAF() and convertTxt() read each field (0-based).
+_LAYOUTS = {
+    # MAF: header row; Tumor_Sample_Barcode is column 16, NCBI_Build 4,
+    # Reference_Allele 11 and Tumor_Seq_Allele2 13.
+    "MAF": {"sep": "\t", "header": True, "sample": 15, "assembly": 3, "ref": 10, "alt": 12},
+    # Simple text, whitespace separated: project, sample, ID, genome, type,
+    # chromosome, start, end, ref, alt.
+    "Txt": {"sep": None, "header": False, "sample": 1, "assembly": 3, "ref": 8, "alt": 9},
+}
+
+
+def _scan_columns(path: Path, layout: dict, samples: set, preview: list,
+                  declared: set, counts: dict) -> None:
+    sep, column = layout["sep"], layout["sample"]
+    header_pending = layout["header"]
+    ref_col, alt_col = layout["ref"], layout["alt"]
     with open(path, "r", errors="replace") as handle:
         for line in handle:
             if not line.strip() or line.startswith("#"):
@@ -100,15 +119,16 @@ def _scan_columns(path: Path, column: int, sep: str | None, skip_header: bool,
             fields = line.rstrip("\n").split(sep)
             if len(fields) <= column:
                 continue
-            records += 1
+            counts["records"] += 1
             sample = fields[column]
             if sample not in samples:
                 samples.add(sample)
                 if len(preview) < PREVIEW_SAMPLES:
                     preview.append(sample)
-            if len(fields) > assembly_column and len(declared) < 10:
-                declared.add(fields[assembly_column])
-    return records
+            if len(fields) > layout["assembly"] and len(declared) < 10:
+                declared.add(fields[layout["assembly"]])
+            if len(fields) > max(ref_col, alt_col) and _is_indel(fields[ref_col], fields[alt_col]):
+                counts["indels"] += 1
 
 
 def inspect(path: str) -> dict:
@@ -148,20 +168,14 @@ def inspect(path: str) -> dict:
     samples: set = set()
     preview: list = []
     declared: set = set()
-    records = 0
+    counts = {"records": 0, "indels": 0}
     for file in matched:
         if file_format == "VCF":
             # One sample per VCF, named after the file, as convertVCF() does.
             # The assembly, if any, is in a ##reference or ##assembly header.
-            records += _scan_vcf(file, samples, preview, declared)
-        elif file_format == "MAF":
-            # Tumor_Sample_Barcode, column 16, after a header row (convertMAF);
-            # the assembly is NCBI_Build, column 4.
-            records += _scan_columns(file, 15, "\t", True, samples, preview, declared, 3)
+            _scan_vcf(file, samples, preview, declared, counts)
         else:
-            # Simple text: the sample is the second whitespace field (convertTxt);
-            # the assembly is the fourth.
-            records += _scan_columns(file, 1, None, False, samples, preview, declared, 3)
+            _scan_columns(file, _LAYOUTS[file_format], samples, preview, declared, counts)
 
     # The assembly the calls say they were made against, when they all agree.
     assemblies = {assembly_of(value) for value in declared}
@@ -176,7 +190,10 @@ def inspect(path: str) -> dict:
         "file_count": len(matched),
         "sample_count": len(samples),
         "samples_preview": preview[:PREVIEW_SAMPLES],
-        "records": records,
+        "records": counts["records"],
+        # Insertions and deletions among them: without any, a run makes no ID
+        # matrices (and ID89/ID476, when asked for, are all zeros).
+        "indels": counts["indels"],
         "other_files": other[:5],
         "other_count": len(other),
     }

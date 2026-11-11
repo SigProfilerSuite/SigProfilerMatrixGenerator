@@ -186,3 +186,28 @@ def test_disagreeing_files_declare_no_assembly(tmp_path):
     result = inputs.inspect(str(tmp_path))
     assert result["assembly"] is None
     assert result["declared_assembly"] == ["GRCh37", "GRCh38"]
+
+
+def test_indels_are_counted_in_every_format(tmp_path):
+    vcf = tmp_path / "vcf"
+    vcf.mkdir()
+    (vcf / "S1.vcf").write_text("#CHROM\n1\t10\t.\tA\tG\n1\t20\t.\tA\tAT\n1\t30\t.\tCT\tC\n1\t40\t.\tAC\tGT\n")
+    txt = tmp_path / "txt"
+    txt.mkdir()
+    (txt / "c.txt").write_text(
+        "P\tS1\tC\tGRCh37\tSNP\t1\t100\t100\tA\tG\n"
+        "P\tS1\tC\tGRCh37\tINS\t1\t200\t200\t-\tTT\n"
+        "P\tS1\tC\tGRCh37\tDEL\t1\t300\t301\tAG\t-\n")
+    maf = tmp_path / "maf"
+    maf.mkdir()
+    rows = []
+    for ref, alt in (("A", "G"), ("-", "C"), ("GA", "-")):
+        row = ["."] * 20
+        row[15], row[10], row[12] = "S1", ref, alt
+        rows.append("\t".join(row))
+    (maf / "c.maf").write_text("\t".join(["h"] * 20) + "\n" + "\n".join(rows) + "\n")
+
+    assert inputs.inspect(str(vcf))["indels"] == 2   # A>AT and CT>C; AC>GT is a doublet
+    assert inputs.inspect(str(txt))["indels"] == 2
+    assert inputs.inspect(str(maf))["indels"] == 2
+    assert inputs.inspect(str(BRCA_EXAMPLE))["indels"] == 0

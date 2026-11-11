@@ -94,8 +94,8 @@ folder.
 | `.txt` | SigProfiler simple text | From the second column; one file can hold many samples |
 
 As soon as a folder is chosen, the app reads it and reports the format, the
-number of samples, the number of mutation calls and the number of files,
-before anything runs. It also catches the usual mistakes:
+number of samples, the number of mutation calls (and how many are insertions
+or deletions) and the number of files, before anything runs. It also catches the usual mistakes:
 
 - **A single file instead of a folder.** SigProfilerMatrixGenerator reads
   whole folders, so the app names the folder to choose instead.
@@ -125,6 +125,25 @@ Either way, each type of mutation found gets its own subfolder (`SBS/`,
 SigProfilerPlotting's figures in `plots/`. SigProfilerMatrixGenerator also keeps a copy of the
 input files it read, in an `input/` folder: inside the input folder by
 default, or inside the output folder when one is set.
+
+#### An output folder that already holds results
+
+SigProfilerMatrixGenerator does not clear an output folder before writing to
+it. A second run into the same folder rewrites the files it makes and leaves
+the rest: plots from a run that drew them, ID89 and ID476 from a run that
+asked for them, everything from a run that failed. Those files would then sit
+beside the new ones as if they belonged to them.
+
+So when the output folder already holds results, the Project card says so and
+the run does not start until you choose one of:
+
+- **Use a new folder**, which fills in the next free name beside it
+  (`BRCA_example_2`, `BRCA_example_3`, ...).
+- **Replace the earlier results**, which deletes them when the run starts.
+  Only what SigProfilerMatrixGenerator wrote is deleted: its matrices, plots,
+  strand bias tables, logs and its copies of the input. Anything else in the
+  folder stays. This cannot be undone. It is not offered when your input calls
+  are inside the output folder.
 
 ### 3. Reference genome
 
@@ -174,6 +193,10 @@ add to the standard set:
 | Region BED file (Advanced) | Keeps only these regions; the file needs a header line. Files end in `.region` | `bed_file=` / `--bed_file` |
 | Genome install folder (Advanced) | Where reference genomes are installed | `volume=` / `--volume` |
 
+Calls without insertions or deletions, such as the BRCA example, give no ID
+matrices: no ID83, and ID89 and ID476 come out all zeros. The card says so
+when ID89 or ID476 is ticked for such calls.
+
 See [ID89 and ID476](ID89-ID476.md) for the indel classifications, and
 [Output Overview](Using-the-Tool-Output.md) for every file a run writes.
 
@@ -201,10 +224,30 @@ so on) and lists each one in its own log, in the output folder's `logs/`, not
 in the log shown here. When a run skipped any, the Monitor tab counts them by
 reason and names that log file.
 
+A run that fails may still have written matrices or plots before it stopped.
+The Monitor tab says so: do not use them. Run again into the same folder and
+choose **Replace the earlier results**, or delete the failed run.
+
 Each run is a separate process, so a long run never slows the page, and runs
 started here keep their records after the app is restarted. Every run, past
 and present, is listed in the sidebar under **Runs**; the Monitor tab shows a
 count of the ones still in progress.
+
+### Removing and deleting runs
+
+A finished run has two buttons, on its row in the Runs list (shown when you
+point at it) and in the Monitor tab:
+
+| Button | What it does |
+|---|---|
+| **×** (Remove from list) | Takes the run off the list. Its results stay on disk, and **Undo** in the message that follows brings it back. |
+| Bin (Delete) | Deletes the run and, after asking, its results: what SigProfilerMatrixGenerator wrote in its output folder. Other files in that folder stay, and the folder itself goes only when nothing else is left in it. This cannot be undone: the files do not go to the Trash or Recycle Bin. |
+
+If a later run wrote to the same output folder, deleting the earlier run
+removes only its entry and leaves the files alone, since they cannot be told
+apart. A genome install can only be removed from the list; that never
+uninstalls the genome. A run still in progress has neither button: stop it
+first.
 
 ## Exploring results
 
@@ -228,9 +271,10 @@ The **Results** tab shows:
   grouped into SBS, DBS and ID.
 - **The profile** of the selected context, for one sample at a time:
     - choose the **sample** from the list;
-    - switch between **Counts**, **Percent** and **Proportion**. Percent and
-      proportion rescale each sample to its own total, which makes samples with
-      different mutation burdens comparable;
+    - switch between **Percent** (the default, for every type of matrix),
+      **Counts** and **Proportion**. Percent and proportion rescale each sample
+      to its own total, which makes samples with different mutation burdens
+      comparable;
     - the **?** button explains what the chart shows and how to read it;
     - **Download** saves the matrix file;
     - the camera button above the chart saves the figure as SVG, named after
@@ -240,6 +284,18 @@ The **Results** tab shows:
   **Download** saves it.
 - **Matrix files:** every matrix in the folder, with its size and a download
   link.
+
+Above the matrices, the Results tab warns about files that should not be read
+as one run's results:
+
+- **From an earlier run.** For a folder written by runs started in this app,
+  matrices and plots older than the latest run there are marked "earlier".
+- **Older than its matrix.** A PDF plot older than the matrix it shows was
+  drawn by an earlier run, so it may not match. This works for folders written
+  from the command line too.
+- **Empty.** A matrix whose counts are all zero (ID89 for calls without
+  indels, say) is marked empty and is not drawn.
+- **From a failed run.** When the newest files come from a run that failed.
 
 Charts are drawn by SigProfilerPlotting's own renderers, the same ones its
 dashboard uses.
@@ -311,6 +367,15 @@ Look at the reasons the Monitor tab lists. If most are "The reference base
 does not match the reference genome", the calls were made against a different
 genome from the one chosen: choose the genome they were called against and run
 again.
+
+**The PDF plots do not match the matrices.**
+They were drawn by an earlier run into the same folder; the Results tab marks
+them. Run again with **PDF plots** ticked, choosing **Replace the earlier
+results**, or use a new folder.
+
+**There is no ID83, only ID89 and ID476 (all zeros).**
+The calls hold no insertions or deletions. The Input card shows how many
+there are.
 
 **The folder picker does not open (Linux).**
 The picker needs `zenity`, `kdialog` or a Python with Tkinter. Without them,

@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -70,6 +72,9 @@ def _kill(pid: int) -> None:
         pass
 
 
+_JOB_ID = re.compile(r"[0-9a-f]{12}")
+
+
 class JobManager:
     def __init__(self, jobs_dir: str | Path):
         self.jobs_dir = Path(jobs_dir)
@@ -81,6 +86,10 @@ class JobManager:
         self._processes: dict[str, subprocess.Popen] = {}
 
     def _job_dir(self, job_id: str) -> Path:
+        # Ids come from request URLs and name folders this class deletes, so
+        # only the shape start() creates is accepted.
+        if not _JOB_ID.fullmatch(str(job_id)):
+            raise JobError(f"no such job: {job_id}")
         return self.jobs_dir / job_id
 
     def _meta_path(self, job_id: str) -> Path:
@@ -159,18 +168,44 @@ class JobManager:
         return meta
 
     def get(self, job_id: str) -> dict | None:
+        if not _JOB_ID.fullmatch(str(job_id)):
+            return None
         meta = _read_json(self._meta_path(job_id))
         if meta is None:
             return None
         return self._refresh(meta)
 
-    def listing(self) -> list[dict]:
+    def listing(self, include_hidden: bool = False) -> list[dict]:
+        """Every job, newest first; hidden ones (removed from the list) only on request."""
         jobs = []
         for job_dir in sorted(self.jobs_dir.iterdir()):
             meta = _read_json(job_dir / "meta.json")
             if meta is not None:
-                jobs.append(self._refresh(meta))
+                meta = self._refresh(meta)
+                if include_hidden or not meta.get("hidden"):
+                    jobs.append(meta)
         return sorted(jobs, key=lambda j: j["created_at"], reverse=True)
+
+    def set_hidden(self, job_id: str, hidden: bool) -> dict:
+        """Remove a finished job from the list, or bring it back. Nothing is deleted."""
+        meta = self.get(job_id)
+        if meta is None:
+            raise JobError(f"no such job: {job_id}")
+        if hidden and meta["status"] == "running":
+            raise JobError("stop the run before removing it from the list")
+        meta["hidden"] = bool(hidden)
+        _write_json_atomic(self._meta_path(job_id), meta)
+        return meta
+
+    def delete_record(self, job_id: str) -> None:
+        """Delete a finished job's record (settings, log, result) for good."""
+        meta = self.get(job_id)
+        if meta is None:
+            raise JobError(f"no such job: {job_id}")
+        if meta["status"] == "running":
+            raise JobError("stop the run before deleting it")
+        shutil.rmtree(self._job_dir(job_id))
+        self._processes.pop(job_id, None)
 
     def live(self) -> list[dict]:
         return [j for j in self.listing() if j["status"] == "running"]

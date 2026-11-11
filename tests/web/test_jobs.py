@@ -136,3 +136,45 @@ def test_job_records_survive_a_new_manager_instance(tmp_path, monkeypatch):
 
     second_manager = jobs.JobManager(jobs_dir)
     assert second_manager.get(meta["id"])["status"] == "done"
+
+
+def test_a_finished_job_can_leave_the_list_and_come_back(manager):
+    job = _start(manager, outcome="done")
+    _wait_for_status(manager, job["id"], "done")
+
+    manager.set_hidden(job["id"], True)
+    assert job["id"] not in [j["id"] for j in manager.listing()]
+    assert job["id"] in [j["id"] for j in manager.listing(include_hidden=True)]
+
+    manager.set_hidden(job["id"], False)
+    assert job["id"] in [j["id"] for j in manager.listing()]
+
+
+def test_deleting_a_job_record_removes_it_for_good(manager):
+    job = _start(manager, outcome="done")
+    _wait_for_status(manager, job["id"], "done")
+
+    manager.delete_record(job["id"])
+
+    assert manager.get(job["id"]) is None
+    assert not (manager.jobs_dir / job["id"]).exists()
+
+
+def test_a_running_job_can_be_neither_hidden_nor_deleted(manager):
+    job = _start(manager, outcome="hang")
+    try:
+        with pytest.raises(jobs.JobError):
+            manager.set_hidden(job["id"], True)
+        with pytest.raises(jobs.JobError):
+            manager.delete_record(job["id"])
+    finally:
+        manager.stop(job["id"])
+
+
+@pytest.mark.parametrize("bad", ["..", "../jobs", "ABCDEF123456", "abc", "0123456789abc"])
+def test_job_ids_of_any_other_shape_are_refused(manager, bad):
+    assert manager.get(bad) is None
+    with pytest.raises(jobs.JobError):
+        manager.delete_record(bad)
+    with pytest.raises(jobs.JobError):
+        manager.log(bad)

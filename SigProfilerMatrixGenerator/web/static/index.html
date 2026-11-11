@@ -137,7 +137,8 @@
               </label>
             </div>
           </div>
-          <div class="bd"><div class="note-box" id="outPreview">The output folder appears here once an input is chosen.</div></div>
+          <div class="bd"><div class="note-box" id="outPreview">The output folder appears here once an input is chosen.</div>
+            <div id="outCheck"></div></div>
         </div>
 
         <div class="card" id="genomeCard">
@@ -205,6 +206,7 @@
                 <span><b>ID476<span class="tag">Koh et al.</span></b>
                 <small>476 detailed indel categories, alongside ID83.</small></span></label>
             </div>
+            <div id="idNote"></div>
             <details class="adv">
               <summary>Advanced</summary>
               <div class="grid-2">
@@ -244,7 +246,9 @@
           <div class="card">
             <div class="hd"><h2 id="jobTitle">run</h2><span id="jobPill" class="pill flat"></span>
               <span class="note" id="jobNote"></span>
-              <button class="btn sm danger" id="stopBtn">Stop</button></div>
+              <button class="btn sm danger" id="stopBtn">Stop</button>
+              <button class="btn sm hidden" id="hideBtn" title="Take this run off the Runs list. Its results stay on disk.">Remove from list</button>
+              <button class="btn sm danger hidden" id="deleteBtn" title="Delete this run and its results for good">Delete</button></div>
             <div class="bd">
               <div class="progress-head"><span id="jobPhase"></span><span class="mono" id="jobClock"></span></div>
               <div class="bar"><i id="jobBar"></i></div>
@@ -287,6 +291,7 @@
         <div id="resultsBody" class="hidden">
           <div class="tiles" id="resTiles"></div>
           <div id="resAlert" class="note-box warn hidden" role="status"></div>
+          <div id="resNotes" class="stack-sm"></div>
 
           <div class="card">
             <div class="hd"><h2>Matrices</h2><span class="note" id="ctxNote">choose a context to plot</span></div>
@@ -302,8 +307,8 @@
               <div class="pick hidden" id="fileWrap"><select class="mono" id="fileSel" aria-label="Matrix file"></select></div>
               <div class="pick"><select class="mono" id="sampleSel" aria-label="Sample"></select></div>
               <div class="seg" role="radiogroup" aria-label="Units">
-                <label><input type="radio" name="unit" value="counts" checked>Counts</label>
-                <label><input type="radio" name="unit" value="percent">Percent</label>
+                <label><input type="radio" name="unit" value="percent" checked>Percent</label>
+                <label><input type="radio" name="unit" value="counts">Counts</label>
                 <label><input type="radio" name="unit" value="proportion">Proportion</label>
               </div>
               <a class="btn sm" id="downloadBtn" href="#" download>
@@ -400,7 +405,17 @@
   </div>
 </dialog>
 
-<div class="toast hidden" id="toast" role="status"><span id="toastText"></span></div>
+<dialog id="deleteDialog">
+  <div class="hd"><h3 id="deleteTitle">Delete this run for good?</h3></div>
+  <div class="msg" id="deleteText"></div>
+  <div class="ft">
+    <button class="btn" id="deleteCancel">Cancel</button>
+    <button class="btn danger-solid" id="deleteGo">Delete</button>
+  </div>
+</dialog>
+
+<div class="toast hidden" id="toast" role="status"><span id="toastText"></span>
+  <button class="btn sm hidden" id="toastAction" type="button"></button></div>
 
 <script src="/vendor/plotly.min.js"></script>
 <script src="/static/app.js"></script>

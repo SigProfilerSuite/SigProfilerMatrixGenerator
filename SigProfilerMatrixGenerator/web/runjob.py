@@ -111,7 +111,7 @@ def run(config: dict, result_path: Path, since: float | None = None) -> None:
     from SigProfilerMatrixGenerator.scripts.SigProfilerMatrixGeneratorFunc import (
         SigProfilerMatrixGeneratorFunc,
     )
-    from SigProfilerMatrixGenerator.web import genomes
+    from SigProfilerMatrixGenerator.web import genomes, results
 
     started = time.monotonic()
     reference_genome = config["reference_genome"]
@@ -128,6 +128,13 @@ def run(config: dict, result_path: Path, since: float | None = None) -> None:
         genomes.install(reference_genome, volume=volume)
 
     _step(2, "generating matrices")
+    if config.get("replace_existing"):
+        # Asked for on the page when the output folder already held results:
+        # without this, files the new run does not rewrite (an earlier run's
+        # plots, say) would sit beside its own as if they belonged to it.
+        out = output_dir_for(config)
+        removed = results.clear_earlier_results(str(out), config["path_to_input_files"])
+        print(f"Removed {len(removed)} earlier results from {out}", flush=True)
     matrices = SigProfilerMatrixGeneratorFunc(
         project=config["project"],
         reference_genome=reference_genome,

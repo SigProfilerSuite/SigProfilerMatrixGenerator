@@ -16,6 +16,7 @@ const state = {
   env: null, jobs: [], jobId: null, logOffset: 0, logTail: '', step: 0, steps: 3,
   input: null, inputPath: '', projectAuto: true, view: 'run', genomes: null, examples: [],
   results: null, resultsPath: null, ctx: null, file: null,
+  job: null, outCheck: null, replaceOutput: false, deleting: null,
 };
 
 /* ------------------------------------------------------------- helpers */
@@ -80,11 +81,29 @@ const noteBox = (kind, parts) => rich(el('div', `note-box ${kind || ''}`), parts
 function pill(kind, text) { return el('span', `pill ${kind}`, text); }
 
 let toastTimer = null;
-function toast(text) {
+// action: optional { label, fn }, a button in the toast (Undo, say).
+function toast(text, action) {
   $('toastText').textContent = text;
+  const btn = $('toastAction');
+  btn.classList.toggle('hidden', !action);
+  btn.onclick = null;
+  if (action) {
+    btn.textContent = action.label;
+    btn.onclick = () => { $('toast').classList.add('hidden'); action.fn(); };
+  }
   $('toast').classList.remove('hidden');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => $('toast').classList.add('hidden'), 3500);
+  toastTimer = setTimeout(() => $('toast').classList.add('hidden'), action ? 9000 : 3500);
+}
+
+// "A", "A and B", "A, B and C"
+function listing(items) {
+  return items.length < 3 ? items.join(' and ')
+    : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+function whenAt(sec) {
+  return new Date(sec * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 // The server owns each picker's kind and title; the page only names which one.
@@ -123,6 +142,7 @@ function applyTheme(name) {
 const VIEWS = ['run', 'monitor', 'results', 'help'];
 function show(view) {
   state.view = view;
+  if (view === 'run' && state.input) checkOutput();
   VIEWS.forEach((v) => {
     $(`view-${v}`).classList.toggle('hidden', v !== view);
     $(`tab-${v}`).setAttribute('aria-selected', String(v === view));
@@ -413,7 +433,7 @@ async function setInput(path) {
     const preview = r.samples_preview.join(', ') + (r.sample_count > r.samples_preview.length ? ', …' : '');
     [['Format', r.format, r.format === 'Txt' ? 'simple text' : ''],
      ['Samples', num(r.sample_count), preview],
-     ['Mutations', num(r.records), 'calls read'],
+     ['Mutations', num(r.records), r.indels === undefined ? 'calls read' : `${num(r.indels)} indel${r.indels === 1 ? '' : 's'}`],
      ['Files', num(r.file_count), r.source !== r.path ? 'in input/' : '']].forEach(([k, v, d]) => {
       const t = el('div', 'tile');
       t.appendChild(el('div', 'k', k));
@@ -444,8 +464,22 @@ async function setInput(path) {
     box.style.marginTop = '10px';
     info.appendChild(box);
   }
-  updateGenomeMatch(); markDone(); updateOutPreview(); updateSummary();
+  updateGenomeMatch(); updateIdNote(); markDone(); updateOutPreview(); updateSummary();
 }
+
+// ID89 and ID476 classify indels. Calls without any still get those two
+// files, all zeros, and no ID83 at all: say so before the run.
+function updateIdNote() {
+  const box = $('idNote');
+  clear(box);
+  const wanted = $('optId89').checked || $('optId476').checked;
+  if (!wanted || !state.input || state.input.indels !== 0) return;
+  const note = noteBox('warn', [{ b: 'These calls hold no insertions or deletions. ' },
+    'The run makes no ID matrices from them: no ID83, and ID89 and ID476 would be all zeros.']);
+  note.classList.add('after-grid');
+  box.appendChild(note);
+}
+['optId89', 'optId476'].forEach((id) => $(id).addEventListener('change', updateIdNote));
 
 $('inputChoose').addEventListener('click', async () => {
   const btn = $('inputChoose');
@@ -492,9 +526,71 @@ function updateOutPreview() {
   const box = $('outPreview');
   clear(box);
   const out = outputDir();
+  clearTimeout(outTimer);
+  outTimer = setTimeout(checkOutput, 250);
   if (!out) { box.textContent = 'The output folder appears here once an input is chosen.'; return; }
   rich(box, ['Matrices will be written to ', { mono: out },
     ', with a subfolder (SBS, DBS, ID) for each type of mutation found.']);
+}
+
+// A run writing into a folder that already holds results would leave the
+// earlier run's files (plots it drew, matrices it alone made) beside its own,
+// looking like part of it. So such a folder needs a choice: a new folder, or
+// replacing what is there.
+let outTimer = null;
+let outSeq = 0;
+async function checkOutput() {
+  const out = outputDir();
+  const seq = ++outSeq;
+  if (!out) { state.outCheck = null; renderOutCheck(); return; }
+  let r;
+  try { r = await get(`/api/output?${q({ path: out, input: state.inputPath || '' })}`); }
+  catch (e) { r = null; }
+  if (seq !== outSeq) return;
+  if (!r || !state.outCheck || state.outCheck.path !== r.path) state.replaceOutput = false;
+  state.outCheck = r;
+  renderOutCheck();
+  updateSummary();
+}
+
+function renderOutCheck() {
+  const box = $('outCheck');
+  clear(box);
+  const r = state.outCheck;
+  if (!r || !r.found) return;
+  const what = listing(r.folders);
+  if (state.replaceOutput) {
+    const note = el('div', 'note-box warn row after-grid');
+    note.appendChild(rich(el('span'), [{ b: 'The earlier results here are deleted when the run starts' },
+      ` (${what}, with their logs and SigProfilerMatrixGenerator's copies of the input). `,
+      'Other files in this folder are kept. This cannot be undone.']));
+    const keep = el('button', 'btn sm', 'Keep them');
+    keep.type = 'button';
+    keep.addEventListener('click', () => { state.replaceOutput = false; renderOutCheck(); updateSummary(); });
+    note.appendChild(keep);
+    box.appendChild(note);
+    return;
+  }
+  const note = el('div', 'note-box warn after-grid');
+  note.appendChild(rich(el('p'), [{ b: 'This folder already holds results from an earlier run' },
+    ` (${what}). Files the new run does not rewrite would stay beside its own and look like part of it.`]));
+  const acts = el('div', 'actions');
+  if (r.suggested) {
+    const fresh = el('button', 'btn sm primary', `Use a new folder: ${baseName(r.suggested)}`);
+    fresh.type = 'button';
+    fresh.dataset.choice = 'new';
+    fresh.addEventListener('click', () => { $('outputPath').value = r.suggested; updateOutPreview(); });
+    acts.appendChild(fresh);
+  }
+  const replace = el('button', 'btn sm danger', 'Replace the earlier results');
+  replace.type = 'button';
+  replace.dataset.choice = 'replace';
+  replace.disabled = !!r.replace_problem;
+  replace.addEventListener('click', () => { state.replaceOutput = true; renderOutCheck(); updateSummary(); });
+  acts.appendChild(replace);
+  note.appendChild(acts);
+  if (r.replace_problem) note.appendChild(rich(el('p'), [r.replace_problem]));
+  box.appendChild(note);
 }
 
 function markDone() {
@@ -509,9 +605,11 @@ function updateSummary() {
   clear(s);
   if (!state.input) { s.textContent = 'Choose an input folder to start.'; return; }
   rich(s, [{ b: $('projectName').value.trim() || 'project' }, ` · ${num(state.input.sample_count)} samples · `,
-    { b: $('genomeSel').value }]);
+    { b: $('genomeSel').value }, replacing() ? ' · replaces earlier results' : '']);
 }
 $('genomeSel').addEventListener('change', updateSummary);
+
+const replacing = () => !!(state.replaceOutput && state.outCheck && state.outCheck.found);
 
 function runConfig() {
   const config = {
@@ -525,6 +623,7 @@ function runConfig() {
     output_directory: $('outputPath').value.trim() || null,
     volume: $('volumePath').value.trim() || null,
     install_genome_if_missing: $('autoInstall').checked,
+    replace_existing: replacing(),
   };
   const indel = [];
   if ($('optId89').checked) indel.push('89');
@@ -555,10 +654,20 @@ $('startBtn').addEventListener('click', async () => {
       'Install it from the genome card, or tick the box that installs it when the run starts.']));
     return;
   }
+  await checkOutput();  // the folder may have changed since it was last looked at
+  if (state.outCheck && state.outCheck.found && !state.replaceOutput) {
+    errorBox.appendChild(noteBox('crit', [{ b: 'The output folder already holds results from an earlier run. ' },
+      'Choose a new folder, or replace the earlier results, in the Project card.']));
+    $('projectCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  config.replace_existing = replacing();
   const btn = $('startBtn');
   btn.disabled = true;
   try {
     const { job } = await post('/api/run', { config, name: config.project });
+    state.replaceOutput = false;
+    checkOutput();
     toast(`Started ${config.project}.`);
     await refreshJobs();
     selectJob(job.id);
@@ -610,6 +719,8 @@ function renderJobList() {
   clear(list);
   if (!state.jobs.length) { list.appendChild(el('p', 'empty', 'No runs yet.')); return; }
   state.jobs.forEach((job) => {
+    const wrap = el('div', 'runrow');
+    wrap.dataset.job = job.id;
     const row = el('button', `item${job.id === state.jobId ? ' on' : ''}`);
     row.type = 'button';
     row.appendChild(el('span', `dot ${STATUS_DOT[job.status] || ''}`));
@@ -618,9 +729,111 @@ function renderJobList() {
     txt.appendChild(el('span', 'meta', jobMeta(job)));
     row.appendChild(txt);
     row.addEventListener('click', () => { selectJob(job.id); show('monitor'); });
-    list.appendChild(row);
+    wrap.appendChild(row);
+    if (job.status !== 'running') {
+      wrap.classList.add('has-actions');
+      if (job.kind === 'run') {
+        const del = el('button', 'rm del');
+        del.type = 'button';
+        del.title = 'Delete this run and its results for good';
+        del.setAttribute('aria-label', `Delete ${job.name}`);
+        del.appendChild(trashIcon());
+        del.addEventListener('click', (e) => { e.stopPropagation(); askDelete(job); });
+        wrap.appendChild(del);
+      }
+      const hide = el('button', 'rm hide', '×');
+      hide.type = 'button';
+      hide.title = 'Remove from the list (its results stay on disk)';
+      hide.setAttribute('aria-label', `Remove ${job.name} from the list`);
+      hide.addEventListener('click', (e) => { e.stopPropagation(); removeFromList(job); });
+      wrap.appendChild(hide);
+    }
+    list.appendChild(wrap);
   });
 }
+
+function trashIcon() {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 16 16');
+  svg.setAttribute('width', '13');
+  svg.setAttribute('height', '13');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('fill', 'currentColor');
+  path.setAttribute('d', 'M6 1h4l.5 1H14v1.5H2V2h3.5L6 1zm-2.5 3.5h9l-.7 9.6c-.06.8-.7 1.4-1.5 1.4H5.7c-.8 0-1.44-.6-1.5-1.4L3.5 4.5zm3 1.5v7h1.2V6H6.5zm2.8 0v7h1.2V6H9.3z');
+  svg.appendChild(path);
+  return svg;
+}
+
+function leaveMonitor() {
+  state.jobId = null;
+  state.job = null;
+  clearInterval(jobTimer);
+  $('monitorBody').classList.add('hidden');
+  $('monitorEmpty').classList.remove('hidden');
+}
+
+// Off the list only: the record and the results stay, and Undo brings it back.
+async function removeFromList(job) {
+  try { await post(`/api/jobs/${job.id}/hide`); } catch (e) { toast(e.message); return; }
+  if (state.jobId === job.id) leaveMonitor();
+  await refreshJobs();
+  toast(`Removed ${job.name} from the list. Its results stay on disk.`, {
+    label: 'Undo',
+    fn: async () => {
+      try { await post(`/api/jobs/${job.id}/unhide`); await refreshJobs(); }
+      catch (e) { toast(e.message); }
+    },
+  });
+}
+
+// For good: asks first, saying exactly what goes.
+async function askDelete(job) {
+  let plan;
+  try { plan = await get(`/api/jobs/${job.id}/delete-preview`); } catch (e) { toast(e.message); return; }
+  state.deleting = { job, plan };
+  $('deleteTitle').textContent = `Delete ${job.name} for good?`;
+  const msg = $('deleteText');
+  clear(msg);
+  if (plan.deletes_files) {
+    msg.appendChild(rich(el('p'), ['This deletes the run and its results: ',
+      { b: `${num(plan.files)} file${plan.files === 1 ? '' : 's'}, ${bytes(plan.bytes)}` },
+      ' that SigProfilerMatrixGenerator wrote (matrices, plots, logs and its copies of the input) in']));
+    msg.appendChild(el('p', 'mono path', plan.output_dir));
+    msg.appendChild(el('p', null, 'Other files in that folder are kept.'));
+  } else {
+    msg.appendChild(el('p', null, 'This deletes the run from the list for good.'));
+    if (plan.kept_because) msg.appendChild(el('p', null, plan.kept_because));
+  }
+  msg.appendChild(rich(el('p'), [{ b: 'This cannot be undone' },
+    ': the files do not go to the Trash or Recycle Bin. To only take the run off the list, use × (Remove from list) instead.']));
+  $('deleteGo').disabled = false;
+  $('deleteDialog').showModal();
+}
+$('deleteCancel').addEventListener('click', () => $('deleteDialog').close());
+$('deleteGo').addEventListener('click', async () => {
+  const { job, plan } = state.deleting || {};
+  if (!job) return;
+  $('deleteGo').disabled = true;
+  try {
+    const r = await post(`/api/jobs/${job.id}/delete`);
+    $('deleteDialog').close();
+    if (state.jobId === job.id) leaveMonitor();
+    await refreshJobs();
+    if (plan.output_dir && state.resultsPath && r.removed) {
+      $('resultsBody').classList.add('hidden');
+      $('resultsEmpty').classList.remove('hidden');
+      state.resultsPath = null;
+    }
+    toast(r.removed ? `Deleted ${job.name} and its results.` : `Deleted ${job.name}.`);
+  } catch (e) {
+    $('deleteGo').disabled = false;
+    toast(e.message);
+  }
+});
+$('hideBtn').addEventListener('click', () => { if (state.job) removeFromList(state.job); });
+$('deleteBtn').addEventListener('click', () => { if (state.job) askDelete(state.job); });
 
 let jobTimer = null;
 function selectJob(id) {
@@ -685,7 +898,10 @@ function renderJob(job) {
   p.className = `pill ${STATUS_PILL[job.status] || 'flat'}`;
   p.textContent = job.status;
   $('jobNote').textContent = job.kind === 'install' ? 'reference genome install' : `run ${job.id}`;
+  state.job = job;
   $('stopBtn').classList.toggle('hidden', job.status !== 'running');
+  $('hideBtn').classList.toggle('hidden', job.status === 'running');
+  $('deleteBtn').classList.toggle('hidden', job.status === 'running' || job.kind !== 'run');
   $('jobClock').textContent = clock(elapsed(job));
 
   const bar = $('jobBar');
@@ -751,6 +967,13 @@ function renderJob(job) {
     result.appendChild(noteBox('crit', [{ b: 'The run failed. ' }, job.error || '',
       job.skipped_total ? '' : ' The log below has the details.']));
     if (job.skipped_total) result.appendChild(skippedNote(job, 'warn'));
+    if (job.kind === 'run' && job.output_dir) {
+      const left = noteBox('', ['Anything this run wrote to ', { mono: job.output_dir },
+        ' before it stopped (matrices, plots) may be incomplete or wrong, so do not use it. ',
+        'A new run into that folder offers to replace it, or Delete removes it.']);
+      left.style.marginTop = '10px';
+      result.appendChild(left);
+    }
   } else if (job.status === 'stopped') {
     result.appendChild(noteBox('', ['Stopped before it finished. Files already written stay where they are.']));
   }
@@ -872,6 +1095,7 @@ async function openResults(path) {
       'The matrices can still be downloaded below.']);
   }
 
+  renderResultNotes(r, ctxs);
   renderContextChips(ctxs);
   renderFileList(ctxs);
   renderPlotList(r.plots || []);
@@ -883,6 +1107,41 @@ async function openResults(path) {
   }
   $('ctxNote').textContent = 'choose a context to plot';
   selectContext(ctxs.includes('SBS96') ? 'SBS96' : ctxs[0]);
+}
+
+// What in this folder should not be read as this run's result: files an
+// earlier run left, plots older than their matrices, matrices with no counts.
+function renderResultNotes(r, ctxs) {
+  const box = $('resNotes');
+  clear(box);
+  const every = (ctx, key) => r.contexts[ctx].every((f) => f[key]);
+  const plots = r.plots || [];
+  const earlierCtx = ctxs.filter((c) => every(c, 'earlier'));
+  const earlierPlots = plots.filter((p) => p.earlier);
+  const olderPlots = plots.filter((p) => !p.earlier && p.older_than_matrix);
+  const emptyCtx = ctxs.filter((c) => every(c, 'empty'));
+  const run = r.run;
+  if (run && run.status === 'failed') {
+    box.appendChild(noteBox('crit', [{ b: 'The newest files here come from a run that failed' },
+      ` (${run.name}, ${run.reference_genome}, started ${whenAt(run.created_at)}). `,
+      'They may be incomplete or wrong, so do not use them. Run again, replacing them.']));
+  }
+  if (run && (earlierCtx.length || earlierPlots.length)) {
+    const parts = [];
+    if (earlierCtx.length) parts.push(`the ${listing(earlierCtx)} matri${earlierCtx.length === 1 ? 'x' : 'ces'}`);
+    if (earlierPlots.length) parts.push(`${earlierPlots.length} PDF plot${earlierPlots.length === 1 ? '' : 's'}`);
+    box.appendChild(noteBox('warn', [{ b: 'Some files here come from an earlier run. ' },
+      `The latest run in this folder (${run.name}, ${run.reference_genome}, started ${whenAt(run.created_at)}) `,
+      `did not write ${listing(parts)}, so they may not match it. They are marked "earlier" below.`]));
+  }
+  if (olderPlots.length) {
+    box.appendChild(noteBox('warn', [{ b: `${olderPlots.length} PDF plot${olderPlots.length === 1 ? ' is' : 's are'} older than ${olderPlots.length === 1 ? 'its matrix' : 'their matrices'}, ` },
+      'so an earlier run drew them and they may not show the matrices here. They are marked below.']));
+  }
+  if (emptyCtx.length) {
+    box.appendChild(noteBox('', [{ b: `${listing(emptyCtx)} ${emptyCtx.length === 1 ? 'is' : 'are'} empty: ` },
+      'every count is zero, because the input had no mutations of that type.']));
+  }
 }
 
 function renderContextChips(ctxs) {
@@ -900,9 +1159,14 @@ function renderContextChips(ctxs) {
       b.dataset.ctx = ctx;
       b.setAttribute('aria-pressed', 'false');
       b.appendChild(document.createTextNode(ctx));
-      const n = state.results.contexts[ctx].length;
+      const files = state.results.contexts[ctx];
+      const n = files.length;
       if (n > 1) b.appendChild(el('span', 'n', `×${n}`));
-      b.title = `${n} file${n === 1 ? '' : 's'}`;
+      const earlier = files.every((f) => f.earlier), empty = files.every((f) => f.empty);
+      if (earlier) { b.classList.add('earlier'); b.appendChild(el('span', 'n', 'earlier')); }
+      if (empty) b.classList.add('empty');
+      b.title = [`${n} file${n === 1 ? '' : 's'}`, earlier && 'from an earlier run',
+        empty && 'empty: every count is zero'].filter(Boolean).join(' · ');
       b.addEventListener('click', () => selectContext(ctx));
       chips.appendChild(b);
     });
@@ -922,6 +1186,8 @@ function renderFileList(ctxs) {
     const nm = el('span', 'nm', f.name);
     nm.title = f.path;
     row.appendChild(nm);
+    if (f.earlier) row.appendChild(el('span', 'flag', 'earlier run'));
+    if (f.empty) row.appendChild(el('span', 'flag flat', 'empty'));
     row.appendChild(el('span', 's', bytes(f.size)));
     const a = el('a', 'btn sm', 'Download');
     a.href = `/api/results/download?${q({ path: f.path })}`;
@@ -964,6 +1230,8 @@ function renderPlotList(plots) {
     const nm = el('span', 'nm', p.name);
     nm.title = p.path;
     row.appendChild(nm);
+    if (p.earlier) row.appendChild(el('span', 'flag', 'earlier run'));
+    else if (p.older_than_matrix) row.appendChild(el('span', 'flag', 'older than its matrix'));
     row.appendChild(el('span', 's', bytes(p.size)));
     const open = el('a', 'btn sm primary', 'Open');
     open.href = `/api/results/view?${q({ path: p.path })}`;
@@ -1017,6 +1285,12 @@ async function selectFile(path) {
       st.querySelector('.v').textContent = num(r.samples.length);
       st.querySelector('.d').textContent = `in ${state.ctx}`;
     }
+    const info = (state.results.contexts[state.ctx] || []).find((f) => f.path === path);
+    if (info && info.empty) {
+      chartMessage([{ b: 'Every count in this matrix is zero. ' },
+        'The input had no mutations of this type, so there is nothing to draw.']);
+      return;
+    }
     await renderChart();
   } catch (e) {
     chartMessage([e.message]);
@@ -1034,7 +1308,7 @@ function chartMessage(parts) {
 
 function currentUnit() {
   const checked = document.querySelector('input[name="unit"]:checked');
-  return checked ? checked.value : 'counts';
+  return checked ? checked.value : 'percent';
 }
 
 async function renderChart() {
@@ -1052,6 +1326,9 @@ async function renderChart() {
   const node = $('chart');
   const fig = r.figure;
   if (!node.classList.contains('js-plotly-plot')) clear(node);
+  // A "Loading samples..." message from before may still sit beside a chart
+  // being redrawn in place (purge() keeps the node's plotly class).
+  node.querySelectorAll('.chart-msg').forEach((m) => m.remove());
   const config = Object.assign({}, fig.config, {
     displaylogo: false, responsive: true,
     modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d'],

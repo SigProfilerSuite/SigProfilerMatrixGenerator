@@ -221,13 +221,42 @@ class Handler(BaseHTTPRequestHandler):
             except ValueError:
                 return self._fail("offset must be an integer", 400)
             return self._json({"ok": True, **srv.manager.log(job_id, offset)})
+        if path.startswith("/api/jobs/") and path.endswith("/delete-preview"):
+            job = srv.manager.get(path.split("/")[3])
+            if job is None:
+                return self._fail("no such run", 404)
+            return self._json({"ok": True, **_delete_plan(srv, job)})
         if path.startswith("/api/jobs/"):
             job_id = path.split("/")[3]
             job = srv.manager.get(job_id)
             return self._json({"ok": bool(job), "job": job})
 
+        if path == "/api/output":
+            # Whether a run writing to this folder would land beside an
+            # earlier run's results, and what to do about it.
+            out, calls = _one(query, "path"), _one(query, "input")
+            found = results.earlier_results(out)
+            return self._json({
+                "ok": True,
+                "path": out,
+                **found,
+                "suggested": results.next_free_folder(out) if found["found"] else None,
+                "replace_problem": (results.replace_problem(out, calls)
+                                    if found["found"] and calls else None),
+            })
         if path == "/api/results":
-            return self._json({"ok": True, **results.scan(_one(query, "path"))})
+            folder = _one(query, "path")
+            scanned = results.scan(folder)
+            # The run that wrote the newest files here, if it was started from
+            # this app: anything older than its start is an earlier run's.
+            newest = results.newest_file_time(scanned)
+            run = _run_that_wrote(srv, folder, newest) if newest else None
+            if run:
+                results.mark_earlier(scanned, run["created_at"])
+            scanned["run"] = ({key: run.get(key) for key in
+                               ("id", "name", "reference_genome", "status", "created_at")}
+                              if run else None)
+            return self._json({"ok": True, **scanned})
         if path == "/api/results/samples":
             return self._json({"ok": True, **results.load(_one(query, "path"))})
         if path == "/api/results/render":
@@ -308,6 +337,15 @@ class Handler(BaseHTTPRequestHandler):
             if missing:
                 return self._fail("A run needs " + ", ".join(missing) + ".", 400)
             config["volume"] = config.get("volume") or srv.volume
+            out = str(runjob.output_dir_for(config))
+            if config.get("replace_existing"):
+                problem = results.replace_problem(out, config["path_to_input_files"])
+                if problem:
+                    return self._fail(problem, 400)
+            elif results.earlier_results(out)["found"]:
+                return self._fail(
+                    "The output folder already holds results from an earlier run. Choose "
+                    "a new folder, or replace the earlier results.", 409)
             extra = {
                 "kind": "run",
                 "project": config["project"],
@@ -330,6 +368,22 @@ class Handler(BaseHTTPRequestHandler):
             extra = {"kind": "install", "reference_genome": genome_name}
             meta = srv.manager.start(config, f"Install {genome_name}", extra=extra)
             return self._json({"ok": True, "job": meta})
+        if path.startswith("/api/jobs/") and path.endswith(("/hide", "/unhide")):
+            job_id = path.split("/")[3]
+            meta = srv.manager.set_hidden(job_id, path.endswith("/hide"))
+            return self._json({"ok": True, "job": meta})
+        if path.startswith("/api/jobs/") and path.endswith("/delete"):
+            job = srv.manager.get(path.split("/")[3])
+            if job is None:
+                return self._fail("no such run", 404)
+            if job["status"] == "running":
+                return self._fail("This run is still going; stop it first.", 409)
+            plan = _delete_plan(srv, job)
+            removed = []
+            if plan["deletes_files"]:
+                removed = results.delete_output(plan["output_dir"], job.get("input") or "")
+            srv.manager.delete_record(job["id"])
+            return self._json({"ok": True, "removed": len(removed), "output_dir": plan["output_dir"]})
         if path.startswith("/api/jobs/") and path.endswith("/stop"):
             job_id = path.split("/")[3]
             return self._json({"ok": srv.manager.stop(job_id)})
@@ -350,6 +404,51 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         return self._fail("not found", 404)
+
+
+def _same_folder(a: str, b: str) -> bool:
+    try:
+        return Path(a).expanduser().resolve() == Path(b).expanduser().resolve()
+    except OSError:
+        return False
+
+
+def _runs_writing_to(srv, folder: str) -> list[dict]:
+    """Runs started here that wrote to ``folder``, newest first (removed ones too:
+    their files are still there)."""
+    return [job for job in srv.manager.listing(include_hidden=True)
+            if job.get("kind") == "run" and job.get("output_dir")
+            and _same_folder(job["output_dir"], folder)]
+
+
+def _run_that_wrote(srv, folder: str, newest: float) -> dict | None:
+    # The newest run that had started by the time the newest file was written.
+    for job in _runs_writing_to(srv, folder):
+        if job["created_at"] <= newest + 2:
+            return job
+    return None
+
+
+def _delete_plan(srv, job: dict) -> dict:
+    """What deleting a run removes: its record always; its results when they can
+    be told apart from anything else in the output folder."""
+    plan = {"name": job.get("name"), "kind": job.get("kind"), "status": job["status"],
+            "output_dir": None, "deletes_files": False, "files": 0, "bytes": 0, "kept_because": None}
+    if job.get("kind") != "run" or not job.get("output_dir"):
+        return plan
+    out = plan["output_dir"] = job["output_dir"]
+    later = [other for other in _runs_writing_to(srv, out) if other["created_at"] > job["created_at"]]
+    problem = results.replace_problem(out, job.get("input") or "")
+    if later:
+        plan["kept_because"] = (f"A later run ({later[-1].get('name')}, "
+                                f"{later[-1].get('reference_genome')}) wrote to the same folder, "
+                                "so the files there are left alone.")
+    elif problem:
+        plan["kept_because"] = problem
+    else:
+        plan.update(results.generated_size(out))
+        plan["deletes_files"] = plan["files"] > 0
+    return plan
 
 
 def _one(query: dict, key: str, default: str = "") -> str:

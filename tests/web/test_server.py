@@ -441,3 +441,150 @@ def test_a_browser_that_disconnects_mid_request_is_not_a_server_error(running_se
     with pytest.raises((urllib.error.URLError, http.client.HTTPException, ConnectionError)):
         _get(running_server, "/api/browse?path=/tmp")
     assert "[500]" not in capsys.readouterr().err
+
+
+# ------------------------------------------- output folders with earlier results
+
+def _earlier_results(folder, project="P"):
+    (folder / "SBS").mkdir(parents=True)
+    (folder / "SBS" / f"{project}.SBS96.all").write_text("MutationType\tS1\na\t1\n")
+    (folder / "plots").mkdir()
+    (folder / "plots" / f"SBS_96_plots_{project}.pdf").write_bytes(b"%PDF-1.4\n")
+
+
+def _calls(tmp_path):
+    calls = tmp_path / "calls"
+    calls.mkdir(exist_ok=True)
+    (calls / "S1.vcf").write_text("##fileformat=VCFv4.2\n#CHROM\n1\t10\t.\tA\tG\n")
+    return calls
+
+
+def _run_config(calls, out, **extra):
+    return {"config": {"project": "P", "reference_genome": "GRCh38",
+                       "path_to_input_files": str(calls), "output_directory": str(out), **extra}}
+
+
+def test_output_check_reports_earlier_results_and_a_free_folder(running_server, tmp_path):
+    out = tmp_path / "BRCA"
+    _earlier_results(out)
+    calls = _calls(tmp_path)
+
+    status, body = _get(running_server, "/api/output?" + urllib.parse.urlencode(
+        {"path": str(out), "input": str(calls)}))
+
+    assert status == 200
+    assert body["found"] is True and body["folders"] == ["SBS", "plots"]
+    assert body["suggested"] == str(tmp_path / "BRCA_2")
+    assert body["replace_problem"] is None
+
+    status, body = _get(running_server, "/api/output?" + urllib.parse.urlencode(
+        {"path": str(tmp_path / "fresh"), "input": str(calls)}))
+    assert body["found"] is False and body["suggested"] is None
+
+
+def test_a_run_never_lands_silently_on_earlier_results(running_server, tmp_path):
+    out = tmp_path / "out"
+    _earlier_results(out)
+    calls = _calls(tmp_path)
+
+    status, body = _post(running_server, "/api/run", _run_config(calls, out))
+    assert status == 409
+    assert "already holds results" in body["error"]
+
+    status, body = _post(running_server, "/api/run", _run_config(calls, out, replace_existing=True))
+    assert status == 200 and body["job"]["status"] == "running"
+
+    status, body = _post(running_server, "/api/run",
+                         _run_config(out / "SBS", out, replace_existing=True))
+    assert status == 400
+    assert "inside this output folder" in body["error"]
+
+
+def _finished_run(srv, calls, out):
+    status, body = _post(srv, "/api/run", _run_config(calls, out, replace_existing=True))
+    assert status == 200, body
+    job_id = body["job"]["id"]
+    deadline = time.monotonic() + 10
+    while srv.manager.get(job_id)["status"] == "running" and time.monotonic() < deadline:
+        time.sleep(0.05)
+    return job_id
+
+
+def test_results_mark_files_older_than_the_run_that_wrote_the_folder(running_server, tmp_path):
+    import os
+
+    out = tmp_path / "out"
+    _earlier_results(out)
+    hour_ago = time.time() - 3600
+    for f in (out / "SBS" / "P.SBS96.all", out / "plots" / "SBS_96_plots_P.pdf"):
+        os.utime(f, (hour_ago, hour_ago))
+    _finished_run(running_server, _calls(tmp_path), out)
+    # What the run itself wrote (the stand-in runner writes nothing).
+    (out / "SBS" / "P.SBS6.all").write_text("MutationType\tS1\na\t1\n")
+
+    status, body = _get(running_server, "/api/results?" + urllib.parse.urlencode({"path": str(out)}))
+
+    assert status == 200
+    assert body["run"]["name"] == "P"
+    assert body["contexts"]["SBS96"][0]["earlier"] is True
+    assert body["contexts"]["SBS6"][0]["earlier"] is False
+    assert body["plots"][0]["earlier"] is True
+
+
+def test_a_run_can_leave_the_list_and_come_back(running_server, tmp_path):
+    job_id = _finished_run(running_server, _calls(tmp_path), tmp_path / "out")
+
+    assert _post(running_server, f"/api/jobs/{job_id}/hide")[0] == 200
+    assert job_id not in [j["id"] for j in _get(running_server, "/api/jobs")[1]["jobs"]]
+    assert _post(running_server, f"/api/jobs/{job_id}/unhide")[0] == 200
+    assert job_id in [j["id"] for j in _get(running_server, "/api/jobs")[1]["jobs"]]
+
+
+def test_deleting_a_run_removes_its_record_and_what_it_wrote(running_server, tmp_path):
+    out = tmp_path / "out"
+    job_id = _finished_run(running_server, _calls(tmp_path), out)
+    _earlier_results(out)   # stands in for what the run wrote
+    (out / "notes.txt").write_text("mine")
+
+    status, plan = _get(running_server, f"/api/jobs/{job_id}/delete-preview")
+    assert status == 200
+    assert plan["deletes_files"] is True and plan["files"] == 2
+
+    status, body = _post(running_server, f"/api/jobs/{job_id}/delete")
+
+    assert status == 200 and body["removed"] == 2
+    assert running_server.manager.get(job_id) is None
+    assert not (out / "SBS").exists() and not (out / "plots").exists()
+    assert (out / "notes.txt").is_file()
+
+
+def test_deleting_an_older_run_leaves_a_later_runs_files_alone(running_server, tmp_path):
+    out = tmp_path / "out"
+    calls = _calls(tmp_path)
+    older = _finished_run(running_server, calls, out)
+    _finished_run(running_server, calls, out)
+    _earlier_results(out)
+
+    plan = _get(running_server, f"/api/jobs/{older}/delete-preview")[1]
+    assert plan["deletes_files"] is False and "later run" in plan["kept_because"]
+
+    assert _post(running_server, f"/api/jobs/{older}/delete")[0] == 200
+    assert (out / "SBS" / "P.SBS96.all").is_file()
+
+
+def test_removing_or_deleting_runs_needs_the_pages_token(running_server, tmp_path):
+    job_id = _finished_run(running_server, _calls(tmp_path), tmp_path / "out")
+    for action in ("hide", "unhide", "delete"):
+        assert _post(running_server, f"/api/jobs/{job_id}/{action}", token=False)[0] == 403
+    assert running_server.manager.get(job_id) is not None
+
+
+def test_a_running_job_cannot_be_deleted(running_server, tmp_path):
+    srv = running_server
+    meta = srv.manager.start({"outcome": "hang"}, name="hang", cwd=str(Path(__file__).resolve().parents[2]),
+                             extra={"kind": "run"})
+    try:
+        status, body = _post(srv, f"/api/jobs/{meta['id']}/delete")
+        assert status == 409
+    finally:
+        srv.manager.stop(meta["id"])
