@@ -5,3 +5,29 @@
 .md-typeset__table {
   overflow-x: auto;
 }
+
+/* Workbench screenshots read as windows: a soft frame and shadow, and a
+   plain caption under each. */
+.md-typeset figure.screenshot {
+  margin: 1.6em auto;
+}
+.md-typeset figure.screenshot img {
+  border-radius: 10px;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  box-shadow: 0 2px 6px rgba(10, 20, 40, .06), 0 12px 32px rgba(10, 20, 40, .12);
+}
+.md-typeset figure.screenshot figcaption {
+  max-width: 46rem;
+  margin-top: .9em;
+  font-style: normal;
+  font-size: .72rem;
+  color: var(--md-default-fg-color--light);
+}
+
+/* The overview cards on the Workbench page. */
+.md-typeset .grid.cards > ul > li {
+  border-radius: 10px;
+}
+.md-typeset .grid.cards .twemoji.lg {
+  color: var(--md-primary-fg-color);
+}

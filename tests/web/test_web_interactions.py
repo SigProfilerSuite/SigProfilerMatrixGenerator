@@ -33,7 +33,7 @@ def dashboard_url(tmp_path, monkeypatch):
 
 
 @pytest.fixture
-def page(dashboard_url):
+def home_page(dashboard_url):
     with playwright_sync_api.sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         browser_page = browser.new_page(viewport={"width": 1280, "height": 900})
@@ -44,6 +44,13 @@ def page(dashboard_url):
         yield browser_page
         browser.close()
         assert errors == [], f"uncaught page errors: {errors}"
+
+
+@pytest.fixture
+def page(home_page):
+    # The app opens on Home; most tests work on the New run tab.
+    home_page.click("#tab-run")
+    return home_page
 
 
 def _wait_text(locator, needle, timeout=10.0):
@@ -73,10 +80,24 @@ def _paste_input(page, path):
 # ------------------------------------------------------------------ shell
 
 
-def test_page_loads_on_new_run(page):
+def test_the_app_opens_on_home_which_introduces_the_tool(home_page):
+    page = home_page
     assert page.title() == "SigProfilerMatrixGenerator Workbench"
-    assert page.get_attribute("#tab-run", "aria-selected") == "true"
+    assert page.get_attribute("#tab-home", "aria-selected") == "true"
+    assert page.is_visible("#view-home")
+    text = page.text_content("#view-home")
+    for words in ("Turn variant calls into mutational matrices", "You give", "You get",
+                  "How it works", "Same results as code"):
+        assert words in text
+    assert page.locator(".how li").count() == 5
+    # The picture: a substitution in its context and 96 channels.
+    assert page.locator("#heroArt svg rect").count() > 96
+
+    page.click("#homeStart")
     assert page.is_visible("#view-run")
+    page.click("#homeBtn")
+    assert page.is_visible("#view-home")
+    assert page.get_attribute("#tab-home", "aria-selected") == "true"
 
 
 def test_tabs_switch_views(page):
@@ -172,6 +193,22 @@ def test_a_run_reaches_done_and_offers_its_results(page, tmp_path):
     assert page.is_visible("#jobResult button:has-text('Open results')")
     assert "cohort" in page.text_content("#jobList")
     assert page.locator("#jobSteps .s.done").count() == 3
+
+
+def test_the_log_reads_windows_line_endings_and_follows_their_steps(page, tmp_path, monkeypatch):
+    # Windows writes lines ending in \r\n, and step lines must still count as
+    # steps. Progress bars redraw with a bare \r: only their last state shows.
+    monkeypatch.setenv("FAKE_RUNJOB_PRINT",
+                       "== step 1/1: still working\r\nfirst line\r\n\r 10%\r 50%\r100% |████|\r\nlast line\r\n")
+    _paste_input(page, _vcf_folder(tmp_path))
+    page.wait_for_selector("#inputInfo .tile")
+    page.click("#startBtn")
+    _wait_text(page.locator("#jobPill"), "done")
+    _wait_text(page.locator("#jobLog"), "last line")
+    lines = page.locator("#jobLog").text_content().split("\n")
+    assert lines[:5] == ["== step 1/1: working", "== step 1/1: still working", "first line",
+                         "100% |████|", "last line"]
+    assert page.locator("#jobLog .step-line").count() == 2
 
 
 # ---------------------------------------------------------------- results
@@ -311,7 +348,7 @@ def test_phone_width_has_no_horizontal_overflow_and_keeps_the_sidebar(dashboard_
         try:
             phone.goto(dashboard_url)
             phone.wait_for_selector("#genomeSel option", state="attached")
-            for tab in ("run", "monitor", "results", "help"):
+            for tab in ("home", "run", "monitor", "results", "help"):
                 phone.click(f"#tab-{tab}")
                 width = phone.evaluate("document.documentElement.scrollWidth")
                 assert width <= 390, f"{tab} view is {width}px wide at a 390px viewport"
@@ -391,6 +428,19 @@ def test_an_example_that_can_run_now_is_listed_first(installed_only, page):
     labels = page.locator("#examples button").all_text_contents()
     assert labels[0] == installed_only
     assert set(labels) == {"Try the BRCA example", "Try the GRCh38 test set"}
+
+
+def test_home_offers_the_example_that_can_run_now(installed_only, home_page):
+    page = home_page
+    button = page.locator("#homeExample")
+    assert button.text_content() == installed_only
+    assert "about a minute" in page.text_content("#homeExampleHint")
+    button.click()
+    assert page.is_visible("#view-run")
+    page.wait_for_selector("#inputInfo .tile")
+    project = page.input_value("#projectName")
+    assert project in ("BRCA_example", "GRCh38_test")
+    assert page.input_value("#outputPath").endswith(f"SigProfilerMatrixGenerator_example/{project}")
 
 
 # ------------------------------------------------- genome / calls mismatch
@@ -573,6 +623,20 @@ def test_a_run_can_be_deleted_for_good_after_confirming(page, tmp_path):
     _wait_text(page.locator("#toast"), "Deleted cohort")
     assert page.locator("#jobList .runrow").count() == 0
     assert not any((tmp_path / "jobs" / j).exists() for j in job_ids)
+
+
+def test_home_lists_recent_runs_and_opens_a_finished_ones_results(page, tmp_path):
+    _finished_run_in_list(page, tmp_path)
+    page.click("#homeBtn")
+    recent = page.locator("#homeRecent .item")
+    recent.first.wait_for()
+    assert recent.count() == 1
+    assert "cohort" in recent.first.text_content()
+    assert "done" in recent.first.text_content()
+    (tmp_path / "cohort" / "output").mkdir(exist_ok=True)  # the fake runner writes nothing
+    recent.first.click()
+    page.wait_for_selector("#view-results:not(.hidden)")
+    assert page.get_attribute("#tab-results", "aria-selected") == "true"
 
 
 def test_delete_works_before_the_runs_first_status_arrives(page, tmp_path):

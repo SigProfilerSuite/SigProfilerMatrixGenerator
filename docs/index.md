@@ -2,7 +2,17 @@
 
 SigProfilerMatrixGenerator is a [python][1] framework that creates mutational matrices for somatic mutations. This tool works to identify and categorize the mutations based on possible single nucleotide variants (SNVs), double base substitutions (DBS), and insertions/deletions and provides further transcriptional strand bias categorization. It downsizes the generated mutations to parts of the genome like the [exome][2] or a custom [BED file][3] to help identify true mutational signatures within a genome. SigProfilerMatrixGenerator seamlessly integrates with [other SigProfiler tools][4].
 
-The SigProfilerMatrixGenerator library can be found on github [here][11]. For users that prefer working in an R environment, we provide an R wrapper (SigProfilerMatrixGeneratorR) that can be found on github [here][10]. For a point-and-click workflow, the [web app](Web-App.md) runs matrix generation and plots the resulting matrices in your browser.
+The SigProfilerMatrixGenerator library can be found on github [here][11]. For users that prefer working in an R environment, we provide an R wrapper (SigProfilerMatrixGeneratorR) that can be found on github [here][10].
+
+!!! tip "Prefer not to write code?"
+    The [SigProfilerMatrixGenerator Workbench](Web-App.md) runs the tool from your browser.
+    Double-click to install and start it on macOS or Windows, choose a folder of variant
+    calls and a reference genome, follow the run, and plot the resulting matrices sample
+    by sample.
+
+    <figure class="screenshot" markdown="span">
+      [![The SigProfilerMatrixGenerator Workbench](assets/images/web-app/home.png)](Web-App.md)
+    </figure>
 
 ----------
 

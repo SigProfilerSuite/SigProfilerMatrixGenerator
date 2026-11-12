@@ -14,7 +14,7 @@ const el = (tag, cls, text) => {
 
 const state = {
   env: null, jobs: [], jobId: null, logOffset: 0, logTail: '', step: 0, steps: 3,
-  input: null, inputPath: '', projectAuto: true, view: 'run', genomes: null, examples: [],
+  input: null, inputPath: '', projectAuto: true, view: 'home', genomes: null, examples: [],
   results: null, resultsPath: null, ctx: null, file: null,
   job: null, outCheck: null, replaceOutput: false, deleting: null,
 };
@@ -139,10 +139,11 @@ function applyTheme(name) {
 
 /* ----------------------------------------------------------- tab router */
 
-const VIEWS = ['run', 'monitor', 'results', 'help'];
+const VIEWS = ['home', 'run', 'monitor', 'results', 'help'];
 function show(view) {
   state.view = view;
   if (view === 'run' && state.input) checkOutput();
+  if (view === 'home') renderRecent();
   VIEWS.forEach((v) => {
     $(`view-${v}`).classList.toggle('hidden', v !== view);
     $(`tab-${v}`).setAttribute('aria-selected', String(v === view));
@@ -155,6 +156,7 @@ function show(view) {
   }
 }
 VIEWS.forEach((v) => $(`tab-${v}`).addEventListener('click', () => show(v)));
+$('homeBtn').addEventListener('click', () => show('home'));
 
 /* -------------------------------------------------------------- about ? */
 
@@ -179,19 +181,69 @@ function fillAbout(panel, entries) {
 
 const SBS_COLORS = ['#03BCEE', '#010101', '#E32926', '#CAC9C9', '#A1CE63', '#EBC6C4'];
 
-(function welcomeArt() {
-  const art = $('welcomeArt');
-  let seed = 7;
+function svgEl(tag, attrs) {
+  const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => node.setAttribute(k, String(v)));
+  return node;
+}
+
+// What the tool does, in one picture: a substitution between its 5' and 3'
+// neighbours, and the SBS96 channel it is counted in.
+(function heroArt() {
+  const W = 320, H = 240;
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, class: 'art-svg', role: 'img' });
+  svg.appendChild(svgEl('rect', { x: 0.5, y: 0.5, width: W - 1, height: H - 1, rx: 12, fill: '#ffffff', stroke: 'rgba(0,0,0,.08)' }));
+  const text = (x, y, content, o = {}) => {
+    const t = svgEl('text', {
+      x, y, 'font-size': o.size || 9, 'font-weight': o.weight || 500, fill: o.fill || '#556',
+      'text-anchor': o.anchor || 'start',
+      'font-family': o.mono ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : 'system-ui, sans-serif',
+    });
+    t.textContent = content;
+    return t;
+  };
+
+  // The profile: an ageing-like sample, C>T at CpG standing out.
+  const x0 = 16, top = 100, h = 82, bw = 288 / 96;
+  const hit = 46;  // T[C>T]G
+  let seed = 11;
   const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-  SBS_COLORS.forEach((color, k) => {
-    for (let i = 0; i < 8; i++) {
-      const bar = el('i');
-      const peak = k === 2 && (i === 2 || i === 6) ? 0.95 : 0.15 + rand() * (k === 2 ? 0.6 : 0.45);
-      bar.style.height = `${Math.round(peak * 100)}%`;
-      bar.style.background = color;
-      art.appendChild(bar);
-    }
+  const values = Array.from({ length: 96 }, (_, i) => {
+    const group = Math.floor(i / 16);
+    if (group === 2) return i % 4 === 2 ? 0.72 + 0.2 * rand() : 0.16 + 0.14 * rand();
+    if (group === 4) return 0.14 + 0.16 * rand();
+    return 0.06 + 0.16 * rand();
   });
+  values[hit] = 1;
+  const mx = x0 + (hit + 0.5) * bw;
+
+  svg.appendChild(text(16, 22, 'a mutation in its context', { size: 9.5, weight: 600 }));
+  [['T', "5\u2032"], ['C>T', ''], ['G', "3\u2032"]].forEach(([base, side], k) => {
+    const x = mx - 17 + (k - 1) * 40;
+    const mid = k === 1;
+    svg.appendChild(svgEl('rect', { x, y: 30, width: 34, height: 28, rx: 5,
+      fill: mid ? '#E32926' : '#F1F4F8', stroke: mid ? 'none' : 'rgba(0,0,0,.14)' }));
+    svg.appendChild(text(x + 17, 48.5, base, { size: mid ? 10.5 : 12, weight: 700,
+      fill: mid ? '#ffffff' : '#223', anchor: 'middle', mono: true }));
+    if (side) svg.appendChild(text(x + 17, 70, side, { size: 8.5, anchor: 'middle' }));
+  });
+  svg.appendChild(svgEl('path', { d: `M${mx} 63 V91 M${mx - 4.5} 86 L${mx} 92 L${mx + 4.5} 86`,
+    stroke: '#7D8794', 'stroke-width': 1.4, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  svg.appendChild(text(mx + 10, 82, 'counted as T[C>T]G', { size: 8.5, mono: true }));
+
+  values.forEach((v, i) => {
+    const bh = Math.max(1, v * h);
+    svg.appendChild(svgEl('rect', { x: (x0 + i * bw + bw * 0.12).toFixed(2), y: (top + h - bh).toFixed(2),
+      width: (bw * 0.76).toFixed(2), height: bh.toFixed(2), fill: SBS_COLORS[Math.floor(i / 16)],
+      opacity: i === hit ? 1 : 0.6 }));
+  });
+  const bandY = top + h + 3;
+  ['C>A', 'C>G', 'C>T', 'T>A', 'T>C', 'T>G'].forEach((label, g) => {
+    svg.appendChild(svgEl('rect', { x: x0 + g * 16 * bw, y: bandY, width: 16 * bw - 1.5, height: 5, fill: SBS_COLORS[g] }));
+    svg.appendChild(text(x0 + (g + 0.5) * 16 * bw, bandY + 17, label, { size: 8, anchor: 'middle', mono: true }));
+  });
+  svg.appendChild(text(16, H - 14, "a sample's SBS96 profile: 96 channels", { size: 8.5 }));
+  $('heroArt').appendChild(svg);
 })();
 
 async function loadEnv() {
@@ -206,12 +258,18 @@ async function loadEnv() {
   return env;
 }
 
+// Examples that can run now (genome installed) first.
+function sortedExamples() {
+  const ready = (ex) => (genomeInstalled(ex.reference_genome) ? 0 : 1);
+  return [...(state.examples || [])].sort((a, b) => ready(a) - ready(b));
+}
+
 function renderExamples() {
   const box = $('examples');
   clear(box);
-  // Examples that can run now (genome installed) first.
-  const ready = (ex) => (genomeInstalled(ex.reference_genome) ? 0 : 1);
-  [...(state.examples || [])].sort((a, b) => ready(a) - ready(b)).forEach((ex) => {
+  $('examplesCard').classList.toggle('hidden', !(state.examples || []).length);
+  renderHomeExample();
+  sortedExamples().forEach((ex) => {
     const row = el('div', 'inline');
     const btn = el('button', 'btn', `Try the ${ex.label}`);
     btn.type = 'button';
@@ -224,6 +282,27 @@ function renderExamples() {
     box.appendChild(row);
   });
 }
+
+// Home offers the example that can run soonest.
+function renderHomeExample() {
+  const ex = sortedExamples()[0];
+  const btn = $('homeExample');
+  btn.classList.toggle('hidden', !ex);
+  if (!ex) { $('homeExampleHint').textContent = ''; return; }
+  btn.textContent = `Try the ${ex.label}`;
+  btn.dataset.example = ex.id;
+  $('homeExampleHint').textContent = genomeInstalled(ex.reference_genome)
+    ? `${ex.description}, ${ex.reference_genome}. It takes about a minute.`
+    : `${ex.description}, ${ex.reference_genome}. The genome is installed first (about 3 GB, once).`;
+}
+$('homeStart').addEventListener('click', () => show('run'));
+$('homeExample').addEventListener('click', async () => {
+  const ex = (state.examples || []).find((e) => e.id === $('homeExample').dataset.example);
+  if (!ex) return;
+  show('run');
+  await useExample(ex);
+});
+$('homeOpen').addEventListener('click', () => chooseResults());
 
 async function useExample(ex) {
   $('outputPath').value = ex.output_directory;
@@ -701,12 +780,35 @@ function jobMeta(job) {
   return parts.join(' · ');
 }
 
+// The latest runs on Home: a finished one opens its results, any other its Monitor.
+function renderRecent() {
+  const runs = state.jobs.filter((j) => j.kind === 'run').slice(0, 4);
+  $('homeRecentCard').classList.toggle('hidden', !runs.length);
+  const box = $('homeRecent');
+  clear(box);
+  runs.forEach((job) => {
+    const row = el('button', 'item');
+    row.type = 'button';
+    row.appendChild(el('span', `dot ${STATUS_DOT[job.status] || ''}`));
+    const txt = el('span', 'txt');
+    txt.appendChild(el('span', 'name', job.name));
+    txt.appendChild(el('span', 'meta', `${jobMeta(job)} · ${whenAt(job.created_at)}`));
+    row.appendChild(txt);
+    row.addEventListener('click', () => {
+      if (job.status === 'done' && job.output_dir) openResults(job.output_dir);
+      else { selectJob(job.id); show('monitor'); }
+    });
+    box.appendChild(row);
+  });
+}
+
 async function refreshJobs() {
   let r;
   try { r = await get('/api/jobs'); } catch (e) { return; }
   const before = new Map(state.jobs.map((j) => [j.id, j.status]));
   state.jobs = r.jobs;
   renderJobList();
+  if (state.view === 'home') renderRecent();
   const live = state.jobs.filter((j) => j.status === 'running').length;
   $('liveCount').textContent = String(live);
   $('liveCount').classList.toggle('hidden', !live);
@@ -863,7 +965,10 @@ function appendLog(text) {
   const log = $('jobLog');
   const lines = (state.logTail + text).split('\n');
   state.logTail = lines.pop();
-  lines.forEach((line) => {
+  // Windows ends lines in \r\n; a bare \r redraws a progress bar, so keep
+  // what follows the last one.
+  lines.forEach((raw) => {
+    const line = raw.replace(/\r$/, '').split('\r').pop();
     const m = line.match(/^== step (\d+)\/(\d+): (.*)$/);
     let node;
     if (m) {

@@ -178,3 +178,42 @@ def test_job_ids_of_any_other_shape_are_refused(manager, bad):
         manager.delete_record(bad)
     with pytest.raises(jobs.JobError):
         manager.log(bad)
+
+
+# ------------------------------------------------- output that is not ASCII
+
+BAR = "Plotting SBS96 |████████████████████████████████████████| 4/4 [100%]"
+
+
+def test_a_run_can_print_any_character_whatever_the_locale(manager, monkeypatch):
+    # What fails on Windows: output to a file uses a code page such as cp1252,
+    # which has no block characters, so printing a progress bar raises
+    # UnicodeEncodeError. Forcing that encoding here reproduces it anywhere.
+    monkeypatch.setenv("PYTHONIOENCODING", "cp1252")
+    meta = _start(manager, outcome="done", print=BAR + "\n")
+    done = _wait_for_status(manager, meta["id"], "done")
+    assert done["status"] == "done"
+    assert BAR in manager.log(meta["id"])["text"]
+
+
+def test_a_character_cut_between_two_reads_is_not_garbled(manager):
+    meta = _start(manager, outcome="done")
+    _wait_for_status(manager, meta["id"], "done")
+    log_path = manager._job_dir(meta["id"]) / "job.log"
+    encoded = "ab█c".encode("utf-8")  # █ is three bytes
+    log_path.write_bytes(encoded[:3])
+    first = manager.log(meta["id"])
+    assert first == {"text": "ab", "offset": 2}
+    log_path.write_bytes(encoded)
+    second = manager.log(meta["id"], first["offset"])
+    assert second == {"text": "█c", "offset": len(encoded)}
+
+
+@pytest.mark.parametrize("text", ["", "abc", "a\n", "é", "█", "😀", "x█"])
+def test_complete_text_is_returned_whole_and_a_cut_character_held_back(text):
+    encoded = text.encode("utf-8")
+    assert jobs._complete_utf8(encoded) == len(encoded)
+    last = text[-1:].encode("utf-8")
+    for cut in range(1, len(last)):
+        # Part of the last character only: everything before it is complete.
+        assert jobs._complete_utf8(encoded[: len(encoded) - len(last) + cut]) == len(encoded) - len(last)

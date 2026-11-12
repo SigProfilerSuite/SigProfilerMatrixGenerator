@@ -12,13 +12,15 @@
 <div class="app" id="app">
 
   <header class="topbar">
-    <div class="brand">
-      <span class="mark" aria-hidden="true">MG</span>
-      <div class="titles">
-        <h1>SigProfilerMatrixGenerator Workbench</h1>
-        <span class="sub" id="envVersion"></span>
-      </div>
-    </div>
+    <h1 class="brand-h">
+      <button class="brand" id="homeBtn" type="button" title="Home">
+        <span class="mark" aria-hidden="true">MG</span>
+        <span class="titles">
+          <span class="title">SigProfilerMatrixGenerator Workbench</span>
+          <span class="sub" id="envVersion"></span>
+        </span>
+      </button>
+    </h1>
     <div class="spacer"></div>
     <span id="envPill" class="pill flat">checking</span>
     <div class="pick auto">
@@ -75,7 +77,8 @@
     <main class="main">
       <header>
         <div class="tabs" role="tablist">
-          <button role="tab" id="tab-run" data-tab="run" aria-selected="true">New run</button>
+          <button role="tab" id="tab-home" data-tab="home" aria-selected="true">Home</button>
+          <button role="tab" id="tab-run" data-tab="run" aria-selected="false">New run</button>
           <button role="tab" id="tab-monitor" data-tab="monitor" aria-selected="false">Monitor
             <span class="count hidden" id="liveCount"></span></button>
           <button role="tab" id="tab-results" data-tab="results" aria-selected="false">Results</button>
@@ -85,21 +88,111 @@
         <span class="mono" id="contextLabel"></span>
       </header>
 
-      <!-- ------------------------------------------------------- new run -->
-      <section id="view-run" class="stack">
+      <!-- ---------------------------------------------------------- home -->
+      <section id="view-home" class="stack home">
+        <div class="hero card">
+          <div class="hero-text">
+            <p class="eyebrow">SigProfiler Suite · mutational matrices</p>
+            <h2 class="hero-title">Turn variant calls into mutational matrices</h2>
+            <p class="hero-lead">Mutational signatures are read from counts: how often each
+              kind of mutation occurs in each sample. SigProfilerMatrixGenerator classifies
+              every substitution, doublet and small insertion or deletion in your calls by
+              its type and the sequence around it, then counts them sample by sample into
+              <b>mutational matrices</b>, the input of SigProfilerExtractor,
+              SigProfilerAssignment and the rest of the SigProfiler suite.</p>
+            <p class="hero-lead">This Workbench runs it on your own computer, from a folder
+              of VCF, MAF or simple text files to matrices you can plot sample by sample,
+              without writing code.</p>
+            <div class="hero-cta">
+              <button class="btn primary lg" id="homeStart" type="button">Start a new run</button>
+              <button class="btn lg hidden" id="homeExample" type="button"></button>
+              <button class="btn lg ghost" id="homeOpen" type="button">Open results</button>
+            </div>
+            <p class="hint" id="homeExampleHint"></p>
+          </div>
+          <div class="hero-art" id="heroArt" aria-hidden="true"></div>
+        </div>
 
-        <div class="card welcome" id="welcomeCard">
-          <div class="bd">
-            <div class="art" aria-hidden="true" id="welcomeArt"></div>
-            <div>
-              <h2>Turn variant calls into mutational matrices</h2>
-              <p class="lead">Choose a folder of VCF, MAF or simple text files and the
-                reference genome they were called against. The run writes SBS, DBS and
-                ID matrices you can plot here, or take on to SigProfilerExtractor and
-                SigProfilerAssignment.</p>
-              <div class="actions examples" id="examples"></div>
+        <div class="home-two">
+          <div class="card home-card">
+            <div class="hd"><h3>You give</h3><span class="note">one cohort per run</span></div>
+            <div class="bd">
+              <ul class="give">
+                <li><b>Variant calls</b><span>A folder of VCF files, one per sample, or MAF or
+                  simple text files holding many samples. The format is recognised, and the
+                  folder checked, before anything runs.</span></li>
+                <li><b>A reference genome</b><span>The assembly the calls were made against:
+                  GRCh37, GRCh38, CHM13-T2T, mouse, rat, dog, C. elegans, yeast and more.
+                  Installed from here, once.</span></li>
+                <li><b>Regions, if you want them</b><span>Keep only the exome, or the regions
+                  of a BED file.</span></li>
+              </ul>
             </div>
           </div>
+          <div class="card home-card">
+            <div class="hd"><h3>You get</h3><span class="note">for every type of mutation found</span></div>
+            <div class="bd">
+              <ul class="give">
+                <li><b>SBS matrices</b><span>Single base substitutions from SBS6 to SBS6144:
+                  SBS96 by the bases on either side, larger ones by a wider context or by
+                  transcriptional strand.</span></li>
+                <li><b>DBS matrices</b><span>Doublet base substitutions: DBS78, and larger
+                  versions up to DBS2976.</span></li>
+                <li><b>ID matrices</b><span>Small insertions and deletions: ID83 by length and
+                  by the repeat or microhomology around them, other versions from ID28 to
+                  ID8628, and ID89 and ID476 on request.</span></li>
+                <li><b>Plots and charts</b><span>PDF plots from SigProfilerPlotting if you ask
+                  for them, and every matrix charted here, sample by sample.</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd"><h3>How it works</h3><span class="note">the method of Bergstrom et al., BMC Genomics 2019</span></div>
+          <div class="bd">
+            <ol class="how">
+              <li><span class="n">1</span><b>Read the calls</b><span>VCF, MAF or simple
+                text, grouped by sample.</span></li>
+              <li><span class="n">2</span><b>Check each one</b><span>Every mutation's
+                reference base is checked against the genome. Mismatches are skipped and
+                logged, with the reason.</span></li>
+              <li><span class="n">3</span><b>Classify</b><span>Substitutions by their
+                neighbouring bases, indels by length and the repeats or microhomology
+                around them, and both by transcriptional strand.</span></li>
+              <li><span class="n">4</span><b>Count</b><span>One matrix per context: a row
+                for each mutation type, a column for each sample. Only the exome or a BED
+                file's regions, if asked.</span></li>
+              <li><span class="n">5</span><b>Plot and test</b><span>Optionally,
+                SigProfilerPlotting draws every matrix and strand bias is tested.</span></li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="facts-row">
+          <div class="fact"><b>Feeds the suite</b><span>Its matrices are what
+            SigProfilerExtractor, SigProfilerAssignment and SigProfilerPlotting read.</span></div>
+          <div class="fact"><b>Many genomes</b><span>Human GRCh37, GRCh38 and CHM13-T2T,
+            mouse, rat, dog, C. elegans, yeast and EBV.</span></div>
+          <div class="fact"><b>Private</b><span>Everything runs on this computer. Your
+            data never leaves it.</span></div>
+          <div class="fact"><b>Same results as code</b><span>The Workbench runs the same
+            function as Python and the command line, and writes the same files.</span></div>
+        </div>
+
+        <div class="card hidden" id="homeRecentCard">
+          <div class="hd"><h3>Pick up where you left off</h3></div>
+          <div class="bd"><div class="list recent" id="homeRecent"></div></div>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------- new run -->
+      <section id="view-run" class="stack hidden">
+
+        <div class="card" id="examplesCard">
+          <div class="hd"><h2>Examples</h2>
+            <span class="note">fill in a complete run with one click</span></div>
+          <div class="bd"><div class="actions examples" id="examples"></div></div>
         </div>
 
         <div class="card" id="inputCard">
@@ -200,10 +293,10 @@
                 <span><b>Strand bias test<span class="tag">TSB/</span></b>
                 <small>Transcriptional strand bias for SBS24, SBS384 and SBS6144.</small></span></label>
               <label class="opt"><input type="checkbox" id="optId89">
-                <span><b>ID89<span class="tag">Koh et al.</span></b>
+                <span><b>ID89</b>
                 <small>89 indel categories, alongside ID83.</small></span></label>
               <label class="opt"><input type="checkbox" id="optId476">
-                <span><b>ID476<span class="tag">Koh et al.</span></b>
+                <span><b>ID476</b>
                 <small>476 detailed indel categories, alongside ID83.</small></span></label>
             </div>
             <div id="idNote"></div>
