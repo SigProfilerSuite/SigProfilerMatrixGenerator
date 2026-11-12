@@ -154,8 +154,9 @@ launcher in its folder:
 
 - The only requirement is **Python 3.9 or newer** ([python.org](https://www.python.org/downloads/)).
 - The first start creates a private Python environment, `.venv-dashboard`, inside this folder and
-  installs SigProfilerMatrixGenerator into it. This takes a few minutes and happens once. Nothing is
-  installed anywhere else on the computer.
+  installs SigProfilerMatrixGenerator into it with [uv](https://docs.astral.sh/uv/) (or pip, if uv
+  cannot be used). This takes a minute or two and happens once. Nothing is installed anywhere else
+  on the computer.
 - The Workbench then opens in your browser. **Quit**, in its top bar, stops it.
 - macOS may say it cannot verify the file the first time: right-click it and choose **Open**. On
   Windows, if SmartScreen appears, click **More info**, then **Run anyway**.

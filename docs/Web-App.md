@@ -120,10 +120,20 @@ starting a second.
 | Run records: each run's settings, log and result | `~/.cache/sigprofilermatrixgenerator` (macOS, Linux), `%LOCALAPPDATA%\SigProfilerMatrixGenerator` (Windows) | yes |
 | Reference genomes installed through the Workbench | `SigProfilerMatrixGenerator/references/chromosomes/tsb`, inside the SigProfilerMatrixGenerator folder (inside the installed package when started with pip), unless you set a **Genome install folder** | only if you agree, since runs from Python or the command line in this folder use them too |
 | Your matrices | each run's output folder | no |
+| Downloaded packages, kept so later installs are quicker | uv's cache: `~/.cache/uv` (macOS, Linux), `%LOCALAPPDATA%\uv\cache` (Windows); or pip's cache if pip was used | no: `uv cache clean` (or `pip cache purge`) empties it |
 
 Nothing else is installed: no system files, services or registry entries. The
 launcher reinstalls into its environment only when `setup.py` or
 `pyproject.toml` changes, for example after updating the repository.
+
+The launcher installs with [uv](https://docs.astral.sh/uv/), which downloads
+and installs packages in parallel and is much quicker than pip: on a laptop, a
+reinstall from its cache takes seconds instead of half a minute. It uses the
+`uv` already on your PATH if there is one; otherwise it first adds uv to the
+Workbench's own environment. If uv cannot be added or cannot install, the
+launcher says so and uses pip instead. To always use pip, for example behind a
+network that only allows pip's configured package mirror, set the environment
+variable `SPMG_WEB_INSTALLER=pip`.
 
 ### Launch options
 
