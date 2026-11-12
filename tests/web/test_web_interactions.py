@@ -575,6 +575,43 @@ def test_a_run_can_be_deleted_for_good_after_confirming(page, tmp_path):
     assert not any((tmp_path / "jobs" / j).exists() for j in job_ids)
 
 
+def test_delete_works_before_the_runs_first_status_arrives(page, tmp_path):
+    # On a slow machine the Monitor's first status poll can arrive after the
+    # user clicks Delete; the button must not depend on it.
+    row = _finished_run_in_list(page, tmp_path)
+    # Removing it from the list and undoing that clears the Monitor's run.
+    row.hover()
+    row.locator("button.rm.hide").click()
+    deadline = time.monotonic() + 5
+    while page.locator("#jobList .runrow").count() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert page.locator("#jobList .runrow").count() == 0
+    page.click("#toastAction")
+    page.locator("#jobList .runrow").first.wait_for()
+
+    # Hold the run's status (GET /api/jobs/<id>, not its /log?offset= or
+    # /delete-preview) until Delete has been clicked, so the click always
+    # comes first, however fast the machine. Sleeping in the handler instead
+    # would stall Playwright's event loop.
+    def is_status(url):
+        return "/api/jobs/" in url and url.rstrip("/").count("/") == 5 and "?" not in url
+
+    held = []
+
+    def hold(route):
+        held.append(route)
+
+    page.route(is_status, hold)
+    page.locator("#jobList .runrow .item").first.click()
+    page.click("#deleteBtn")
+    page.wait_for_selector("#deleteDialog[open]", timeout=2000)
+    assert held, "the status request was not held, so this did not test the race"
+    for route in list(held):
+        route.continue_()
+    page.unroute(is_status)  # lets through any held since
+    page.click("#deleteCancel")
+
+
 def test_no_loading_message_is_left_beside_a_drawn_chart(page, output_folder):
     page.fill("#openPath", str(output_folder))
     page.press("#openPath", "Enter")
