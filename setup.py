@@ -37,11 +37,15 @@ setup(
     entry_points={
         "console_scripts": [
             "SigProfilerMatrixGenerator=SigProfilerMatrixGenerator.scripts.SigProfilerMatrixGenerator_CLI:main_function",
+            "sigprofilermatrixgenerator-web=SigProfilerMatrixGenerator.web.launcher:main",
         ],
     },
     extras_require={
         "tests": [
             "pytest",
+        ],
+        "web-tests": [
+            "playwright",
         ],
     },
     include_package_data=True,

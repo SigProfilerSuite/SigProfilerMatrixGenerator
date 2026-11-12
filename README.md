@@ -4,6 +4,11 @@
 # SigProfilerMatrixGenerator
 SigProfilerMatrixGenerator creates mutational matrices for all types of somatic mutations. It allows downsizing the generated mutations only to parts of the genome (e.g., exome or a custom BED file). The tool seamlessly integrates with other SigProfiler tools.
 
+**Prefer not to write code?** SigProfilerMatrixGenerator also has a graphical interface, the
+**SigProfilerMatrixGenerator Workbench**: double-click to install and start it on macOS or
+Windows, choose a folder of variant calls and a reference genome in your browser, and plot the
+resulting matrices sample by sample. See [Using the graphical interface](#web_app).
+
 ## CHM13 Support Added
 
 This development branch adds **T2T-CHM13v2.0** support using the reference name
@@ -118,7 +123,58 @@ This section will guide you through the minimum steps required to create mutatio
     SigProfilerMatrixGenerator matrix_generator <project> <reference_genome> <path_to_input_files>
     ```
 
-View the table below for the full list of parameters.
+#### <a name="web_app"></a>Using the Graphical Interface (Workbench):
+The SigProfilerMatrixGenerator Workbench generates mutational matrices from your browser, without
+writing code. It runs entirely on your own computer: your data never leaves it.
+
+![The SigProfilerMatrixGenerator Workbench](https://raw.githubusercontent.com/SigProfilerSuite/SigProfilerMatrixGenerator/master/docs/assets/images/web-app/home.png)
+
+- **Variant calls in:** a folder of VCF, MAF or simple text files. The format, samples, mutations
+  and indels are reported before anything runs, and bundled examples fill in a complete run with
+  one click.
+- **Mistakes caught early:** a warning when the calls name a different genome from the one chosen,
+  and a choice (a new folder, or replace) when the output folder already holds earlier results.
+- **Reference genomes** installed from the Workbench, once.
+- **Live progress**, with every mutation the run had to skip counted by reason.
+- **Results:** every matrix charted sample by sample (percent, counts or proportion), the PDF plots,
+  and every matrix file to download.
+- **The same results as code:** it runs the same function as Python and the command line, with
+  the same defaults, and writes the same files.
+
+![Exploring the matrices in the Workbench](https://raw.githubusercontent.com/SigProfilerSuite/SigProfilerMatrixGenerator/master/docs/assets/images/web-app/results.png)
+
+**Install and start with a double-click.** Download or clone this repository, then use the
+launcher in its folder:
+
+| System | Start | Uninstall |
+|---|---|---|
+| macOS | double-click `launch_web.command` | double-click `uninstall_web.command` |
+| Windows | double-click `launch_web.bat` | double-click `uninstall_web.bat` |
+| Linux | `./launch_web.sh` in a terminal | `./uninstall_web.sh` |
+
+- The only requirement is **Python 3.9 or newer** ([python.org](https://www.python.org/downloads/)).
+- The first start creates a private Python environment, `.venv-dashboard`, inside this folder and
+  installs SigProfilerMatrixGenerator into it. This takes a few minutes and happens once. Nothing is
+  installed anywhere else on the computer.
+- The Workbench then opens in your browser. **Quit**, in its top bar, stops it.
+- macOS may say it cannot verify the file the first time: right-click it and choose **Open**. On
+  Windows, if SmartScreen appears, click **More info**, then **Run anyway**.
+
+If SigProfilerMatrixGenerator is already installed with pip, `SigProfilerMatrixGenerator web` (or
+`sigprofilermatrixgenerator-web`) starts the Workbench from that installation instead. Charts in
+the Workbench need SigProfilerPlotting 1.5.0 or later.
+
+**Uninstall with a double-click.** Click **Quit** in the Workbench, then double-click
+`uninstall_web.command` (macOS) or `uninstall_web.bat` (Windows). It lists what it will remove and
+asks first. It removes the Workbench's Python environment and its run records. Reference genomes
+installed through the Workbench are listed too, and removed only if you agree, since runs from
+Python or the command line in this folder use them as well. It keeps your matrices and this folder;
+delete those yourself if you no longer need them.
+
+The [Workbench guide](https://sigprofilersuite.github.io/SigProfilerMatrixGenerator/Web-App.html)
+covers every screen in detail.
+
+View the table below for the full list of Python and command line parameters.
 
 **PARAMETERS**
 | Category | Parameter | Variable Type | Parameter Description |

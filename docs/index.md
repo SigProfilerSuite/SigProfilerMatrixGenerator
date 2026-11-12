@@ -4,6 +4,16 @@ SigProfilerMatrixGenerator is a [python][1] framework that creates mutational ma
 
 The SigProfilerMatrixGenerator library can be found on github [here][11]. For users that prefer working in an R environment, we provide an R wrapper (SigProfilerMatrixGeneratorR) that can be found on github [here][10].
 
+!!! tip "Prefer not to write code?"
+    The [SigProfilerMatrixGenerator Workbench](Web-App.md) runs the tool from your browser.
+    Double-click to install and start it on macOS or Windows, choose a folder of variant
+    calls and a reference genome, follow the run, and plot the resulting matrices sample
+    by sample.
+
+    <figure class="screenshot" markdown="span">
+      [![The SigProfilerMatrixGenerator Workbench](assets/images/web-app/home.png)](Web-App.md)
+    </figure>
+
 ----------
 
 ### Citation ###

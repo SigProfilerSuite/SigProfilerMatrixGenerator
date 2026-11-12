@@ -54,7 +54,13 @@ markdown_extensions:
   - pymdownx.details
   - tables
   - attr_list
+  - md_in_html
   - def_list
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.tasklist:
       custom_checkbox: true
 
@@ -64,6 +70,8 @@ nav:
     - Quick Start Example: Quick-Start-Example.md
     - CHM13 Test Example: CHM13-Test-Example.md
     - CHM13 Compatibility: CHM13-Downstream-Compatibility.md
+  - Graphical Interface:
+    - The Workbench: Web-App.md
   - Installation:
     - Python: Installation-Python.md
     - R: Installation-R.md
