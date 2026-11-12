@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-11
+
+### Added
+- Add the SigProfilerMatrixGenerator Workbench, a local web app for generating mutational
+  matrices without writing code. Start it with `SigProfilerMatrixGenerator web`,
+  `sigprofilermatrixgenerator-web`, or the double-click launchers (`launch_web.command` on
+  macOS, `launch_web.bat` on Windows, `launch_web.sh` on Linux); the first launch sets up its
+  own environment. It reads a folder of VCF, MAF or simple text calls before anything runs,
+  warns when the calls name a different genome from the one chosen, installs reference
+  genomes, keeps runs from mixing in one output folder, follows each run and counts the
+  mutations it skipped by reason, and charts every matrix sample by sample beside the PDF
+  plots and matrix files. It listens only on this computer and protects every change with a
+  per-launch token. See the Graphical Interface page of the documentation.
+- Add double-click uninstallers (`uninstall_web.command` on macOS, `uninstall_web.bat` on
+  Windows, `uninstall_web.sh` on Linux) that remove the Workbench's environment and run
+  records but never matrices. Reference genomes installed in the repository folder are
+  removed only if the user agrees, since command-line runs use them too.
+- Add the `web` CLI subcommand, the `sigprofilermatrixgenerator-web` console script, and the
+  `web-tests` extra for the Workbench's browser tests.
+
+### Changed
+- The Workbench launcher installs its dependencies with [uv](https://docs.astral.sh/uv/) when
+  it can: the `uv` on PATH, or uv added to the Workbench's own environment. On a Mac this
+  cut a reinstall from 27 s to 4 s. It falls back to pip if uv cannot be added or cannot
+  install; set `SPMG_WEB_INSTALLER=pip` to always use pip.
+
+## [1.5.1] - 2026-11-10
+
+### Fixed
+- MAF insertions are anchored correctly. `convertMAF` shifted every indel's
+  `Start_Position` left by one, which is right for deletions but not for insertions, whose
+  MAF position is already the base before the inserted sequence; most homopolymer insertion
+  counts collapsed to 0 (for example `1:Ins:T:0` instead of `1:Ins:T:5`) (#264).
+
+## [1.5.0] - 2026-11-06
+
 ### Added
 - Add optional Koh ID89 and ID476 count matrices through `indel_contexts` and
   `--indel_contexts`, retaining the existing ID83 classifier and outputs.
@@ -19,11 +55,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   builder, independent source-level validation, and explicit downstream limits.
 - Correct the CHM13 exome opportunity coordinate conversion without changing
   historical coordinate handling for other references.
-- Register `mm39_Legacy` with the original mm39 archive checksums and
-  opportunity tables for reproducibility.
 - Added support for the T2T-CHM13v2.0 human reference genome (CHM13-T2T), nuclear chromosomes only (1–22, X, Y). Network installation becomes available when the corrected archive described under **Reference Data** is published to the AlexandrovLab FTP.
 - Added `scripts/build_refseq_references.py`, the developer tool that derives both the CHM13-T2T exome interval list and its per-chromosome transcript files from a pinned NCBI RefSeq annotation release, so the shipped files can be regenerated and audited rather than only described. Replaces `scripts/build_exome_interval_list.py`, whose behaviour is now the `exome-list` subcommand.
 - Added an exome interval list for CHM13-T2T, so `exome=True` is supported alongside WGS. It is annotation-derived (union of all CDS features in NCBI RefSeq annotation release `GCF_009914755.1-RS_2025_08`, merged; 213,010 intervals over 36.4 Mb) rather than a capture-kit definition, so CHM13-T2T exome matrices are not directly comparable to GRCh38 exome matrices. See `docs/Currently-Supported-Genomes.md` for the full derivation.
+
+### Changed
+- Regenerated the CHM13-T2T transcript files, and with them the whole TSB reference payload, against NCBI RefSeq annotation release `GCF_009914755.1-RS_2025_08`. The previous files came from an earlier release that was never recorded, so neither they nor the TSB files derived from them could be reproduced from any pinned source. All 24 per-chromosome checksums in `CHECKSUMS` change as a result. Note that RS_2025_08 annotates 4,993 transcripts on chrY against 882 before, almost all Gnomon-predicted lncRNA models in the Yq12 satellite region newly resolved by T2T, so transcriptional strand assignments on chrY shift substantially.
+- `exome=True` now fails immediately with an actionable message naming the missing interval list and the genomes that do support exome downsampling, instead of raising a bare `FileNotFoundError` after every chromosome has already been parsed.
+- Exome interval list paths are resolved through `ReferenceDir.get_exome_dir()` / `get_exome_interval_list()` rather than being assembled by hand in several places.
+
+### Fixed
+- Use explicit positional indexing in the optional TSB statistical test so
+  `tsb_stat=True` works with pandas 3.
+- Report SBS384 and SBS24 enrichment from their own context counts, including
+  significant-results output, rather than incorrectly reusing SBS6144 ratios.
+- Preserve SV32 clustering assignments with pandas Copy-on-Write, including
+  hotspot metadata and merged regions; add clustered/nonclustered regressions.
+- Generate matrices from a fresh input snapshot on every run so reusing an
+  output directory does not silently reuse a previous cohort or removed files.
+
+### Reference Data
+- `CHM13-T2T.tar.gz` must be published before CHM13-T2T network installation
+  can succeed. The original August archive linked in issue #251 predates the
+  transcription-strand fixes; the latest PR updates the chromosome checksums.
+  Our independently rebuilt replacement archive has SHA-256
+  `e8d0309879486beefb83d730c00b8cf8733aa7cd1716f694855817e69943f6a3`;
+  source hashes and the reproducible build command are documented in
+  `docs/Currently-Supported-Genomes.md`.
+
+## [1.4.0] - 2026-10-02
+
+### Added
+- Register `mm39_Legacy` with the original mm39 archive checksums and
+  opportunity tables for reproducibility.
 - Register `GRCh38_Legacy` with the chromosome checksums and context tables from
   the previously distributed GRCh38 reference so historical results remain
   reproducible.
@@ -46,9 +110,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   Existing mm39 installations must be reinstalled after upgrading. Raw
   sequence-only mutation counts retain the same DNA, but opportunity-based
   normalization can change because historical context tables had drifted.
-- Regenerated the CHM13-T2T transcript files, and with them the whole TSB reference payload, against NCBI RefSeq annotation release `GCF_009914755.1-RS_2025_08`. The previous files came from an earlier release that was never recorded, so neither they nor the TSB files derived from them could be reproduced from any pinned source. All 24 per-chromosome checksums in `CHECKSUMS` change as a result. Note that RS_2025_08 annotates 4,993 transcripts on chrY against 882 before, almost all Gnomon-predicted lncRNA models in the Yq12 satellite region newly resolved by T2T, so transcriptional strand assignments on chrY shift substantially.
-- `exome=True` now fails immediately with an actionable message naming the missing interval list and the genomes that do support exome downsampling, instead of raising a bare `FileNotFoundError` after every chromosome has already been parsed.
-- Exome interval list paths are resolved through `ReferenceDir.get_exome_dir()` / `get_exome_interval_list()` rather than being assembled by hand in several places.
 - Promote the corrected transcription-strand reference to the default `GRCh38`
   identity, including validated strand-aware whole-genome and exome context-count
   and distribution tables. Existing installations of the former `GRCh38`
@@ -69,14 +130,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   their default identities; retain their existing DNA sequences.
 
 ### Fixed
-- Use explicit positional indexing in the optional TSB statistical test so
-  `tsb_stat=True` works with pandas 3.
-- Report SBS384 and SBS24 enrichment from their own context counts, including
-  significant-results output, rather than incorrectly reusing SBS6144 ratios.
-- Preserve SV32 clustering assignments with pandas Copy-on-Write, including
-  hotspot metadata and merged regions; add clustered/nonclustered regressions.
-- Generate matrices from a fresh input snapshot on every run so reusing an
-  output directory does not silently reuse a previous cohort or removed files.
 - Allow rn7 and rn7_Legacy whole-exome and BED matrix generation through the
   chromosome-order lookups used by those workflows.
 - Rebuild SBS context-distribution tables from the shared five-base opportunity
@@ -124,13 +177,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   of the untouched historical archive named `mm9_Legacy.tar.gz`. Older
   MatrixGenerator releases cannot verify the corrected archive under the
   original name and should upgrade before reinstalling.
-- `CHM13-T2T.tar.gz` must be published before CHM13-T2T network installation
-  can succeed. The original August archive linked in issue #251 predates the
-  transcription-strand fixes; the latest PR updates the chromosome checksums.
-  Our independently rebuilt replacement archive has SHA-256
-  `e8d0309879486beefb83d730c00b8cf8733aa7cd1716f694855817e69943f6a3`;
-  source hashes and the reproducible build command are documented in
-  `docs/Currently-Supported-Genomes.md`.
 
 ## [1.3.6] - 2025-10-28
 
